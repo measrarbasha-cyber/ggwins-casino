@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GG Sic Bo 3-Dice – GG Wins</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sic Bo 3D – GG Wins</title>
 <link rel="stylesheet" href="../game-shell.css">
 <script src="../security-guard.js"></script>
 <style>
@@ -14,243 +14,93 @@
   align-items: center;
   justify-content: center;
   padding: 14px;
-  gap: 10px;
-  overflow: auto;
-  position: relative;
-  background: radial-gradient(ellipse at 50% 35%, #450a0a 0%, #200505 65%, #0a0101 100%);
-  user-select: none;
-}
-.sicbo-stage {
-  width: min(540px, 94vw);
-  background: linear-gradient(145deg, #1c1917, #0c0a09);
-  border: 3px solid #ffd700;
-  border-radius: 20px;
-  padding: 16px 14px;
-  box-shadow: 0 10px 45px rgba(0,0,0,0.8), inset 0 0 35px rgba(0,0,0,0.9);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  position: relative;
-}
-.stage-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: 'Space Grotesk', sans-serif;
-  color: #ffd700;
-  font-weight: 800;
-  font-size: 13px;
-  border-bottom: 1px dashed rgba(255,215,0,0.3);
-  padding-bottom: 6px;
-}
-
-/* Result Banner */
-.result-banner {
-  display: none;
-  padding: 10px 16px;
-  border-radius: 14px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 900;
-  text-align: center;
-  font-size: 15px;
-  animation: bannerSlide 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-@keyframes bannerSlide {
-  0% { transform: scale(0.85); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-.result-banner.win {
-  display: block;
-  background: linear-gradient(135deg, rgba(0,230,118,0.25), rgba(0,180,216,0.2));
-  border: 2px solid #00e676;
-  color: #00e676;
-  box-shadow: 0 0 20px rgba(0,230,118,0.4);
-}
-.result-banner.lose {
-  display: block;
-  background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(185,28,28,0.2));
-  border: 2px solid #ef4444;
-  color: #ef4444;
-  box-shadow: 0 0 20px rgba(239,68,68,0.4);
-}
-
-/* Shaker Dome */
-.dome-container {
-  height: 110px;
-  background: radial-gradient(circle at 50% 30%, rgba(255,215,0,0.25), rgba(0,0,0,0.85));
-  border: 2px solid rgba(255,215,0,0.6);
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  box-shadow: inset 0 0 30px rgba(0,0,0,0.9), 0 0 25px rgba(255,215,0,0.2);
+  background: radial-gradient(ellipse at 50% 40%, #1e1b4b 0%, #0f172a 70%, #030712 100%);
   position: relative;
   overflow: hidden;
-}
-.dome-container.shaking {
-  animation: domeRumble 0.12s infinite alternate;
-}
-@keyframes domeRumble {
-  0%{ transform: translate(-5px, 3px) rotate(-2deg); }
-  100%{ transform: translate(5px, -3px) rotate(2deg); }
+  user-select: none;
 }
 
-/* 3D CASINO DIE WITH CRISP PIPS */
-.real-die {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(145deg, #ffffff, #f1f5f9);
-  border-radius: 12px;
-  border: 2px solid #cbd5e1;
-  box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), 0 8px 20px rgba(0,0,0,0.7);
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  padding: 6px;
-  gap: 3px;
-  position: relative;
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.real-die.tumbling {
-  animation: dieTumble 0.15s infinite linear;
-}
-@keyframes dieTumble {
-  0%{ transform: rotate(0deg) scale(0.85); }
-  50%{ transform: rotate(180deg) scale(1.15); }
-  100%{ transform: rotate(360deg) scale(0.85); }
-}
-
-.pip {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #0f172a;
-  align-self: center;
-  justify-self: center;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
-}
-.pip.red {
-  background: #dc2626;
-  width: 16px;
-  height: 16px;
-  box-shadow: 0 0 6px rgba(220,38,38,0.6);
-}
-
-/* Sic Bo Betting Grid */
-.sicbo-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-.sicbo-zone {
-  background: rgba(255,255,255,0.05);
-  border: 1.5px solid rgba(255,255,255,0.15);
-  border-radius: 12px;
-  padding: 10px 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  font-family: 'Space Grotesk', sans-serif;
-  position: relative;
-}
-.sicbo-zone:hover {
-  transform: translateY(-2px);
-  border-color: #ffd700;
-  background: rgba(255,215,0,0.1);
-}
-.sicbo-zone.selected {
-  border-color: #ffd700;
-  background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05));
-  box-shadow: 0 0 20px rgba(255,215,0,0.4);
-  transform: scale(1.02);
-}
-.sicbo-zone.winning-glow {
-  border-color: #00e676 !important;
-  background: rgba(0,230,118,0.2) !important;
-  box-shadow: 0 0 25px rgba(0,230,118,0.8) !important;
-}
-.zone-lbl { font-size: 13px; font-weight: 800; color: #fff; }
-.zone-odd { font-size: 11px; font-weight: 700; color: #00e676; margin-top: 2px; }
-
-/* Quick Action Bar */
-.round-action-bar {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-.btn-action-main {
-  flex: 1.2;
-  padding: 12px;
-  background: linear-gradient(135deg, #00e676, #00b0ff);
-  border: none;
-  border-radius: 12px;
-  color: #000;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 14px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,230,118,0.4);
-  transition: all 0.2s;
-}
-.btn-action-main:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,230,118,0.6);
-}
-.btn-action-2x {
-  flex: 1;
-  padding: 12px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  border: none;
-  border-radius: 12px;
-  color: #000;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 14px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-action-2x:hover {
-  transform: translateY(-2px);
-}
-
-/* Chip Selector Row */
-.chip-row {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 2px;
-}
-.casino-chip {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 2px dashed rgba(255,255,255,0.5);
+/* 3D Shaking Glass Dome */
+.dice-dome-3d {
+  width: min(340px, 85vw);
+  height: 150px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.6) 80%);
+  border: 3px solid #ffd700;
+  border-radius: 100px 100px 20px 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 16px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.8), inset 0 0 25px rgba(255,215,0,0.2);
+  margin-bottom: 12px;
+  position: relative;
+}
+.dice-dome-3d.shaking {
+  animation: domeShake 0.15s infinite;
+}
+@keyframes domeShake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-3px, 2px) rotate(-1deg); }
+  50% { transform: translate(3px, -2px) rotate(1deg); }
+  75% { transform: translate(-2px, -1px) rotate(-0.5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* 3D Dice Box */
+.dice-3d {
+  width: 52px;
+  height: 52px;
+  background: #fff;
+  border-radius: 12px;
+  border: 2px solid #000;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 900;
+  color: #dc2626;
+  font-family: sans-serif;
+  transition: transform 0.2s;
+}
+
+/* Betting Board */
+.sicbo-table {
+  width: min(540px, 94vw);
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid rgba(255,215,0,0.4);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sicbo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.sicbo-tile {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 10px 4px;
+  text-align: center;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
   transition: all 0.2s;
 }
-.casino-chip:hover {
-  transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 6px 15px rgba(255,215,0,0.5);
+.sicbo-tile:hover {
+  border-color: #ffd700;
+  transform: translateY(-2px);
 }
-.casino-chip.c10 { background: radial-gradient(circle, #3b82f6, #1d4ed8); }
-.casino-chip.c50 { background: radial-gradient(circle, #ef4444, #b91c1c); }
-.casino-chip.c100 { background: radial-gradient(circle, #10b981, #047857); }
-.casino-chip.c500 { background: radial-gradient(circle, #8b5cf6, #6d28d9); }
-.casino-chip.c1000 { background: radial-gradient(circle, #f59e0b, #b45309); color: #000; border-color: #ffd700; }
-
-#sicbo-confetti {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  pointer-events: none; z-index: 50;
+.sicbo-tile.selected {
+  background: rgba(0,230,118,0.25);
+  border-color: #00e676;
+  box-shadow: 0 0 15px rgba(0,230,118,0.4);
 }
 </style>
 </head>
@@ -263,72 +113,37 @@
   </button>
   <div class="gnav-brand-block">
     <div class="gnav-logo">GG <span>Wins</span></div>
-    <div class="gnav-game-under-logo">🎲 Sic Bo 3-Dice</div>
+    <div class="gnav-game-under-logo">🎲 Sic Bo 3D</div>
   </div>
-  <div class="gnav-game-name">GG Sic Bo</div>
-  <span class="gnav-game-badge" style="background:#ef4444;color:#fff">3-DICE</span>
+  <div class="gnav-game-name">Sic Bo 3-Dice</div>
+  <span class="gnav-game-badge" style="background:#ffd700;color:#000">3D DOME</span>
   <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
   <div class="gnav-spacer"></div>
   <div id="wallet-chip-target"></div>
-  <button class="btn-wallet-game" onclick="openWalletModal('deposit')" title="Deposit Funds">💳 Deposit</button>
+  <button class="btn-wallet-game" onclick="if(typeof openWalletModal==='function') openWalletModal('deposit')">💳 Deposit</button>
 </nav>
 
 <div class="game-layout">
   <div class="game-area sicbo-area">
-    <canvas id="sicbo-confetti"></canvas>
+    <div class="dice-dome-3d" id="dice-dome">
+      <div class="dice-3d" id="d1">⚃</div>
+      <div class="dice-3d" id="d2">⚄</div>
+      <div class="dice-3d" id="d3">⚅</div>
+    </div>
 
-    <div class="sicbo-stage">
-      <div class="stage-header">
-        <span>GOLDEN DOME SHAKER</span>
-        <span id="stage-status-msg" style="color:#fff">Pick a zone &amp; Roll</span>
-      </div>
-
-      <!-- Result Banner -->
-      <div id="stage-result-banner" class="result-banner"></div>
-
-      <!-- Real 3D Dice Container -->
-      <div class="dome-container" id="dome-box">
-        <div class="real-die" id="die-0"></div>
-        <div class="real-die" id="die-1"></div>
-        <div class="real-die" id="die-2"></div>
+    <div class="sicbo-table">
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:900;color:#ffd700;padding:0 4px">
+        <span>BET SECTOR:</span>
+        <span id="lbl-sicbo-bet" style="color:#00e676">BIG 11-17 (2.0×)</span>
       </div>
 
       <div class="sicbo-grid">
-        <div class="sicbo-zone selected" id="zone-small" onclick="selectSicZone('small')">
-          <div class="zone-lbl">SMALL (4 – 10)</div>
-          <div class="zone-odd">1.70× Payout</div>
-        </div>
-        <div class="sicbo-zone" id="zone-big" onclick="selectSicZone('big')">
-          <div class="zone-lbl">BIG (11 – 17)</div>
-          <div class="zone-odd">1.70× Payout</div>
-        </div>
-        <div class="sicbo-zone" id="zone-odd" onclick="selectSicZone('odd')">
-          <div class="zone-lbl">ODD SUM</div>
-          <div class="zone-odd">1.70× Payout</div>
-        </div>
-        <div class="sicbo-zone" id="zone-even" onclick="selectSicZone('even')">
-          <div class="zone-lbl">EVEN SUM</div>
-          <div class="zone-odd">1.70× Payout</div>
-        </div>
-        <div class="sicbo-zone" id="zone-triple" onclick="selectSicZone('triple')" style="grid-column: span 2">
-          <div class="zone-lbl">👑 ANY TRIPLE (1-1-1 to 6-6-6)</div>
-          <div class="zone-odd">20.00× GRAND JACKPOT</div>
-        </div>
-      </div>
-
-      <!-- Quick Action Controls for Instant Play Again -->
-      <div class="round-action-bar" id="round-action-bar">
-        <button class="btn-action-main" id="btn-main-roll" onclick="rollSicBo()">🎲 ROLL / PLAY (₹<span id="lbl-bet-val">100</span>)</button>
-        
-      </div>
-
-      <!-- Chip Presets -->
-      <div class="chip-row">
-        <div class="casino-chip c10" onclick="addChip(10)">₹10</div>
-        <div class="casino-chip c50" onclick="addChip(50)">₹50</div>
-        <div class="casino-chip c100" onclick="addChip(100)">₹100</div>
-        <div class="casino-chip c500" onclick="addChip(500)">₹500</div>
-        <div class="casino-chip c1000" onclick="addChip(1000)">₹1k</div>
+        <div class="sicbo-tile" onclick="selectSicbo('SMALL (4-10)', 2.0, this)">SMALL (4-10)<br><span style="font-size:10px;color:#94a3b8">2.0×</span></div>
+        <div class="sicbo-tile selected" onclick="selectSicbo('BIG (11-17)', 2.0, this)">BIG (11-17)<br><span style="font-size:10px;color:#94a3b8">2.0×</span></div>
+        <div class="sicbo-tile" onclick="selectSicbo('ANY TRIPLE', 31.0, this)">ANY TRIPLE<br><span style="font-size:10px;color:#ffd700">31.0×</span></div>
+        <div class="sicbo-tile" onclick="selectSicbo('SUM 9-10-11-12', 7.0, this)">MID (9-12)<br><span style="font-size:10px;color:#94a3b8">7.0×</span></div>
+        <div class="sicbo-tile" onclick="selectSicbo('DOUBLE PAIR', 11.0, this)">DOUBLE PAIR<br><span style="font-size:10px;color:#ffd700">11.0×</span></div>
+        <div class="sicbo-tile" onclick="selectSicbo('ODD SUM', 2.0, this)">ODD TOTAL<br><span style="font-size:10px;color:#94a3b8">2.0×</span></div>
       </div>
     </div>
 
@@ -342,7 +157,7 @@
       <div class="bet-label">Bet Amount</div>
       <div class="bet-input-row">
         <div class="bet-currency">₹</div>
-        <input class="bet-input" id="bet-amt" type="number" value="100.00" min="1" step="10" oninput="updateBetLabels()">
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="10">
         <div class="bet-quick-btns">
           <button class="qbtn" onclick="halveBet()">½</button>
           <button class="qbtn" onclick="doubleBet()">2×</button>
@@ -351,10 +166,8 @@
       </div>
     </div>
 
-    <div class="bet-section" style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn-bet" id="btn-panel-roll" onclick="rollSicBo()">🎲 Shake &amp; Roll</button>
-      
-      
+    <div class="bet-section">
+      <button class="btn-bet" id="btn-roll" onclick="rollSicBo()">🎲 SHAKE &amp; ROLL</button>
     </div>
 
     <div class="bet-section">
@@ -381,250 +194,107 @@
 <script src="../wallet.js"></script>
 <script src="../auth-guard.js"></script>
 <script>
-updateAllWalletDisplays();
-
-const PIP_CONFIGS = {
-  1: [ {r:2, c:2, isRed:true} ],
-  2: [ {r:1, c:1}, {r:3, c:3} ],
-  3: [ {r:1, c:1}, {r:2, c:2}, {r:3, c:3} ],
-  4: [ {r:1, c:1}, {r:1, c:3}, {r:3, c:1}, {r:3, c:3} ],
-  5: [ {r:1, c:1}, {r:1, c:3}, {r:2, c:2}, {r:3, c:1}, {r:3, c:3} ],
-  6: [ {r:1, c:1}, {r:1, c:3}, {r:2, c:1}, {r:2, c:3}, {r:3, c:1}, {r:3, c:3} ]
-};
-
-function renderDieFace(elementId, val) {
-  const die = document.getElementById(elementId);
-  die.innerHTML = '';
-  const pips = PIP_CONFIGS[val] || PIP_CONFIGS[1];
-  for(let row=1; row<=3; row++) {
-    for(let col=1; col<=3; col++) {
-      const match = pips.find(p => p.r === row && p.c === col);
-      if(match) {
-        const pip = document.createElement('div');
-        pip.className = `pip ${match.isRed ? 'red' : ''}`;
-        pip.style.gridRow = row;
-        pip.style.gridColumn = col;
-        die.appendChild(pip);
-      }
-    }
-  }
-}
-
-renderDieFace('die-0', 3);
-renderDieFace('die-1', 4);
-renderDieFace('die-2', 5);
-
-function playSynth(type) {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
-    if (type === 'dice') {
-      [220, 340, 480].forEach((freq, i)=>{
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(freq + Math.random()*120, now + i*0.04);
-        gain.gain.setValueAtTime(0.25, now + i*0.04);
-        gain.gain.linearRampToValueAtTime(0.01, now + i*0.04 + 0.06);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(now + i*0.04); osc.stop(now + i*0.04 + 0.06);
-      });
-    } else if (type === 'chip') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.setValueAtTime(800, now);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.05);
-    }
-  } catch(e) {}
-}
-
-let selectedSicZone = 'small';
+const DICE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+let selectedBet = 'BIG (11-17)';
+let selectedMult = 2.0;
 let isRolling = false;
-let lastBet = 100;
 let totalProfit = 0, wins = 0, losses = 0;
 
-function updateBetLabels(){
-  const b = parseFloat(document.getElementById('bet-amt').value) || 100;
-  const _lv = document.getElementById('lbl-bet-val'); if(_lv) _lv.textContent = b.toFixed(0);
-  const _l2x = document.getElementById('lbl-bet-2x'); if(_l2x) _l2x.textContent = (b*2).toFixed(0);
-}
-
-function halveBet(){ const el=document.getElementById('bet-amt'); el.value = Math.max(1, (parseFloat(el.value)/2)).toFixed(2); updateBetLabels(); }
-function doubleBet(){ const el=document.getElementById('bet-amt'); el.value = (parseFloat(el.value)*2).toFixed(2); updateBetLabels(); }
-function maxBet(){ const el=document.getElementById('bet-amt'); el.value = Math.floor(getBalance()).toFixed(2); updateBetLabels(); }
-
-function addChip(amount){
+function selectSicbo(name, mult, el){
   if(isRolling) return;
-  const el = document.getElementById('bet-amt');
-  el.value = (parseFloat(el.value || 0) + amount).toFixed(2);
-  updateBetLabels();
-  playSynth('chip');
+  selectedBet = name;
+  selectedMult = mult;
+  document.querySelectorAll('.sicbo-tile').forEach(t => t.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  document.getElementById('lbl-sicbo-bet').textContent = `${name} (${mult}×)`;
 }
-
-function selectSicZone(z){
-  if(isRolling) return;
-  selectedSicZone = z;
-  document.querySelectorAll('.sicbo-zone').forEach(el=>el.classList.remove('selected'));
-  document.getElementById(`zone-${z}`).classList.add('selected');
-  playSynth('chip');
-}
-
-updateBetLabels();
-
-
 
 function rollSicBo(){
-  if(!requireAuth()) return;
+  if(typeof requireAuth === 'function' && !requireAuth()) return;
   if(isRolling) return;
 
-  const bet = parseFloat(document.getElementById('bet-amt').value) || 100;
-  if(bet > getBalance()){ showToast('Insufficient balance'); return; }
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if(isNaN(amt) || amt <= 0){ showToast('Enter a valid bet amount!', 'error'); return; }
 
-  lastBet = bet;
-  setBalance(getBalance() - bet);
-  playSynth('dice');
+  const curBal = typeof getBalance === 'function' ? getBalance() : 10000;
+  if(amt > curBal){ showToast('Insufficient balance!', 'error'); return; }
 
+  if(typeof setBalance === 'function') setBalance(curBal - amt);
   isRolling = true;
-  document.getElementById('stage-result-banner').style.display = 'none';
-  document.querySelectorAll('.sicbo-zone').forEach(el=>el.classList.remove('winning-glow'));
+  document.getElementById('btn-roll').disabled = true;
 
-  document.getElementById('bet-amt').disabled = true;
-  document.getElementById('btn-main-roll').disabled = true;
-  
-  document.getElementById('btn-panel-roll').disabled = true;
-  document.getElementById('stage-status-msg').textContent = '🎲 Shaking golden dome...';
-
-  const dome = document.getElementById('dome-box');
+  const dome = document.getElementById('dice-dome');
   dome.classList.add('shaking');
-  for(let i=0; i<3; i++){
-    document.getElementById(`die-${i}`).className = 'real-die tumbling';
-  }
 
-  let flashes = 0;
-  const interval = setInterval(()=>{
-    for(let i=0; i<3; i++){
-      renderDieFace(`die-${i}`, Math.floor(Math.random()*6) + 1);
-    }
-    playSynth('dice');
-    flashes++;
-    if(flashes >= 10){
-      clearInterval(interval);
-      dome.classList.remove('shaking');
-      resolveSicBo(bet);
-    }
+  // Tumbling animation
+  const interval = setInterval(() => {
+    document.getElementById('d1').textContent = DICE_FACES[Math.floor(Math.random()*6)];
+    document.getElementById('d2').textContent = DICE_FACES[Math.floor(Math.random()*6)];
+    document.getElementById('d3').textContent = DICE_FACES[Math.floor(Math.random()*6)];
   }, 70);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    dome.classList.remove('shaking');
+    isRolling = false;
+    document.getElementById('btn-roll').disabled = false;
+
+    // Final Dice Values (1-6)
+    const v1 = Math.floor(Math.random()*6) + 1;
+    const v2 = Math.floor(Math.random()*6) + 1;
+    const v3 = Math.floor(Math.random()*6) + 1;
+
+    document.getElementById('d1').textContent = DICE_FACES[v1 - 1];
+    document.getElementById('d2').textContent = DICE_FACES[v2 - 1];
+    document.getElementById('d3').textContent = DICE_FACES[v3 - 1];
+
+    evaluateSicBo(amt, v1, v2, v3);
+  }, 1600);
 }
 
-function resolveSicBo(bet){
-  const roll1 = Math.floor(Math.random()*6) + 1;
-  const roll2 = Math.floor(Math.random()*6) + 1;
-  const roll3 = Math.floor(Math.random()*6) + 1;
-  const sum = roll1 + roll2 + roll3;
-  const isTriple = (roll1 === roll2 && roll2 === roll3);
-
-  renderDieFace('die-0', roll1);
-  renderDieFace('die-1', roll2);
-  renderDieFace('die-2', roll3);
-  for(let i=0; i<3; i++){
-    document.getElementById(`die-${i}`).className = 'real-die';
-  }
-
+function evaluateSicBo(betAmt, v1, v2, v3){
+  const sum = v1 + v2 + v3;
+  const isTriple = (v1 === v2 && v2 === v3);
+  const isDouble = (v1 === v2 || v2 === v3 || v1 === v3);
   let won = false;
-  let mult = 0;
 
-  // Highlight winning zones
-  if(sum >= 4 && sum <= 10 && !isTriple) document.getElementById('zone-small').classList.add('winning-glow');
-  if(sum >= 11 && sum <= 17 && !isTriple) document.getElementById('zone-big').classList.add('winning-glow');
-  if(sum % 2 !== 0 && !isTriple) document.getElementById('zone-odd').classList.add('winning-glow');
-  if(sum % 2 === 0 && !isTriple) document.getElementById('zone-even').classList.add('winning-glow');
-  if(isTriple) document.getElementById('zone-triple').classList.add('winning-glow');
+  if(selectedBet === 'SMALL (4-10)' && sum >= 4 && sum <= 10 && !isTriple) won = true;
+  else if(selectedBet === 'BIG (11-17)' && sum >= 11 && sum <= 17 && !isTriple) won = true;
+  else if(selectedBet === 'ANY TRIPLE' && isTriple) won = true;
+  else if(selectedBet === 'SUM 9-10-11-12' && sum >= 9 && sum <= 12) won = true;
+  else if(selectedBet === 'DOUBLE PAIR' && isDouble) won = true;
+  else if(selectedBet === 'ODD TOTAL' && sum % 2 === 1) won = true;
 
-  if(selectedSicZone === 'small' && sum >= 4 && sum <= 10 && !isTriple){ won = true; mult = 1.70; }
-  else if(selectedSicZone === 'big' && sum >= 11 && sum <= 17 && !isTriple){ won = true; mult = 1.70; }
-  else if(selectedSicZone === 'odd' && sum % 2 !== 0 && !isTriple){ won = true; mult = 1.70; }
-  else if(selectedSicZone === 'even' && sum % 2 === 0 && !isTriple){ won = true; mult = 1.70; }
-  else if(selectedSicZone === 'triple' && isTriple){ won = true; mult = 20.0; }
-
-  const payout = bet * mult;
-  const banner = document.getElementById('stage-result-banner');
   const res = document.getElementById('result-container');
-
   if(won){
-    setBalance(getBalance() + payout);
-    totalProfit += (payout - bet);
+    const payout = betAmt * selectedMult;
+    if(typeof setBalance === 'function') setBalance(getBalance() + payout);
+    totalProfit += payout - betAmt;
     wins++;
-    flashBal('flash-win');
-    launchSicBoConfetti();
-    if(typeof playGameSound==='function') playGameSound('win');
-    if(typeof trackGameWager==='function') trackGameWager('GG Sic Bo', bet, payout, true);
-
-    banner.className = 'result-banner win';
-    banner.innerHTML = `🎉 <strong>YOU WON +₹${payout.toFixed(2)} (${mult}×)!</strong> Sum was ${sum} (${roll1}+${roll2}+${roll3}) [${sum>=11?'BIG':'SMALL'} • ${sum%2===0?'EVEN':'ODD'}]`;
-    res.innerHTML = `<div class="result-box win"><div class="result-box-title">🎲 WON SUM ${sum}</div><div class="result-box-val">+₹${payout.toFixed(2)}</div></div>`;
-    document.getElementById('stage-status-msg').textContent = `🎉 You Won! Sum was ${sum}`;
+    res.innerHTML = `<div class="result-box win" style="padding:8px;text-align:center;font-weight:900;color:#00e676">🎉 Sum ${sum} (${v1},${v2},${v3})! +₹${payout.toFixed(2)}</div>`;
   } else {
-    totalProfit -= bet;
+    totalProfit -= betAmt;
     losses++;
-    flashBal('flash-lose');
-    if(typeof playGameSound==='function') playGameSound('lose');
-    if(typeof trackGameWager==='function') trackGameWager('GG Sic Bo', bet, 0, false);
-
-    banner.className = 'result-banner lose';
-    banner.innerHTML = `💀 <strong>YOU LOST -₹${bet.toFixed(2)}!</strong> Sum was ${sum} (${roll1}+${roll2}+${roll3}) [${sum>=11?'BIG':'SMALL'} • ${sum%2===0?'EVEN':'ODD'}]`;
-    res.innerHTML = `<div class="result-box lose"><div class="result-box-title">💀 LOST SUM ${sum}</div><div class="result-box-val">-₹${bet.toFixed(2)}</div></div>`;
-    document.getElementById('stage-status-msg').textContent = `Lost! Sum was ${sum}`;
+    res.innerHTML = `<div class="result-box lose" style="padding:8px;text-align:center;font-weight:900;color:#ef4444">💀 Sum ${sum} (${v1},${v2},${v3})! -₹${betAmt.toFixed(2)}</div>`;
   }
-
-  const pEl = document.getElementById('stat-profit');
-  pEl.textContent = (totalProfit>=0?'+':'')+' ₹'+totalProfit.toFixed(2);
-  pEl.className = 'stat-box-val '+(totalProfit>=0?'green':'red');
-  document.getElementById('stat-wins').textContent = wins;
-  document.getElementById('stat-losses').textContent = losses;
-
-  // Reactivate buttons for instant 1-click play again
-  isRolling = false;
-  document.getElementById('bet-amt').disabled = false;
-  document.getElementById('btn-main-roll').disabled = false;
-  
-  document.getElementById('btn-panel-roll').disabled = false;
-  document.getElementById('btn-main-roll').innerHTML = `🔁 ROLL AGAIN (₹<span id="lbl-bet-val">${bet.toFixed(0)}</span>)`;
-  document.getElementById('btn-panel-roll').textContent = '🎲 Roll Again';
+  updateStats();
 }
 
-function launchSicBoConfetti(){
-  const canvas = document.getElementById('sicbo-confetti');
-  const ctx = canvas.getContext('2d');
-  canvas.width  = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
-  const particles = [];
-  const colors = ['#ef4444','#ffd700','#ffffff','#00e676'];
-  for(let i=0;i<70;i++){
-    particles.push({
-      x:canvas.width/2, y:canvas.height/2,
-      vx:(Math.random()-0.5)*14, vy:(Math.random()-0.8)*15,
-      size:Math.random()*7+3, color:colors[Math.floor(Math.random()*colors.length)],
-      alpha:1
-    });
+function updateStats(){
+  const p = document.getElementById('stat-profit');
+  if(p){
+    p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
+    p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
   }
-  function render(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    let alive=false;
-    particles.forEach(p=>{
-      p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.alpha-=0.015;
-      if(p.alpha>0){
-        alive=true;
-        ctx.fillStyle=p.color;
-        ctx.globalAlpha=Math.max(0,p.alpha);
-        ctx.fillRect(p.x,p.y,p.size,p.size);
-      }
-    });
-    if(alive) requestAnimationFrame(render);
-    else ctx.clearRect(0,0,canvas.width,canvas.height);
-  }
-  render();
+  const w = document.getElementById('stat-wins');
+  if(w) w.textContent = wins;
+  const l = document.getElementById('stat-losses');
+  if(l) l.textContent = losses;
 }
+
+function halveBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
+function doubleBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
+function maxBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=getBalance().toFixed(2); }
 </script>
 </body>
 </html>

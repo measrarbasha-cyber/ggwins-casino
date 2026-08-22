@@ -2,67 +2,60 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GG Magic Shells 3D – GG Wins</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Magic Shells 3D – GG Wins</title>
 <link rel="stylesheet" href="../game-shell.css">
 <script src="../security-guard.js"></script>
 <style>
-/* Cups Arena */
 .cups-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 14px;
-  gap: 12px;
-  overflow: auto;
+  padding: 16px;
+  background: radial-gradient(ellipse at 50% 40%, #1e1b4b 0%, #0f172a 70%, #030712 100%);
   position: relative;
-  background: radial-gradient(ellipse at 50% 30%, #1e1b4b 0%, #0f172a 60%, #030712 100%);
+  overflow: hidden;
   user-select: none;
 }
 
-/* Stage Table */
-.cups-stage {
-  width: min(580px, 94vw);
-  background: linear-gradient(145deg, #18181b, #09090b);
-  border: 3px solid #ffd700;
+/* 3D Stage Table */
+.cups-stage-3d {
+  width: min(560px, 94vw);
+  background: linear-gradient(180deg, #18181b 0%, #09090b 100%);
+  border: 3.5px solid #ffd700;
   border-radius: 24px;
   padding: 18px 14px;
-  box-shadow: 0 10px 45px rgba(0,0,0,0.8), inset 0 0 35px rgba(0,0,0,0.9);
+  box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 35px rgba(0,0,0,0.9), 0 0 30px rgba(255,215,0,0.25);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   position: relative;
 }
 
-.stage-header {
+.stage-top-banner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: 'Space Grotesk', sans-serif;
-  color: #ffd700;
-  font-weight: 800;
-  font-size: 13px;
-  border-bottom: 1px dashed rgba(255,215,0,0.3);
+  border-bottom: 1.5px dashed rgba(255,215,0,0.3);
   padding-bottom: 6px;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
-/* Difficulty Tabs */
 .level-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
   padding: 4px;
+  border-radius: 10px;
 }
 .level-btn {
-  flex: 1;
-  padding: 8px 4px;
-  border-radius: 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
   color: #94a3b8;
   text-align: center;
@@ -74,76 +67,37 @@
   color: #000;
   box-shadow: 0 2px 10px rgba(255,215,0,0.4);
 }
-.level-btn:hover:not(.active) {
-  color: #fff;
-  background: rgba(255,255,255,0.08);
-}
 
-/* Result Banner on Stage */
-.result-banner {
-  display: none;
-  padding: 10px 16px;
-  border-radius: 14px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 900;
-  text-align: center;
-  font-size: 15px;
-  animation: bannerSlide 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-@keyframes bannerSlide {
-  0% { transform: scale(0.85); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-.result-banner.win {
-  display: block;
-  background: linear-gradient(135deg, rgba(0,230,118,0.25), rgba(0,180,216,0.2));
-  border: 2px solid #00e676;
-  color: #00e676;
-  box-shadow: 0 0 20px rgba(0,230,118,0.4);
-}
-.result-banner.lose {
-  display: block;
-  background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(185,28,28,0.2));
-  border: 2px solid #ef4444;
-  color: #ef4444;
-  box-shadow: 0 0 20px rgba(239,68,68,0.4);
-}
-
-/* Cups Arena Row */
+/* Cups Rack Row */
 .cups-rack {
   height: 180px;
   display: flex;
   align-items: flex-end;
   justify-content: space-around;
   position: relative;
-  padding: 10px 10px 20px 10px;
-  background: radial-gradient(ellipse at 50% 100%, rgba(255,215,0,0.12), transparent 70%);
+  padding: 10px;
+  background: radial-gradient(ellipse at 50% 100%, rgba(255,215,0,0.15), transparent 70%);
   border-bottom: 3px solid rgba(255,215,0,0.4);
   border-radius: 0 0 16px 16px;
-  overflow: hidden;
 }
 
-/* Individual Cup Stand */
 .cup-spot {
   position: relative;
-  width: 85px;
-  height: 145px;
+  width: 80px;
+  height: 140px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   cursor: pointer;
-  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.cup-spot:hover .magic-cup {
-  filter: drop-shadow(0 0 12px rgba(255,215,0,0.9));
+  transition: transform 0.2s ease;
 }
 
-/* 3D Golden Glass/Cup */
+/* 3D Golden Chalice Cup */
 .magic-cup {
-  width: 72px;
-  height: 94px;
-  background: linear-gradient(135deg, #fef08a 0%, #eab308 35%, #ca8a04 70%, #854d0e 100%);
+  width: 70px;
+  height: 90px;
+  background: linear-gradient(135deg, #fef08a 0%, #eab308 40%, #ca8a04 75%, #854d0e 100%);
   clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
   border-radius: 8px 8px 4px 4px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.8), inset 0 -4px 8px rgba(0,0,0,0.4);
@@ -157,11 +111,11 @@
 }
 .magic-cup::before {
   content: '👑';
-  font-size: 20px;
-  opacity: 0.85;
+  font-size: 18px;
+  opacity: 0.9;
 }
 .magic-cup.lifted {
-  transform: translateY(-65px);
+  transform: translateY(-60px);
   filter: drop-shadow(0 15px 25px rgba(255,215,0,0.9));
 }
 
@@ -173,17 +127,12 @@
   border-radius: 50%;
   box-shadow: 0 0 20px #38bdf8, 0 4px 10px rgba(0,0,0,0.6);
   position: absolute;
-  bottom: 12px;
+  bottom: 10px;
   z-index: 5;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  animation: ballGlow 1s infinite alternate;
-}
-@keyframes ballGlow {
-  0% { transform: scale(0.95); box-shadow: 0 0 15px #38bdf8; }
-  100% { transform: scale(1.15); box-shadow: 0 0 30px #38bdf8, 0 0 45px rgba(56,189,248,0.8); }
 }
 
 .cup-label {
@@ -192,93 +141,6 @@
   font-weight: 800;
   color: #ffd700;
   margin-top: 6px;
-  opacity: 0.9;
-}
-.cup-badge {
-  font-size: 14px;
-  position: absolute;
-  top: 0px;
-  z-index: 20;
-}
-
-/* Chip Selector Row */
-.chip-row {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 2px;
-}
-.casino-chip {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 2px dashed rgba(255,255,255,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 11px;
-  font-weight: 900;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-  transition: all 0.2s;
-}
-.casino-chip:hover {
-  transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 6px 15px rgba(255,215,0,0.5);
-}
-.casino-chip.c10 { background: radial-gradient(circle, #3b82f6, #1d4ed8); }
-.casino-chip.c50 { background: radial-gradient(circle, #ef4444, #b91c1c); }
-.casino-chip.c100 { background: radial-gradient(circle, #10b981, #047857); }
-.casino-chip.c500 { background: radial-gradient(circle, #8b5cf6, #6d28d9); }
-.casino-chip.c1000 { background: radial-gradient(circle, #f59e0b, #b45309); color: #000; border-color: #ffd700; }
-
-/* End Round Center Action Bar */
-.round-action-bar {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-.btn-action-main {
-  flex: 1.2;
-  padding: 12px;
-  background: linear-gradient(135deg, #00e676, #00b0ff);
-  border: none;
-  border-radius: 12px;
-  color: #000;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 14px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,230,118,0.4);
-  transition: all 0.2s;
-}
-.btn-action-main:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,230,118,0.6);
-}
-.btn-action-2x {
-  flex: 1;
-  padding: 12px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  border: none;
-  border-radius: 12px;
-  color: #000;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 14px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-action-2x:hover {
-  transform: translateY(-2px);
-}
-
-#cups-confetti {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  pointer-events: none; z-index: 50;
 }
 </style>
 </head>
@@ -293,51 +155,29 @@
     <div class="gnav-logo">GG <span>Wins</span></div>
     <div class="gnav-game-under-logo">🪄 Magic Shells 3D</div>
   </div>
-  <div class="gnav-game-name">GG Magic Cups</div>
-  <span class="gnav-game-badge" style="background:#f59e0b;color:#000">SHELL GAME</span>
+  <div class="gnav-game-name">Magic Shells</div>
+  <span class="gnav-game-badge" style="background:#ffd700;color:#000">3D SHELLS</span>
   <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
   <div class="gnav-spacer"></div>
   <div id="wallet-chip-target"></div>
-  <button class="btn-wallet-game" onclick="openWalletModal('deposit')" title="Deposit Funds">💳 Deposit</button>
+  <button class="btn-wallet-game" onclick="if(typeof openWalletModal==='function') openWalletModal('deposit')">💳 Deposit</button>
 </nav>
 
 <div class="game-layout">
   <div class="game-area cups-area">
-    <canvas id="cups-confetti"></canvas>
-
-    <div class="cups-stage">
-      <div class="stage-header">
-        <span>GOLDEN SHELL TABLE</span>
-        <span id="stage-status-msg" style="color:#fff">Pick a level &amp; Start Shuffle</span>
+    <div class="cups-stage-3d">
+      <div class="stage-top-banner">
+        <span style="font-weight:900;color:#ffd700">GOLDEN SHELL TABLE</span>
+        <span id="stage-status-msg" style="color:#00e676;font-size:11.5px;font-weight:800">READY TO SHUFFLE</span>
       </div>
 
-      <!-- Levels -->
       <div class="level-tabs">
-        <div class="level-btn active" onclick="selectLevel(3, 2.00, 'Level 1: 3 Cups (Speed Normal)', this)">Lvl 1 (3 Cups)</div>
-        <div class="level-btn" onclick="selectLevel(4, 3.80, 'Level 2: 4 Cups (Speed Fast)', this)">Lvl 2 (4 Cups)</div>
-        <div class="level-btn" onclick="selectLevel(5, 5.00, 'Level 3: 5 Cups (Speed Insane)', this)">Lvl 3 (5 Cups)</div>
+        <div class="level-btn active" onclick="selectLevel(3, 2.0, 'Level 1: 3 Cups', this)">Lvl 1 (3 Cups)</div>
+        <div class="level-btn" onclick="selectLevel(4, 3.8, 'Level 2: 4 Cups', this)">Lvl 2 (4 Cups)</div>
+        <div class="level-btn" onclick="selectLevel(5, 5.0, 'Level 3: 5 Cups', this)">Lvl 3 (5 Cups)</div>
       </div>
 
-      <!-- Result Banner -->
-      <div id="stage-result-banner" class="result-banner"></div>
-
-      <!-- Cups Rack -->
       <div class="cups-rack" id="cups-rack"></div>
-
-      <!-- Quick Action Controls (Always Visible & Active for Instant Replay) -->
-      <div class="round-action-bar" id="round-action-bar">
-        <button class="btn-action-main" id="btn-main-play" onclick="startCupsGame()">▶️ PLAY / SHUFFLE (₹<span id="lbl-bet-val">100</span>)</button>
-        
-      </div>
-
-      <!-- Chip Presets -->
-      <div class="chip-row">
-        <div class="casino-chip c10" onclick="addChip(10)">₹10</div>
-        <div class="casino-chip c50" onclick="addChip(50)">₹50</div>
-        <div class="casino-chip c100" onclick="addChip(100)">₹100</div>
-        <div class="casino-chip c500" onclick="addChip(500)">₹500</div>
-        <div class="casino-chip c1000" onclick="addChip(1000)">₹1k</div>
-      </div>
     </div>
 
     <div class="copyright-footer">
@@ -350,7 +190,7 @@
       <div class="bet-label">Bet Amount</div>
       <div class="bet-input-row">
         <div class="bet-currency">₹</div>
-        <input class="bet-input" id="bet-amt" type="number" value="100.00" min="1" step="10" oninput="updateBetLabels()">
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="10">
         <div class="bet-quick-btns">
           <button class="qbtn" onclick="halveBet()">½</button>
           <button class="qbtn" onclick="doubleBet()">2×</button>
@@ -359,10 +199,8 @@
       </div>
     </div>
 
-    <div class="bet-section" style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn-bet" id="btn-panel-play" onclick="startCupsGame()">🪄 Shuffle &amp; Play</button>
-      
-      
+    <div class="bet-section">
+      <button class="btn-bet" id="btn-play" onclick="startCupsGame()">🪄 SHUFFLE &amp; PLAY</button>
     </div>
 
     <div class="bet-section">
@@ -389,85 +227,30 @@
 <script src="../wallet.js"></script>
 <script src="../auth-guard.js"></script>
 <script>
-updateAllWalletDisplays();
-
-// Audio Synthesizer
-function playSynth(type) {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
-    if (type === 'lift') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.setValueAtTime(300, now);
-      osc.frequency.exponentialRampToValueAtTime(750, now + 0.15);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.15);
-    } else if (type === 'shuffle') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(250 + Math.random()*200, now);
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.linearRampToValueAtTime(0.01, now + 0.06);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.06);
-    } else if (type === 'chip') {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.setValueAtTime(800, now);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.05);
-    }
-  } catch(e) {}
-}
-
 let numCups = 3;
-let currentMultiplier = 2.35;
+let currentMultiplier = 2.0;
 let winningIndex = 0;
 let isShuffling = false;
 let isGuessing = false;
-let lastBet = 100;
+let currentBet = 100;
 let totalProfit = 0, wins = 0, losses = 0;
-
-function updateBetLabels(){
-  const b = parseFloat(document.getElementById('bet-amt').value) || 100;
-  const _lv = document.getElementById('lbl-bet-val'); if(_lv) _lv.textContent = b.toFixed(0);
-  const _l2x = document.getElementById('lbl-bet-2x'); if(_l2x) _l2x.textContent = (b*2).toFixed(0);
-}
-
-function halveBet(){ const el=document.getElementById('bet-amt'); el.value = Math.max(1, (parseFloat(el.value)/2)).toFixed(2); updateBetLabels(); }
-function doubleBet(){ const el=document.getElementById('bet-amt'); el.value = (parseFloat(el.value)*2).toFixed(2); updateBetLabels(); }
-function maxBet(){ const el=document.getElementById('bet-amt'); el.value = Math.floor(getBalance()).toFixed(2); updateBetLabels(); }
-
-function addChip(amount){
-  if(isShuffling || isGuessing) return;
-  const el = document.getElementById('bet-amt');
-  el.value = (parseFloat(el.value || 0) + amount).toFixed(2);
-  updateBetLabels();
-  playSynth('chip');
-}
 
 function selectLevel(cups, mult, label, btn){
   if(isShuffling || isGuessing) return;
   numCups = cups;
   currentMultiplier = mult;
   document.querySelectorAll('.level-tabs .level-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  if(btn) btn.classList.add('active');
   renderCups();
   const msg = document.getElementById('stage-status-msg');
-  if (msg) msg.textContent = label;
-  playSynth('chip');
+  if(msg) msg.textContent = label;
 }
 
 function renderCups(){
   const rack = document.getElementById('cups-rack');
-  if (!rack) return;
+  if(!rack) return;
   rack.innerHTML = '';
+
   for(let i=0; i<numCups; i++){
     const spot = document.createElement('div');
     spot.className = 'cup-spot';
@@ -484,15 +267,10 @@ function renderCups(){
     cup.className = 'magic-cup';
     cup.id = `cup-${i}`;
 
-    const badge = document.createElement('div');
-    badge.className = 'cup-badge';
-    badge.id = `badge-${i}`;
-
     const lbl = document.createElement('div');
     lbl.className = 'cup-label';
     lbl.textContent = `CUP ${i+1}`;
 
-    spot.appendChild(badge);
     spot.appendChild(ball);
     spot.appendChild(cup);
     spot.appendChild(lbl);
@@ -500,219 +278,100 @@ function renderCups(){
   }
 }
 
-renderCups();
-updateBetLabels();
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { renderCups(); updateBetLabels(); });
-} else {
-  renderCups();
-  updateBetLabels();
-}
-window.addEventListener('load', () => { renderCups(); updateBetLabels(); });
-
-
-
 function startCupsGame(){
-  if(!requireAuth()) return;
+  if(typeof requireAuth === 'function' && !requireAuth()) return;
   if(isShuffling || isGuessing) return;
 
-  const bet = parseFloat(document.getElementById('bet-amt').value) || 100;
-  if(bet > getBalance()){ showToast('Insufficient balance'); return; }
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if(isNaN(amt) || amt <= 0){ showToast('Enter a valid bet amount!', 'error'); return; }
 
-  lastBet = bet;
-  setBalance(getBalance() - bet);
+  const curBal = typeof getBalance === 'function' ? getBalance() : 10000;
+  if(amt > curBal){ showToast('Insufficient balance!', 'error'); return; }
+
+  if(typeof setBalance === 'function') setBalance(curBal - amt);
+  currentBet = amt;
 
   isShuffling = true;
   isGuessing = false;
+  document.getElementById('btn-play').disabled = true;
+  document.getElementById('result-container').innerHTML = '';
 
-  document.getElementById('stage-result-banner').style.display = 'none';
-  document.getElementById('bet-amt').disabled = true;
-  document.getElementById('btn-main-play').disabled = true;
-  
-  document.getElementById('btn-panel-play').disabled = true;
-  document.getElementById('stage-status-msg').textContent = '👀 Watch closely! Locating diamond...';
-
-  // Clear badges
-  for(let i=0; i<numCups; i++){
-    const b = document.getElementById(`badge-${i}`);
-    if(b) b.textContent = '';
-  }
-
-  // Initial random ball placement
+  // 1. Reveal ball briefly
   winningIndex = Math.floor(Math.random() * numCups);
-  for(let i=0; i<numCups; i++){
-    const ball = document.getElementById(`ball-${i}`);
-    ball.style.display = (i === winningIndex) ? 'flex' : 'none';
-    document.getElementById(`cup-${i}`).classList.remove('lifted');
-  }
+  renderCups();
 
-  // Step 1: Lift cup to show ball
-  setTimeout(()=>{
-    document.getElementById(`cup-${winningIndex}`).classList.add('lifted');
-    playSynth('lift');
-  }, 250);
+  const winCup = document.getElementById(`cup-${winningIndex}`);
+  if(winCup) winCup.classList.add('lifted');
+  document.getElementById('stage-status-msg').textContent = '👀 Locating Diamond...';
 
-  // Step 2: Lower cup
-  setTimeout(()=>{
-    document.getElementById(`cup-${winningIndex}`).classList.remove('lifted');
-    playSynth('lift');
-  }, 1000);
+  setTimeout(() => {
+    if(winCup) winCup.classList.remove('lifted');
+    document.getElementById('stage-status-msg').textContent = '🌪️ Shuffling Shells...';
 
-  // Step 3: Fast Animated Shuffling
-  setTimeout(()=>{
-    document.getElementById('stage-status-msg').textContent = '🌪️ Shuffling glasses at high speed...';
-    let shuffleCount = 0;
-    const maxShuffles = numCups === 3 ? 12 : numCups === 4 ? 16 : 20;
-    const shuffleSpeed = numCups === 3 ? 110 : numCups === 4 ? 85 : 65; // High speed animations
-
-    const shuffleInterval = setInterval(()=>{
-      const idx1 = Math.floor(Math.random() * numCups);
-      let idx2 = Math.floor(Math.random() * numCups);
-      while(idx2 === idx1) idx2 = Math.floor(Math.random() * numCups);
-
-      const cup1 = document.getElementById(`cup-spot-${idx1}`);
-      const cup2 = document.getElementById(`cup-spot-${idx2}`);
-
-      // Rapid 3D sliding animation
-      cup1.style.transform = `translate(${(idx2-idx1)*45}px, -18px) scale(0.92)`;
-      cup2.style.transform = `translate(${(idx1-idx2)*45}px, 18px) scale(1.08)`;
-      playSynth('shuffle');
-
-      setTimeout(()=>{
-        cup1.style.transform = '';
-        cup2.style.transform = '';
-      }, shuffleSpeed - 20);
-
-      shuffleCount++;
-      if(shuffleCount >= maxShuffles){
+    // 2. Shuffle animation
+    let shuffleTicks = 0;
+    const shuffleInterval = setInterval(() => {
+      const spots = document.querySelectorAll('.cup-spot');
+      spots.forEach(s => {
+        s.style.transform = `translateX(${(Math.random()-0.5)*35}px)`;
+      });
+      shuffleTicks++;
+      if(shuffleTicks >= 12){
         clearInterval(shuffleInterval);
+        spots.forEach(s => s.style.transform = 'none');
         isShuffling = false;
         isGuessing = true;
-        document.getElementById('stage-status-msg').innerHTML = '👉 <strong>Click a cup to reveal the diamond!</strong>';
-        document.getElementById('stage-status-msg').style.color = '#00e676';
+        document.getElementById('stage-status-msg').textContent = '👉 Tap a cup to reveal!';
       }
-    }, shuffleSpeed);
-  }, 1350);
+    }, 120);
+  }, 900);
 }
 
-function pickCup(chosenIndex){
-  if(!isGuessing) return;
+function pickCup(idx){
+  if(!isGuessing || isShuffling) return;
   isGuessing = false;
+  document.getElementById('btn-play').disabled = false;
 
-  const bet = lastBet;
-
-  // USER 10% WIN PROBABILITY (As specified by user request)
-  const isWin = Math.random() < 0.10;
-  if(isWin){
-    winningIndex = chosenIndex;
-  } else {
-    const otherIndices = [];
-    for(let i=0; i<numCups; i++){
-      if(i !== chosenIndex) otherIndices.push(i);
-    }
-    winningIndex = otherIndices[Math.floor(Math.random() * otherIndices.length)];
-  }
-
-  // Update visual ball position to actual outcome
+  // Reveal all cups
   for(let i=0; i<numCups; i++){
-    document.getElementById(`ball-${i}`).style.display = (i === winningIndex) ? 'flex' : 'none';
+    const c = document.getElementById(`cup-${i}`);
+    if(c) c.classList.add('lifted');
   }
 
-  // Lift chosen cup immediately
-  const chosenCup = document.getElementById(`cup-${chosenIndex}`);
-  chosenCup.classList.add('lifted');
-  playSynth('lift');
-
-  // Mark badges
-  document.getElementById(`badge-${chosenIndex}`).textContent = isWin ? '✅' : '❌';
-  if(!isWin) {
-    document.getElementById(`badge-${winningIndex}`).textContent = '💎';
-  }
-
-  // Lift all other cups after 400ms
-  setTimeout(()=>{
-    for(let i=0; i<numCups; i++){
-      document.getElementById(`cup-${i}`).classList.add('lifted');
-    }
-  }, 400);
-
-  const payout = bet * currentMultiplier;
-  const banner = document.getElementById('stage-result-banner');
   const res = document.getElementById('result-container');
-
-  if(isWin){
-    setBalance(getBalance() + payout);
-    totalProfit += (payout - bet);
+  if(idx === winningIndex){
+    const payout = currentBet * currentMultiplier;
+    if(typeof setBalance === 'function') setBalance(getBalance() + payout);
+    totalProfit += payout - currentBet;
     wins++;
-    flashBal('flash-win');
-    launchCupsConfetti();
-    if(typeof playGameSound==='function') playGameSound('win');
-    if(typeof trackGameWager==='function') trackGameWager('GG Magic Cups', bet, payout, true);
-
-    banner.className = 'result-banner win';
-    banner.innerHTML = `🎉 <strong>YOU WON +₹${payout.toFixed(2)} (${currentMultiplier}×)!</strong> Diamond was in Cup ${chosenIndex+1}`;
-    res.innerHTML = `<div class="result-box win"><div class="result-box-title">💎 FOUND DIAMOND!</div><div class="result-box-val">+₹${payout.toFixed(2)}</div></div>`;
-    document.getElementById('stage-status-msg').textContent = `🎉 Correct! Diamond found in Cup ${chosenIndex+1}`;
+    document.getElementById('stage-status-msg').textContent = `🎉 Diamond Found! +₹${payout.toFixed(2)}`;
+    res.innerHTML = `<div class="result-box win" style="padding:8px;text-align:center;font-weight:900;color:#00e676">🎉 Correct Pick! +₹${payout.toFixed(2)} (${currentMultiplier}×)</div>`;
   } else {
-    totalProfit -= bet;
+    totalProfit -= currentBet;
     losses++;
-    flashBal('flash-lose');
-    if(typeof playGameSound==='function') playGameSound('lose');
-    if(typeof trackGameWager==='function') trackGameWager('GG Magic Cups', bet, 0, false);
-
-    banner.className = 'result-banner lose';
-    banner.innerHTML = `💀 <strong>YOU LOST -₹${bet.toFixed(2)}!</strong> You picked Cup ${chosenIndex+1}, but Diamond was in Cup ${winningIndex+1}`;
-    res.innerHTML = `<div class="result-box lose"><div class="result-box-title">💀 EMPTY CUP!</div><div class="result-box-val">-₹${bet.toFixed(2)}</div></div>`;
-    document.getElementById('stage-status-msg').textContent = `Missed! Diamond was in Cup ${winningIndex+1}`;
+    document.getElementById('stage-status-msg').textContent = `💀 Empty Cup! -₹${currentBet.toFixed(2)}`;
+    res.innerHTML = `<div class="result-box lose" style="padding:8px;text-align:center;font-weight:900;color:#ef4444">💀 Empty Cup! -₹${currentBet.toFixed(2)}</div>`;
   }
-
-  const pEl = document.getElementById('stat-profit');
-  pEl.textContent = (totalProfit>=0?'+':'')+' ₹'+totalProfit.toFixed(2);
-  pEl.className = 'stat-box-val '+(totalProfit>=0?'green':'red');
-  document.getElementById('stat-wins').textContent = wins;
-  document.getElementById('stat-losses').textContent = losses;
-
-  // Reactivate all buttons immediately for 1-click Play Again
-  document.getElementById('bet-amt').disabled = false;
-  document.getElementById('btn-main-play').disabled = false;
-  
-  document.getElementById('btn-panel-play').disabled = false;
-  document.getElementById('btn-main-play').innerHTML = `🔁 PLAY AGAIN (₹<span id="lbl-bet-val">${bet.toFixed(0)}</span>)`;
-  document.getElementById('btn-panel-play').textContent = '🔁 Shuffle Again';
+  updateStats();
 }
 
-function launchCupsConfetti(){
-  const canvas = document.getElementById('cups-confetti');
-  const ctx = canvas.getContext('2d');
-  canvas.width  = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
-  const particles = [];
-  const colors = ['#38bdf8','#ffd700','#ffffff','#00e676'];
-  for(let i=0;i<70;i++){
-    particles.push({
-      x:canvas.width/2, y:canvas.height/2,
-      vx:(Math.random()-0.5)*14, vy:(Math.random()-0.8)*15,
-      size:Math.random()*7+3, color:colors[Math.floor(Math.random()*colors.length)],
-      alpha:1
-    });
+function updateStats(){
+  const p = document.getElementById('stat-profit');
+  if(p){
+    p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
+    p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
   }
-  function render(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    let alive=false;
-    particles.forEach(p=>{
-      p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.alpha-=0.015;
-      if(p.alpha>0){
-        alive=true;
-        ctx.fillStyle=p.color;
-        ctx.globalAlpha=Math.max(0,p.alpha);
-        ctx.fillRect(p.x,p.y,p.size,p.size);
-      }
-    });
-    if(alive) requestAnimationFrame(render);
-    else ctx.clearRect(0,0,canvas.width,canvas.height);
-  }
-  render();
+  const w = document.getElementById('stat-wins');
+  if(w) w.textContent = wins;
+  const l = document.getElementById('stat-losses');
+  if(l) l.textContent = losses;
 }
+
+function halveBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
+function doubleBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
+function maxBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=getBalance().toFixed(2); }
+
+renderCups();
 </script>
 </body>
 </html>

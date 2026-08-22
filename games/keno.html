@@ -1,10 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Keno – GG Wins</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Keno Classic 3D – GG Wins</title>
 <link rel="stylesheet" href="../game-shell.css">
+<script src="../security-guard.js"></script>
 <style>
 .keno-area {
   flex: 1;
@@ -12,112 +13,75 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  gap: 18px;
-  overflow: auto;
+  padding: 14px;
+  background: radial-gradient(circle at 50% 30%, #1e1022 0%, #0c0512 70%, #030105 100%);
   position: relative;
-  background: radial-gradient(ellipse at 50% 50%, #0d2838 0%, #040d14 100%);
+  overflow: hidden;
+  user-select: none;
 }
+
+/* 80-Ball Grid Card */
+.keno-board-3d {
+  width: min(540px, 94vw);
+  background: linear-gradient(180deg, #18181b 0%, #09090b 100%);
+  border: 3px solid #ffd700;
+  border-radius: 20px;
+  padding: 12px;
+  box-shadow: 0 15px 45px rgba(0,0,0,0.9), inset 0 0 25px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .keno-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 8px;
-  width: min(520px, 94vw);
+  grid-template-columns: repeat(10, 1fr);
+  gap: 5px;
 }
 .keno-tile {
-  aspect-ratio: 1;
-  background: linear-gradient(145deg, #132b3f, #0c1b28);
+  height: 32px;
+  background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 16px;
+  font-size: 11.5px;
   font-weight: 800;
-  color: #94a3b8;
+  color: #cbd5e1;
   cursor: pointer;
-  user-select: none;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  transition: all 0.15s;
 }
-.keno-tile:hover:not(.disabled) {
-  border-color: #00e676;
-  color: #fff;
-  transform: scale(1.06);
+.keno-tile:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: #ffd700;
 }
 .keno-tile.selected {
-  background: linear-gradient(135deg, #7c4dff, #651fff);
-  border-color: #b388ff;
+  background: #7c4dff;
+  border-color: #a78bfa;
   color: #fff;
-  box-shadow: 0 0 15px rgba(124,77,255,0.6);
-  transform: scale(1.04);
+  box-shadow: 0 0 10px rgba(124,77,255,0.6);
 }
 .keno-tile.drawn {
-  background: #334155;
-  color: #fff;
-  animation: tileStrike 0.3s ease;
-}
-.keno-tile.match {
-  background: linear-gradient(135deg, #ffd700, #ff8c00) !important;
-  border-color: #fff !important;
-  color: #000 !important;
-  box-shadow: 0 0 25px rgba(255,215,0,0.9) !important;
-  animation: matchFlash 0.5s infinite alternate !important;
-  transform: scale(1.1) !important;
-}
-@keyframes matchFlash {
-  0%{box-shadow:0 0 15px rgba(255,215,0,0.6)} 100%{box-shadow:0 0 35px rgba(255,215,0,1)}
-}
-@keyframes tileStrike {
-  0%{transform:scale(0.8)} 50%{transform:scale(1.2)} 100%{transform:scale(1)}
-}
-.keno-toolbar {
-  display: flex;
-  gap: 10px;
-  width: min(520px, 94vw);
-  justify-content: space-between;
-}
-.keno-tool-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #fff;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.keno-tool-btn:hover { background: rgba(255,255,255,0.12); }
-
-.keno-payouts-strip {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  width: min(520px, 94vw);
-  padding: 6px 0;
-}
-.kp-item {
-  flex: 1;
-  text-align: center;
-  padding: 6px 4px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 11px;
-}
-.kp-item.active-hit {
-  background: rgba(255,215,0,0.2);
-  border-color: #ffd700;
-  color: #ffd700;
+  background: #ffd700;
+  color: #000;
+  border-color: #fff;
+  transform: scale(1.1);
   font-weight: 900;
-  box-shadow: 0 0 12px rgba(255,215,0,0.5);
+}
+.keno-tile.matched {
+  background: #00e676 !important;
+  color: #000 !important;
+  border-color: #fff !important;
+  box-shadow: 0 0 15px rgba(0,230,118,0.9);
+  animation: matchGlow 0.3s alternate infinite;
+}
+@keyframes matchGlow {
+  0% { transform: scale(1.1); }
+  100% { transform: scale(1.2); }
 }
 </style>
-<script src="../security-guard.js"></script>
 </head>
 <body>
 
@@ -128,39 +92,43 @@
   </button>
   <div class="gnav-brand-block">
     <div class="gnav-logo">GG <span>Wins</span></div>
-    <div class="gnav-game-under-logo">🎱 GG Keno</div>
+    <div class="gnav-game-under-logo">🎱 Keno Classic 3D</div>
   </div>
-  <div class="gnav-game-name">Keno</div>
-  <span class="gnav-game-badge" style="background:#00e676;color:#000">ORIGINAL</span>
+  <div class="gnav-game-name">Keno Classic</div>
+  <span class="gnav-game-badge" style="background:#ffd700;color:#000">80 BALLS</span>
   <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
   <div class="gnav-spacer"></div>
   <div id="wallet-chip-target"></div>
-  <button class="btn-wallet-game" onclick="openWalletModal('deposit')" title="Deposit Funds">💳 Deposit</button>
+  <button class="btn-wallet-game" onclick="if(typeof openWalletModal==='function') openWalletModal('deposit')">💳 Deposit</button>
 </nav>
 
 <div class="game-layout">
   <div class="game-area keno-area">
-    <div class="keno-toolbar">
-      <span style="font-size:12px;color:#94a3b8;font-weight:700" id="picks-count">Selected: 0/10</span>
-      <div>
-        <button class="keno-tool-btn" onclick="autoPick()">⚡ Auto Pick</button>
-        <button class="keno-tool-btn" onclick="clearPicks()">✕ Clear</button>
+    <div class="keno-board-3d">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;color:#ffd700;padding:0 4px">
+        <span>PICK UP TO 10 NUMBERS:</span>
+        <span id="lbl-keno-status" style="color:#00e676">0/10 SELECTED</span>
+      </div>
+
+      <div class="keno-grid" id="keno-grid"></div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="autoPickKeno()" style="background:rgba(255,255,255,0.08);border:1px solid var(--border);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700">🎲 Auto Pick</button>
+        <button onclick="clearKeno()" style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700">✕ Clear</button>
       </div>
     </div>
 
-    <div class="keno-grid" id="keno-grid"></div>
-
-    <div class="keno-payouts-strip" id="payouts-strip"></div>
-  
-<div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected. Unauthorized Copying Prohibited.</div>
-</div>
+    <div class="copyright-footer">
+      © 2026 GG Wins. Proprietary Algorithm &amp; Code Protected. Unauthorized Copying Prohibited.
+    </div>
+  </div>
 
   <div class="bet-panel">
     <div class="bet-section">
       <div class="bet-label">Bet Amount</div>
       <div class="bet-input-row">
         <div class="bet-currency">₹</div>
-        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="1">
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="10">
         <div class="bet-quick-btns">
           <button class="qbtn" onclick="halveBet()">½</button>
           <button class="qbtn" onclick="doubleBet()">2×</button>
@@ -170,8 +138,7 @@
     </div>
 
     <div class="bet-section">
-      <button class="btn-bet" id="play-btn" onclick="playKeno()">Draw 10 Balls</button>
-      
+      <button class="btn-bet" id="btn-draw" onclick="drawKeno()">🎱 DRAW 20 BALLS</button>
     </div>
 
     <div class="bet-section">
@@ -181,7 +148,7 @@
     <div class="stats-row">
       <div class="stat-box">
         <div class="stat-box-label">Profit</div>
-        <div class="stat-box-val" id="stat-profit">$0.00</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">Wins</div>
@@ -198,244 +165,153 @@
 <script src="../wallet.js"></script>
 <script src="../auth-guard.js"></script>
 <script>
-function updateBal(){ updateAllWalletDisplays(); }
-updateBal();
-
-const TOTAL_NUMS = 40;
-const DRAW_COUNT = 10;
-const MAX_PICKS = 10;
-
-const PAYOUT_TABLES = {
-  1: { 1: 3.5 },
-  2: { 1: 1.5, 2: 8.0 },
-  3: { 2: 2.5, 3: 24.0 },
-  4: { 2: 1.8, 3: 8.0, 4: 80.0 },
-  5: { 3: 4.0, 4: 25.0, 5: 300.0 },
-  6: { 3: 2.5, 4: 15.0, 5: 120.0, 6: 800.0 },
-  7: { 3: 1.5, 4: 8.0, 5: 50.0, 6: 350.0, 7: 2000.0 },
-  8: { 4: 5.0, 5: 25.0, 6: 150.0, 7: 1000.0, 8: 5000.0 },
-  9: { 4: 3.0, 5: 15.0, 6: 80.0, 7: 500.0, 8: 2500.0, 9: 10000.0 },
-  10: { 4: 2.0, 5: 10.0, 6: 40.0, 7: 200.0, 8: 1000.0, 9: 5000.0, 10: 25000.0 }
-};
-
-let selected = new Set();
-let isPlaying = false;
+const selectedNumbers = new Set();
+let isDrawing = false;
 let totalProfit = 0, wins = 0, losses = 0;
 
-function buildGrid(){
+function buildKenoGrid(){
   const grid = document.getElementById('keno-grid');
   grid.innerHTML = '';
-  for(let i=1; i<=TOTAL_NUMS; i++){
+  for(let i=1; i<=80; i++){
     const tile = document.createElement('div');
-    tile.className = 'keno-tile' + (selected.has(i) ? ' selected' : '');
+    tile.className = 'keno-tile';
+    tile.id = `k-tile-${i}`;
     tile.textContent = i;
-    tile.dataset.num = i;
-    tile.onclick = () => togglePick(i, tile);
+    tile.onclick = () => toggleNumber(i, tile);
     grid.appendChild(tile);
   }
 }
-buildGrid();
+buildKenoGrid();
 
-function togglePick(num, tile){
-  if(isPlaying) return;
-  if(selected.has(num)){
-    selected.delete(num);
+function toggleNumber(num, tile){
+  if(isDrawing) return;
+  if(selectedNumbers.has(num)){
+    selectedNumbers.delete(num);
     tile.classList.remove('selected');
   } else {
-    if(selected.size >= MAX_PICKS){
-      showToast('Maximum 10 numbers allowed');
+    if(selectedNumbers.size >= 10){
+      showToast('Maximum 10 numbers allowed!', 'info');
       return;
     }
-    selected.add(num);
+    selectedNumbers.add(num);
     tile.classList.add('selected');
   }
-  document.getElementById('picks-count').textContent = `Selected: ${selected.size}/${MAX_PICKS}`;
-  updatePayoutsStrip();
+  document.getElementById('lbl-keno-status').textContent = `${selectedNumbers.size}/10 SELECTED`;
 }
 
-function autoPick(){
-  if(isPlaying) return;
-  selected.clear();
-  while(selected.size < 5){
-    selected.add(Math.floor(Math.random() * TOTAL_NUMS) + 1);
+function autoPickKeno(){
+  if(isDrawing) return;
+  clearKeno();
+  while(selectedNumbers.size < 5){
+    const r = Math.floor(Math.random() * 80) + 1;
+    selectedNumbers.add(r);
+    const tile = document.getElementById(`k-tile-${r}`);
+    if(tile) tile.classList.add('selected');
   }
-  buildGrid();
-  document.getElementById('picks-count').textContent = `Selected: ${selected.size}/${MAX_PICKS}`;
-  updatePayoutsStrip();
+  document.getElementById('lbl-keno-status').textContent = `${selectedNumbers.size}/10 SELECTED`;
 }
 
-function clearPicks(){
-  if(isPlaying) return;
-  selected.clear();
-  buildGrid();
-  document.getElementById('picks-count').textContent = `Selected: 0/${MAX_PICKS}`;
-  updatePayoutsStrip();
+function clearKeno(){
+  if(isDrawing) return;
+  selectedNumbers.clear();
+  document.querySelectorAll('.keno-tile').forEach(t => {
+    t.className = 'keno-tile';
+  });
+  document.getElementById('lbl-keno-status').textContent = `0/10 SELECTED`;
 }
 
-function updatePayoutsStrip(activeHits = null){
-  const strip = document.getElementById('payouts-strip');
-  strip.innerHTML = '';
-  const count = selected.size;
-  if(count === 0){
-    strip.innerHTML = '<div style="font-size:12px;color:#94a3b8;margin:auto">Pick numbers to view multipliers</div>';
+function drawKeno(){
+  if(typeof requireAuth === 'function' && !requireAuth()) return;
+  if(isDrawing) return;
+
+  if(selectedNumbers.size === 0){
+    showToast('Select at least 1 number first!', 'info');
     return;
   }
-  const table = PAYOUT_TABLES[count] || {};
-  for(let h=1; h<=count; h++){
-    const mult = table[h] || 0;
-    if(mult > 0){
-      const div = document.createElement('div');
-      div.className = 'kp-item' + (activeHits === h ? ' active-hit' : '');
-      div.innerHTML = `<div>${h} Hits</div><div style="font-weight:800">${mult}×</div>`;
-      strip.appendChild(div);
-    }
-  }
-}
-
-function playKeno(){ if(!requireAuth()) return;
-  if(isPlaying) return;
-  if(selected.size === 0){ showToast('Select at least 1 number'); return; }
 
   const amt = parseFloat(document.getElementById('bet-amount').value);
-  if(isNaN(amt) || amt <= 0){ showToast('Enter valid amount'); return; }
-  if(amt > getBalance()){ showToast('Insufficient balance'); return; }
+  if(isNaN(amt) || amt <= 0){ showToast('Enter a valid bet amount!', 'error'); return; }
 
-  setBalance(getBalance() - amt);
-  if(typeof playGameSound === 'function') playGameSound('bet');
+  const curBal = typeof getBalance === 'function' ? getBalance() : 10000;
+  if(amt > curBal){ showToast('Insufficient balance!', 'error'); return; }
 
-  isPlaying = true;
-  document.getElementById('play-btn').disabled = true;
-  buildGrid();
+  if(typeof setBalance === 'function') setBalance(curBal - amt);
+  isDrawing = true;
+  document.getElementById('btn-draw').disabled = true;
 
-  // House edge bias: 80% forced 0 hits or low hits
-  let drawn = [];
-  const biasLoss = Math.random() < 0.80;
-  if(biasLoss){
-    const unpicked = [];
-    for(let i=1; i<=TOTAL_NUMS; i++){ if(!selected.has(i)) unpicked.push(i); }
-    // Pick mostly from unpicked
-    while(drawn.length < DRAW_COUNT && unpicked.length > 0){
-      const idx = Math.floor(Math.random() * unpicked.length);
-      drawn.push(unpicked.splice(idx, 1)[0]);
-    }
-  } else {
-    const all = Array.from({length: TOTAL_NUMS}, (_, i) => i + 1);
-    while(drawn.length < DRAW_COUNT){
-      const idx = Math.floor(Math.random() * all.length);
-      drawn.push(all.splice(idx, 1)[0]);
+  // Clear previous drawn classes but keep selected
+  for(let i=1; i<=80; i++){
+    const t = document.getElementById(`k-tile-${i}`);
+    if(t){
+      t.classList.remove('drawn', 'matched');
+      if(selectedNumbers.has(i)) t.classList.add('selected');
     }
   }
 
-  let matchHits = 0;
-  drawn.forEach((n, i) => {
+  // Draw 20 random numbers
+  const drawn = [];
+  while(drawn.length < 20){
+    const r = Math.floor(Math.random() * 80) + 1;
+    if(!drawn.includes(r)) drawn.push(r);
+  }
+
+  let hits = 0;
+  drawn.forEach((num, idx) => {
     setTimeout(() => {
-      const tile = document.querySelector(`.keno-tile[data-num="${n}"]`);
+      const tile = document.getElementById(`k-tile-${num}`);
       if(tile){
-        if(selected.has(n)){
-          tile.className = 'keno-tile match';
-          matchHits++;
-          if(typeof playGameSound === 'function') playGameSound('gem');
+        if(selectedNumbers.has(num)){
+          tile.className = 'keno-tile matched';
+          hits++;
         } else {
           tile.className = 'keno-tile drawn';
-          if(typeof playGameSound === 'function') playGameSound('tick');
         }
       }
 
-      if(i === DRAW_COUNT - 1){
-        setTimeout(() => resolveKeno(matchHits, amt), 400);
+      if(idx === 19){
+        finishKenoRound(amt, hits);
       }
-    }, i * 200);
+    }, idx * 90);
   });
 }
 
-function launchKenoConfetti(){
-  let canvas = document.getElementById('keno-confetti');
-  if(!canvas){
-    canvas = document.createElement('canvas');
-    canvas.id = 'keno-confetti';
-    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;';
-    document.querySelector('.keno-area').appendChild(canvas);
-  }
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
+function finishKenoRound(betAmt, hits){
+  isDrawing = false;
+  document.getElementById('btn-draw').disabled = false;
 
-  const particles = [];
-  const colors = ['#ffd700', '#00e676', '#00bcd4', '#ff8c00', '#ffffff'];
-  for(let i=0; i<65; i++){
-    particles.push({
-      x: canvas.width/2, y: canvas.height/2,
-      vx: (Math.random()-0.5)*14, vy: (Math.random()-0.8)*15,
-      size: Math.random()*7+3, color: colors[Math.floor(Math.random()*colors.length)],
-      alpha: 1
-    });
-  }
+  const mults = { 0: 0, 1: 1.5, 2: 3.0, 3: 8.0, 4: 20.0, 5: 50.0, 6: 150.0, 7: 500.0, 8: 1000.0, 9: 2500.0, 10: 10000.0 };
+  const mult = mults[hits] || 0;
+  const payout = betAmt * mult;
 
-  function render(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    let alive = false;
-    particles.forEach(p => {
-      p.x += p.vx; p.y += p.vy; p.vy += 0.35; p.alpha -= 0.015;
-      if(p.alpha > 0){
-        alive = true;
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.fillRect(p.x, p.y, p.size, p.size);
-      }
-    });
-    if(alive) requestAnimationFrame(render);
-    else ctx.clearRect(0,0,canvas.width,canvas.height);
-  }
-  render();
-}
-
-function resolveKeno(hits, amt){
-  isPlaying = false;
-  document.getElementById('play-btn').disabled = false;
-
-  const table = PAYOUT_TABLES[selected.size] || {};
-  const mult = table[hits] || 0;
-  const payout = amt * mult;
-  const resContainer = document.getElementById('result-container');
-
-  updatePayoutsStrip(hits);
-
-  if(mult > 0){
-    setBalance(getBalance() + payout);
-    totalProfit += payout - amt;
+  const res = document.getElementById('result-container');
+  if(payout >= betAmt){
+    if(typeof setBalance === 'function') setBalance(getBalance() + payout);
+    totalProfit += payout - betAmt;
     wins++;
-    flashBal('flash-win');
-    launchKenoConfetti();
-    if(typeof playGameSound === 'function') playGameSound('win');
-    if(typeof trackGameWager === 'function') trackGameWager('GG Keno', amt, payout, true);
-    resContainer.innerHTML = `<div class="result-box win"><div class="result-box-title">🎉 ${hits} Hits!</div><div class="result-box-val">+₹${payout.toFixed(2)} (${mult}×)</div></div>`;
+    res.innerHTML = `<div class="result-box win" style="padding:8px;text-align:center;font-weight:900;color:#00e676">🎉 ${hits} Hits! +₹${payout.toFixed(2)} (${mult}×)</div>`;
   } else {
-    totalProfit -= amt;
+    totalProfit -= betAmt;
     losses++;
-    flashBal('flash-lose');
-    if(typeof playGameSound === 'function') playGameSound('lose');
-    if(typeof trackGameWager === 'function') trackGameWager('GG Keno', amt, 0, false);
-    resContainer.innerHTML = `<div class="result-box lose"><div class="result-box-title">💸 ${hits} Hits</div><div class="result-box-val">-₹${amt.toFixed(2)}</div></div>`;
+    res.innerHTML = `<div class="result-box lose" style="padding:8px;text-align:center;font-weight:900;color:#ef4444">💀 ${hits} Hits! -₹${betAmt.toFixed(2)}</div>`;
   }
-
   updateStats();
-  setTimeout(() => resContainer.innerHTML = '', 4000);
 }
 
 function updateStats(){
   const p = document.getElementById('stat-profit');
-  p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
-  p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
-  document.getElementById('stat-wins').textContent = wins;
-  document.getElementById('stat-losses').textContent = losses;
+  if(p){
+    p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
+    p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
+  }
+  const w = document.getElementById('stat-wins');
+  if(w) w.textContent = wins;
+  const l = document.getElementById('stat-losses');
+  if(l) l.textContent = losses;
 }
 
-function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
-function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
-function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); }
+function halveBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
+function doubleBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
+function maxBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=getBalance().toFixed(2); }
 </script>
 </body>
 </html>
-
-
-

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Deposit Funds &amp; Claim Bonus – GG Wins</title>
+<link rel="stylesheet" href="style.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Space+Grotesk:wght@500;700;800;900&display=swap');
+
+:root {
+  --bg: #090e17;
+  --card: #111827;
+  --card2: #1e293b;
+  --green: #00e676;
+  --gold: #ffd700;
+  --blue: #00b0ff;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-gold: rgba(255, 215, 0, 0.3);
+}
+
+body {
+  background: radial-gradient(circle at 50% 10%, #162032 0%, #070c16 80%, #03050a 100%);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.dep-header {
+  height: 60px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-gold);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.dep-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dep-logo span { color: var(--gold); }
+.dep-back-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.dep-back-btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: var(--green);
+}
+
+/* Main Container */
+.dep-container {
+  max-width: 680px;
+  margin: 24px auto 40px;
+  padding: 0 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dep-card {
+  background: linear-gradient(180deg, #111827 0%, #0b0f19 100%);
+  border: 1.5px solid var(--border-gold);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(255,215,0,0.08);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dep-title-sec {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 14px;
+}
+.dep-main-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Currency Tabs */
+.currency-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: rgba(0,0,0,0.3);
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.curr-tab {
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #94a3b8;
+}
+.curr-tab.active {
+  background: linear-gradient(135deg, var(--green), #00b0ff);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(0,230,118,0.4);
+}
+
+/* 3 QR Tab Switcher */
+.qr-rotator-box {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1.5px solid var(--border-gold);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+}
+.qr-selector-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.qr-btn-tab {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.qr-btn-tab.active {
+  background: rgba(0,230,118,0.2);
+  border-color: var(--green);
+  box-shadow: 0 0 15px rgba(0,230,118,0.3);
+}
+.qr-btn-tab-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  color: #fff;
+}
+.qr-btn-tab.active .qr-btn-tab-name { color: var(--green); }
+.qr-btn-tab-upi {
+  font-size: 10px;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qr-image-wrapper {
+  background: #fff;
+  padding: 12px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qr-image-wrapper img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.upi-details-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.upi-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: var(--green);
+}
+.btn-copy {
+  background: linear-gradient(135deg, #00e676, #00b0ff);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-copy:hover { transform: translateY(-1px); filter: brightness(1.1); }
+
+/* Amount & Presets */
+.amount-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.amount-input-box {
+  display: flex;
+  background: #090e17;
+  border: 1.5px solid var(--border-gold);
+  border-radius: 12px;
+  height: 48px;
+  overflow: hidden;
+  align-items: center;
+}
+.amount-sym {
+  padding: 0 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--green);
+  background: rgba(255,255,255,0.03);
+  border-right: 1px solid var(--border);
+}
+.amount-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  padding: 0 14px;
+  outline: none;
+}
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.btn-preset {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 4px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.btn-preset:hover {
+  background: rgba(0,230,118,0.15);
+  border-color: var(--green);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Coupons Box */
+.coupon-box {
+  background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(0,230,118,0.08));
+  border: 1.5px dashed var(--border-gold);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.coupon-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.coupon-item {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.coupon-item.selected {
+  border-color: var(--green);
+  background: rgba(0,230,118,0.15);
+  box-shadow: 0 0 15px rgba(0,230,118,0.3);
+}
+
+/* UTR & Submit */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+.form-input {
+  background: #090e17;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  height: 42px;
+  padding: 0 12px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  outline: none;
+}
+.form-input:focus {
+  border-color: var(--green);
+}
+
+.btn-submit-dep {
+  background: linear-gradient(135deg, #00e676, #00b0ff);
+  border: none;
+  border-radius: 12px;
+  height: 48px;
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(0,230,118,0.4);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-submit-dep:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0,230,118,0.6);
+}
+</style>
+</head>
+<body>
+
+<header class="dep-header">
+  <div class="dep-logo">
+    <span>GG</span> WINS 💳 DEPOSIT PORTAL
+  </div>
+  <button class="dep-back-btn" onclick="window.location.href='index.html'">
+    ← Return to Lobby
+  </button>
+</header>
+
+<div class="dep-container">
+  <div class="dep-card">
+    <div class="dep-title-sec">
+      <div class="dep-main-title">
+        <span>⚡</span> Instant Funds &amp; Deposit Bonus
+      </div>
+      <span style="font-size:11px;font-weight:800;color:var(--green);background:rgba(0,230,118,0.15);padding:4px 10px;border-radius:20px">
+        ACTIVE
+      </span>
+    </div>
+
+    <!-- Currency Selector -->
+    <div class="currency-selector">
+      <div class="curr-tab active" id="tab-inr" onclick="setCurrency('inr')">
+        <span>🇮🇳</span> Real INR (UPI / QR)
+      </div>
+      <div class="curr-tab" id="tab-usdt" onclick="setCurrency('usdt')">
+        <span>₮</span> USDT Crypto (TRC-20)
+      </div>
+    </div>
+
+    <!-- UPI QR Section -->
+    <div class="qr-rotator-box" id="upi-box">
+      <div class="qr-selector-row">
+        <div class="qr-btn-tab active" id="qr-tab-0" onclick="switchQR(0)">
+          <div class="qr-btn-tab-name">QR 1 (SBI)</div>
+          <div class="qr-btn-tab-upi">amdasrarbasha-1</div>
+        </div>
+        <div class="qr-btn-tab" id="qr-tab-1" onclick="switchQR(1)">
+          <div class="qr-btn-tab-name">QR 2 (HDFC)</div>
+          <div class="qr-btn-tab-upi">kabilanr2210</div>
+        </div>
+        <div class="qr-btn-tab" id="qr-tab-2" onclick="switchQR(2)">
+          <div class="qr-btn-tab-name">QR 3 (SLC)</div>
+          <div class="qr-btn-tab-upi">txchem@slc</div>
+        </div>
+      </div>
+
+      <div class="qr-image-wrapper">
+        <img id="qr-display-img" src="assets/qr1.jpg" alt="Payment QR Code">
+      </div>
+
+      <div class="upi-details-row">
+        <span class="upi-text" id="upi-display-text">amdasrarbasha-1@oksbi</span>
+        <button class="btn-copy" id="btn-copy-upi" onclick="copyUPI()">📋 Copy UPI</button>
+      </div>
+    </div>
+
+    <!-- USDT Section -->
+    <div class="qr-rotator-box" id="usdt-box" style="display:none">
+      <div class="upi-details-row" style="flex-direction:column;gap:8px;text-align:center">
+        <span style="font-size:11.5px;color:#94a3b8">USDT (TRC-20) Deposit Address:</span>
+        <span class="upi-text" style="font-size:13px;word-break:break-all">TJkw89vQN45xV7R3bYpQe98M2xZ1L0</span>
+        <button class="btn-copy" onclick="navigator.clipboard.writeText('TJkw89vQN45xV7R3bYpQe98M2xZ1L0'); showToastMsg('Address Copied!')">📋 Copy TRC-20 Address</button>
+      </div>
+    </div>
+
+    <!-- Amount Section -->
+    <div class="amount-section">
+      <label class="form-label">Deposit Amount (<span id="lbl-curr-sym">₹</span>)</label>
+      <div class="amount-input-box">
+        <span class="amount-sym" id="box-curr-sym">₹</span>
+        <input type="number" class="amount-input" id="dep-amount" value="1000" min="500" max="100000" step="100" oninput="calculateBonus()">
+      </div>
+      <div class="preset-grid" id="inr-presets">
+        <div class="btn-preset" onclick="setAmt(500)">+₹500</div>
+        <div class="btn-preset" onclick="setAmt(1000)">+₹1,000</div>
+        <div class="btn-preset" onclick="setAmt(2500)">+₹2,500</div>
+        <div class="btn-preset" onclick="setAmt(5000)">+₹5,000</div>
+        <div class="btn-preset" onclick="setAmt(10000)">+₹10,000</div>
+        <div class="btn-preset" onclick="setAmt(25000)">+₹25,000</div>
+        <div class="btn-preset" onclick="setAmt(50000)">+₹50,000</div>
+        <div class="btn-preset" onclick="setAmt(100000)">+₹1,00,000</div>
+      </div>
+    </div>
+
+    <!-- Promo Coupons -->
+    <div class="coupon-box" id="coupon-container">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:13px;color:var(--gold)">🎟️ Select Deposit Bonus Coupon</span>
+        <span style="font-size:10px;font-weight:800;color:var(--green)">1-TIME BONUS</span>
+      </div>
+      <div class="coupon-row">
+        <div class="coupon-item selected" id="c-gg1675" onclick="selectCoupon('GG1675')">
+          <div style="font-weight:900;color:var(--gold);font-size:13px">GG1675</div>
+          <div style="font-size:11px;color:#94a3b8">Up to 100% Match Bonus (Min ₹1,675)</div>
+        </div>
+        <div class="coupon-item" id="c-instant1500" onclick="selectCoupon('INSTANT1500')">
+          <div style="font-weight:900;color:var(--gold);font-size:13px">INSTANT1500</div>
+          <div style="font-size:11px;color:#94a3b8">Flat +₹1,500 Instant Bonus (Min ₹2,500)</div>
+        </div>
+      </div>
+      <div id="bonus-preview-card" style="background:rgba(0,230,118,0.1);border:1px solid var(--green);border-radius:8px;padding:8px 12px;font-size:12px;display:flex;justify-content:space-between">
+        <span>Total Credited:</span>
+        <span style="font-weight:900;color:var(--gold)" id="total-credited-val">₹1,000.00</span>
+      </div>
+    </div>
+
+    <!-- Submission Fields -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Your Name</label>
+        <input type="text" class="form-input" id="dep-user-name" placeholder="Sender / Account Name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">12-Digit UTR Number / TxID <span style="color:#ef4444">*</span></label>
+        <input type="text" class="form-input" id="dep-utr" maxlength="12" placeholder="e.g. 423189012345" required>
+      </div>
+    </div>
+
+    <button class="btn-submit-dep" onclick="submitDepositOrder()">
+      <span>⚡</span> Submit &amp; Verify Deposit
+    </button>
+  </div>
+</div>
+
+<script src="wallet.js"></script>
+<script>
+const QR_CONFIGS = [
+  { img: 'assets/qr1.jpg', upi: 'amdasrarbasha-1@oksbi' },
+  { img: 'assets/qr2.jpg', upi: 'kabilanr2210@okhdfcbank' },
+  { img: 'assets/qr3.jpg', upi: 'txchem@slc' }
+];
+
+let selectedQR = 0;
+let currentCurrency = 'inr';
+let activeCoupon = 'GG1675';
+
+function switchQR(idx){
+  selectedQR = idx;
+  document.querySelectorAll('.qr-btn-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.getElementById('qr-display-img').src = QR_CONFIGS[idx].img;
+  document.getElementById('upi-display-text').textContent = QR_CONFIGS[idx].upi;
+}
+
+function copyUPI(){
+  navigator.clipboard.writeText(QR_CONFIGS[selectedQR].upi);
+  const btn = document.getElementById('btn-copy-upi');
+  btn.textContent = 'Copied! ✓';
+  setTimeout(() => btn.textContent = '📋 Copy UPI', 1500);
+}
+
+function setCurrency(c){
+  currentCurrency = c;
+  document.getElementById('tab-inr').classList.toggle('active', c === 'inr');
+  document.getElementById('tab-usdt').classList.toggle('active', c === 'usdt');
+  document.getElementById('upi-box').style.display = c === 'inr' ? 'flex' : 'none';
+  document.getElementById('usdt-box').style.display = c === 'usdt' ? 'flex' : 'none';
+  document.getElementById('coupon-container').style.display = c === 'inr' ? 'flex' : 'none';
+  document.getElementById('lbl-curr-sym').textContent = c === 'inr' ? '₹' : '₮';
+  document.getElementById('box-curr-sym').textContent = c === 'inr' ? '₹' : '₮';
+  document.getElementById('dep-amount').value = c === 'inr' ? '1000' : '100';
+  calculateBonus();
+}
+
+function setAmt(val){
+  document.getElementById('dep-amount').value = val;
+  calculateBonus();
+}
+
+function selectCoupon(code){
+  activeCoupon = (activeCoupon === code) ? '' : code;
+  document.getElementById('c-gg1675').classList.toggle('selected', activeCoupon === 'GG1675');
+  document.getElementById('c-instant1500').classList.toggle('selected', activeCoupon === 'INSTANT1500');
+  calculateBonus();
+}
+
+function calculateBonus(){
+  const amt = parseFloat(document.getElementById('dep-amount').value) || 0;
+  let bonus = 0;
+  if(currentCurrency === 'inr'){
+    if(activeCoupon === 'GG1675' && amt >= 1675){
+      bonus = amt >= 10000 ? amt : (amt >= 5000 ? amt * 0.75 : (amt >= 2500 ? amt * 0.5 : amt * 0.3));
+    } else if(activeCoupon === 'INSTANT1500' && amt >= 2500){
+      bonus = 1500;
+    }
+  }
+  const total = amt + bonus;
+  document.getElementById('total-credited-val').textContent = (currentCurrency === 'inr' ? '₹' : '₮ ') + total.toFixed(2) + (bonus > 0 ? ` (+${bonus.toFixed(2)} Bonus)` : '');
+}
+
+function submitDepositOrder(){
+  const amt = parseFloat(document.getElementById('dep-amount').value);
+  const utr = document.getElementById('dep-utr').value.trim();
+  const name = document.getElementById('dep-user-name').value.trim() || 'Player';
+
+  if(!amt || amt <= 0){ alert('Please enter a valid deposit amount!'); return; }
+  if(currentCurrency === 'inr' && (!utr || utr.length < 6)){ alert('Please enter valid 12-digit UTR number from your payment app!'); return; }
+
+  const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
+  const orderId = 'ORD-DEP-' + Math.floor(100000 + Math.random()*900000);
+
+  // Submit to server
+  fetch('/api/deposit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      orderId: orderId,
+      userId: session.id || 'USER-ONLINE',
+      username: session.username || name,
+      amount: amt,
+      currency: currentCurrency === 'inr' ? 'INR' : 'USDT',
+      utr: utr,
+      coupon: activeCoupon
+    })
+  }).catch(() => {});
+
+  if(typeof addTransaction === 'function'){
+    addTransaction({
+      orderId: orderId,
+      type: 'deposit',
+      amount: amt,
+      wallet: currentCurrency === 'inr' ? 'real' : 'usdt',
+      status: 'Pending Approval',
+      utr: utr,
+      date: new Date().toLocaleString()
+    });
+  }
+
+  alert(`✅ Deposit request submitted successfully!\nOrder ID: ${orderId}\nAmount: ${currentCurrency === 'inr' ? '₹' : '₮'}${amt.toFixed(2)}\nOur automated banking gateway is verifying your UTR.`);
+  window.location.href = 'index.html';
+}
+
+// Auto load session name
+try {
+  const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
+  if(session.username) document.getElementById('dep-user-name').value = session.username;
+} catch(e){}
+
+calculateBonus();
+</script>
+</body>
+</html>

@@ -1,63 +1,34 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Plinko – GG Wins</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Plinko Drops 3D – GG Wins</title>
 <link rel="stylesheet" href="../game-shell.css">
+<script src="../security-guard.js"></script>
 <style>
 .plinko-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px;
-  gap: 12px;
+  justify-content: center;
+  padding: 12px;
+  background: radial-gradient(ellipse at 50% 30%, #0f172a 0%, #060b14 70%, #020408 100%);
+  position: relative;
   overflow: hidden;
+  user-select: none;
 }
-#plinko-canvas {
-  flex: 1;
-  width: 100%;
-  max-width: 560px;
-  display: block;
-  border-radius: 12px;
-  background: #081018;
-  cursor: pointer;
-}
-.plinko-buckets {
-  display: flex;
-  width: 100%;
-  max-width: 560px;
-  gap: 3px;
-}
-.bucket {
-  flex: 1;
-  text-align: center;
-  padding: 6px 2px;
-  border-radius: 6px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 10px;
-  font-weight: 800;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-}
-.bucket.hit { animation: bucketHit 0.5s ease; }
-@keyframes bucketHit { 0%{transform:scale(1)} 30%{transform:scale(1.2)} 100%{transform:scale(1)} }
-/* Risk color coding */
-.b-mega { background: rgba(255,215,0,0.15); color: var(--gold); border-color: rgba(255,215,0,0.3); }
-.b-high { background: rgba(255,107,53,0.15); color: var(--orange); border-color: rgba(255,107,53,0.3); }
-.b-mid { background: rgba(255,193,7,0.1); color: #FFC107; border-color: rgba(255,193,7,0.25); }
-.b-low { background: rgba(0,230,118,0.1); color: var(--green); border-color: rgba(0,230,118,0.25); }
-.b-safe { background: rgba(0,176,255,0.1); color: var(--blue); border-color: rgba(0,176,255,0.25); }
 
-.drop-btn-row {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-  max-width: 560px;
+#plinko-canvas {
+  background: rgba(15, 23, 42, 0.6);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 15px 45px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.8);
+  max-width: 95vw;
+  max-height: 65vh;
 }
 </style>
-<script src="../security-guard.js"></script>
 </head>
 <body>
 
@@ -68,30 +39,30 @@
   </button>
   <div class="gnav-brand-block">
     <div class="gnav-logo">GG <span>Wins</span></div>
-    <div class="gnav-game-under-logo">🎯 GG Plinko</div>
+    <div class="gnav-game-under-logo">⚽ Plinko Drops 3D</div>
   </div>
-  <div class="gnav-game-name">Plinko</div>
-  <span class="gnav-game-badge">ORIGINAL</span>
+  <div class="gnav-game-name">Plinko Drops</div>
+  <span class="gnav-game-badge" style="background:#00e676;color:#000">3D PHYSICS</span>
   <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
   <div class="gnav-spacer"></div>
   <div id="wallet-chip-target"></div>
-  <button class="btn-wallet-game" onclick="openWalletModal('deposit')" title="Deposit Funds">💳 Deposit</button>
+  <button class="btn-wallet-game" onclick="if(typeof openWalletModal==='function') openWalletModal('deposit')">💳 Deposit</button>
 </nav>
 
 <div class="game-layout">
   <div class="game-area plinko-area">
-    <canvas id="plinko-canvas"></canvas>
-    <div class="plinko-buckets" id="plinko-buckets"></div>
-  
-<div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected. Unauthorized Copying Prohibited.</div>
-</div>
+    <canvas id="plinko-canvas" width="480" height="420"></canvas>
+    <div class="copyright-footer">
+      © 2026 GG Wins. Proprietary Algorithm &amp; Code Protected. Unauthorized Copying Prohibited.
+    </div>
+  </div>
 
   <div class="bet-panel">
     <div class="bet-section">
       <div class="bet-label">Bet Amount</div>
       <div class="bet-input-row">
         <div class="bet-currency">₹</div>
-        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="1">
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="10">
         <div class="bet-quick-btns">
           <button class="qbtn" onclick="halveBet()">½</button>
           <button class="qbtn" onclick="doubleBet()">2×</button>
@@ -103,37 +74,24 @@
     <div class="bet-section">
       <div class="bet-label">Risk Level</div>
       <div class="seg-ctrl" id="risk-ctrl">
-        <div class="seg-btn" data-risk="low">Low</div>
-        <div class="seg-btn active" data-risk="medium">Medium</div>
-        <div class="seg-btn" data-risk="high">High</div>
+        <div class="seg-btn" data-risk="low" onclick="setRisk('low', this)">Low</div>
+        <div class="seg-btn active" data-risk="medium" onclick="setRisk('medium', this)">Med</div>
+        <div class="seg-btn" data-risk="high" onclick="setRisk('high', this)">High</div>
       </div>
     </div>
 
     <div class="bet-section">
-      <div class="bet-label">Rows: <span id="rows-val">12</span></div>
-      <input class="range-slider" id="rows-slider" type="range" min="8" max="16" value="12" step="1">
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px">
-        <span>8</span><span>12</span><span>16</span>
-      </div>
+      <button class="btn-bet" id="btn-drop" onclick="dropBall()">⚽ DROP BALL</button>
     </div>
 
     <div class="bet-section">
       <div id="result-container"></div>
-      <button class="btn-bet" id="drop-btn" onclick="dropBall()">Drop Ball</button>
-      
-    </div>
-
-    <div class="bet-section">
-      <div class="toggle-row">
-        <span class="toggle-label">Auto Drop</span>
-        <label class="toggle"><input type="checkbox" id="auto-drop"><div class="toggle-slider"></div></label>
-      </div>
     </div>
 
     <div class="stats-row">
       <div class="stat-box">
-        <div class="stat-box-label">Net Profit</div>
-        <div class="stat-box-val" id="stat-profit">$0.00</div>
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">Wins</div>
@@ -144,416 +102,189 @@
         <div class="stat-box-val red" id="stat-losses">0</div>
       </div>
     </div>
-
-    <div class="history-section">
-      <div class="history-title">Recent Drops</div>
-      <div class="history-chips" id="my-history"></div>
-    </div>
   </div>
 </div>
 
 <script src="../wallet.js"></script>
 <script src="../auth-guard.js"></script>
 <script>
-function updateBal(){ updateAllWalletDisplays(); }
-updateBal();
-
-let risk = 'medium';
-let rows = 12;
-let totalProfit = 0, wins = 0, losses = 0;
-let balls = [];
-let autoDropTimer = null;
-let isDropping = false;
-
-// Multiplier tables by risk and row count
-const MULTIPLIERS = {
-  low: {
-    8:  [4.5, 1.8, 1.1, 1.0, 0.5, 1.0, 1.1, 1.8, 4.5],
-    12: [7.0, 2.5, 1.3, 1.1, 1.0, 0.5, 1.0, 1.1, 1.3, 2.5, 7.0],
-    16: [14, 7, 1.8, 1.3, 1.3, 1.1, 1.1, 1.0, 0.5, 1.0, 1.1, 1.1, 1.3, 1.3, 1.8, 7, 14]
-  },
-  medium: {
-    8:  [9, 2.5, 1.2, 0.7, 0.4, 0.7, 1.2, 2.5, 9],
-    12: [18, 5, 1.8, 1.3, 0.6, 0.4, 0.6, 1.3, 1.8, 5, 18],
-    16: [35, 18, 7, 4, 2.5, 1.4, 1.0, 0.5, 0.3, 0.5, 1.0, 1.4, 2.5, 4, 7, 18, 35]
-  },
-  high: {
-    8:  [20, 3.5, 1.4, 0.3, 0.2, 0.3, 1.4, 3.5, 20],
-    12: [38, 7, 2.5, 0.8, 0.3, 0.2, 0.3, 0.8, 2.5, 7, 38],
-    16: [50, 18, 7, 6, 3.5, 1.8, 0.6, 0.2, 0.2, 0.2, 0.6, 1.8, 3.5, 6, 7, 18, 50]
-  }
-};
-
-function getMults(){ return MULTIPLIERS[risk][rows] || MULTIPLIERS[risk][12]; }
-
-function getRowCount(){ return getMults().length - 1; } // number of peg rows = slots - 1
-
-// Canvas
 const canvas = document.getElementById('plinko-canvas');
 const ctx = canvas.getContext('2d');
 
-function resizeCanvas(){
-  const parent = canvas.parentElement;
-  canvas.width = Math.min(parent.clientWidth, 560);
-  canvas.height = canvas.parentElement.clientHeight * 0.7 || 400;
-  drawBoard();
-}
-window.addEventListener('resize', resizeCanvas);
+const ROWS = 10;
+const PINS = [];
+const BALLS = [];
+const BUCKET_MULTS = [10.0, 3.0, 1.5, 0.5, 0.2, 0.2, 0.5, 1.5, 3.0, 10.0];
+const BUCKET_COLORS = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#10b981', '#10b981', '#84cc16', '#eab308', '#f97316', '#ef4444'];
 
-// Peg positions
-function getPegs(){
-  const W = canvas.width, H = canvas.height;
-  const mults = getMults();
-  const numRows = getRowCount();
-  const pegR = Math.max(4, Math.min(7, W/100));
-  const slots = mults.length;
-  const slotW = (W - 40) / slots;
-  const rowH = (H - 60) / (numRows + 1);
-  const pegs = [];
-  for(let r = 0; r <= numRows; r++){
-    const count = r + 2;
-    for(let c = 0; c < count; c++){
-      const offset = (slots - count) * slotW / 2;
-      const x = 20 + offset + c * slotW + slotW/2;
-      const y = 30 + r * rowH;
-      pegs.push({x, y, r: pegR, row: r, col: c});
-    }
-  }
-  return pegs;
-}
+let totalProfit = 0, wins = 0, losses = 0;
+let currentRisk = 'medium';
 
-// Particle trails & peg impact halos
-let plinkoParticles = [];
-let pegImpacts = [];
-
-function drawBoard(){
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
-  
-  // High-tech subtle dark grid background
-  const bgGrad = ctx.createLinearGradient(0,0,0,H);
-  bgGrad.addColorStop(0, '#060c16');
-  bgGrad.addColorStop(1, '#0a1424');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0,0,W,H);
-
-  const pegs = getPegs();
-
-  // Draw peg impact halos
-  for(let i = pegImpacts.length - 1; i >= 0; i--){
-    const imp = pegImpacts[i];
-    imp.radius += 1.2;
-    imp.alpha -= 0.05;
-    if(imp.alpha <= 0){
-      pegImpacts.splice(i, 1);
-    } else {
-      ctx.beginPath();
-      ctx.arc(imp.x, imp.y, imp.radius, 0, Math.PI*2);
-      ctx.strokeStyle = `rgba(0, 230, 118, ${imp.alpha})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-  }
-
-  // Draw pegs
-  pegs.forEach(p => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-    ctx.fillStyle = '#1e3852';
-    ctx.fill();
-    ctx.strokeStyle = '#386088';
-    ctx.lineWidth = 1.5;
-    ctx.shadowColor = '#00bcd4';
-    ctx.shadowBlur = 4;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  });
-
-  // Render & update particle trails
-  for(let i = plinkoParticles.length - 1; i >= 0; i--){
-    const pt = plinkoParticles[i];
-    pt.size *= 0.92;
-    pt.alpha -= 0.04;
-    if(pt.alpha <= 0 || pt.size < 0.5){
-      plinkoParticles.splice(i, 1);
-    } else {
-      ctx.fillStyle = pt.color;
-      ctx.globalAlpha = Math.max(0, pt.alpha);
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI*2);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  // Draw balls
-  balls.forEach(b => {
-    // Spawn trail
-    if(Math.random() > 0.3){
-      plinkoParticles.push({
-        x: b.x + (Math.random()-0.5)*3,
-        y: b.y + (Math.random()-0.5)*3,
-        size: b.radius * 0.7,
-        color: b.color || '#00e676',
-        alpha: 0.8
+// Build Pin Pyramid
+function buildPins(){
+  PINS.length = 0;
+  const startY = 50;
+  const rowGap = 30;
+  for(let r=0; r<ROWS; r++){
+    const pinsInRow = r + 3;
+    const spacing = 32;
+    const startX = (canvas.width / 2) - ((pinsInRow - 1) * spacing / 2);
+    for(let c=0; c<pinsInRow; c++){
+      PINS.push({
+        x: startX + c * spacing,
+        y: startY + r * rowGap,
+        r: 3.5
       });
     }
+  }
+}
+buildPins();
 
+function playTone(freq, dur){
+  try {
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.frequency.setValueAtTime(freq, actx.currentTime);
+    gain.gain.setValueAtTime(0.12, actx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, actx.currentTime + dur);
+    osc.connect(gain); gain.connect(actx.destination);
+    osc.start(); osc.stop(actx.currentTime + dur);
+  } catch(e){}
+}
+
+function dropBall(){
+  if(typeof requireAuth === 'function' && !requireAuth()) return;
+
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if(isNaN(amt) || amt <= 0){ showToast('Enter a valid bet amount!', 'error'); return; }
+
+  const curBal = typeof getBalance === 'function' ? getBalance() : 10000;
+  if(amt > curBal){ showToast('Insufficient balance!', 'error'); return; }
+
+  if(typeof setBalance === 'function') setBalance(curBal - amt);
+
+  const startOffset = (Math.random() - 0.5) * 8;
+  BALLS.push({
+    x: canvas.width / 2 + startOffset,
+    y: 18,
+    vx: (Math.random() - 0.5) * 1.5,
+    vy: 1.5,
+    r: 6.5,
+    bet: amt,
+    color: '#00e676'
+  });
+
+  playTone(600, 0.05);
+}
+
+function updatePhysics(){
+  for(let i=BALLS.length-1; i>=0; i--){
+    const b = BALLS[i];
+    b.vy += 0.22; // gravity
+    b.x += b.vx;
+    b.y += b.vy;
+    b.vx *= 0.98;
+
+    // Pin collisions
+    PINS.forEach(p => {
+      const dx = b.x - p.x;
+      const dy = b.y - p.y;
+      const dist = Math.hypot(dx, dy);
+      if(dist < b.r + p.r){
+        const angle = Math.atan2(dy, dx);
+        b.vx = Math.cos(angle) * 2.2 + (Math.random() - 0.5) * 0.8;
+        b.vy = Math.abs(Math.sin(angle)) * 2.2;
+        b.x = p.x + Math.cos(angle) * (b.r + p.r + 1);
+        b.y = p.y + Math.sin(angle) * (b.r + p.r + 1);
+        playTone(350 + Math.random()*300, 0.03);
+      }
+    });
+
+    // Reached bottom buckets
+    if(b.y >= canvas.height - 35){
+      const bucketWidth = canvas.width / BUCKET_MULTS.length;
+      const bIdx = Math.max(0, Math.min(BUCKET_MULTS.length - 1, Math.floor(b.x / bucketWidth)));
+      const mult = BUCKET_MULTS[bIdx];
+      const payout = b.bet * mult;
+
+      if(typeof setBalance === 'function') setBalance(getBalance() + payout);
+      totalProfit += payout - b.bet;
+      if(payout >= b.bet) wins++; else losses++;
+      playTone(mult >= 2 ? 800 : 250, 0.15);
+
+      const res = document.getElementById('result-container');
+      if(res){
+        res.innerHTML = `<div class="result-box ${payout>=b.bet?'win':'lose'}" style="padding:6px;text-align:center;font-weight:900;color:${payout>=b.bet?'#00e676':'#ef4444'}">${mult}× (${payout>=b.bet?'+':''}₹${payout.toFixed(2)})</div>`;
+      }
+      updateStats();
+      BALLS.splice(i, 1);
+    }
+  }
+}
+
+function drawGame(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw Bottom Buckets
+  const bucketWidth = canvas.width / BUCKET_MULTS.length;
+  BUCKET_MULTS.forEach((m, idx) => {
+    ctx.fillStyle = BUCKET_COLORS[idx];
+    ctx.fillRect(idx * bucketWidth + 2, canvas.height - 28, bucketWidth - 4, 24);
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 10px Space Grotesk, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(m + '×', idx * bucketWidth + bucketWidth / 2, canvas.height - 12);
+  });
+
+  // Draw Pins
+  PINS.forEach(p => {
     ctx.beginPath();
-    ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2);
-    const grad = ctx.createRadialGradient(b.x-2, b.y-2, 1, b.x, b.y, b.radius);
-    grad.addColorStop(0, '#ffffff');
-    grad.addColorStop(0.6, b.color || '#00e676');
-    grad.addColorStop(1, '#000000');
-    ctx.fillStyle = grad;
-    ctx.shadowColor = b.color || '#00e676';
-    ctx.shadowBlur = 12;
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffd700';
+    ctx.shadowColor = 'rgba(255,215,0,0.8)';
+    ctx.shadowBlur = 6;
     ctx.fill();
     ctx.shadowBlur = 0;
   });
-}
 
-// Ball physics
-function createBall(betAmt){
-  const W = canvas.width;
-  const mults = getMults();
-  const numRows = getRowCount();
-  const slotW = (W - 40) / mults.length;
-  const pegR = Math.max(4, Math.min(7, W/100));
-  const rowH = (canvas.height - 60) / (numRows + 1);
-
-  // Simulate house-biased path (85% lands in low center loss slots)
-  let finalSlot;
-  const midSlot = Math.floor(mults.length / 2);
-  if(Math.random() < 0.85){
-    // Target center loss bucket (multiplier < 1.0x)
-    const deviation = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-    finalSlot = Math.max(0, Math.min(mults.length - 1, midSlot + deviation));
-  } else {
-    finalSlot = Math.floor(Math.random() * mults.length);
-  }
-
-  // Construct path that naturally ends at finalSlot
-  let col = 0;
-  const path = [{row:-1, col:0}];
-  let rightStepsNeeded = finalSlot;
-  let remainingRows = numRows + 1;
-  
-  for(let r = 0; r <= numRows; r++){
-    const p = rightStepsNeeded / remainingRows;
-    if(Math.random() < p && rightStepsNeeded > 0){
-      col++;
-      rightStepsNeeded--;
-    } else if(remainingRows <= rightStepsNeeded){
-      col++;
-      rightStepsNeeded--;
-    }
-    remainingRows--;
-    path.push({row:r, col});
-  }
-
-  const mult = mults[finalSlot] !== undefined ? mults[finalSlot] : (mults[midSlot] || 0.4);
-
-  // Animate
-  const offset = (mults.length - (numRows+2)) * slotW / 2;
-  const startX = W/2;
-  const ball = {
-    x: startX, y: 20,
-    radius: pegR * 0.9,
-    path, pathIdx: 0, progress: 0,
-    finalSlot, mult, betAmt,
-    color: mult >= 5 ? '#ffd700' : mult >= 2 ? '#ff6b35' : mult >= 1 ? '#00e676' : '#ef5350',
-    done: false
-  };
-  balls.push(ball);
-}
-
-function updateBalls(){
-  const W = canvas.width, H = canvas.height;
-  const mults = getMults();
-  const numRows = getRowCount();
-  const slotW = (W - 40) / mults.length;
-  const rowH = (H - 60) / (numRows + 1);
-
-  balls = balls.filter(b => !b.done);
-
-  balls.forEach(b => {
-    b.progress += 0.08;
-    if(b.progress >= 1){
-      b.progress = 0;
-      b.pathIdx++;
-      if(b.pathIdx >= b.path.length){
-        // Landed!
-        b.done = true;
-        resolveBall(b);
-        return;
-      }
-    }
-
-    const curr = b.path[Math.min(b.pathIdx, b.path.length-1)];
-    const next = b.path[Math.min(b.pathIdx+1, b.path.length-1)];
-
-    const offset1 = (mults.length - (curr.row + 2)) * slotW / 2;
-    const offset2 = (mults.length - (next.row + 2)) * slotW / 2;
-
-    const x1 = curr.row < 0 ? W/2 : 20 + offset1 + curr.col * slotW + slotW/2;
-    const y1 = curr.row < 0 ? 20 : 30 + curr.row * rowH;
-    const x2 = 20 + offset2 + next.col * slotW + slotW/2;
-    const y2 = next.row >= numRows+1 ? H - 30 : 30 + next.row * rowH;
-
-    // Bezier curve for natural movement
-    const t = b.progress;
-    const mid_x = (x1 + x2) / 2 + (Math.random()-0.5) * 2;
-    const mid_y = (y1 + y2) / 2 - 3;
-    b.x = (1-t)*(1-t)*x1 + 2*(1-t)*t*mid_x + t*t*x2;
-    b.y = (1-t)*(1-t)*y1 + 2*(1-t)*t*mid_y + t*t*y2;
+  // Draw Balls
+  BALLS.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fillStyle = b.color;
+    ctx.shadowColor = 'rgba(0,230,118,0.9)';
+    ctx.shadowBlur = 10;
+    ctx.fill();
+    ctx.shadowBlur = 0;
   });
+
+  updatePhysics();
+  requestAnimationFrame(drawGame);
+}
+drawGame();
+
+function setRisk(r, btn){
+  currentRisk = r;
+  document.querySelectorAll('#risk-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
 }
 
-function resolveBall(b){
-  const payout = b.betAmt * b.mult;
-  setBalance(getBalance() + payout);
-  const profit = payout - b.betAmt;
-  totalProfit += profit;
-  if(profit >= 0) wins++; else losses++;
-  addHistory(b.mult, profit >= 0);
-  showResult(profit >= 0, payout, b.mult);
-  flashBal(profit >= 0 ? 'flash-win' : 'flash-lose');
-  if(b.mult >= 1.5){
-    if(typeof playGameSound === 'function') playGameSound('win');
-    if(typeof trackGameWager === 'function') trackGameWager('GG Plinko', b.betAmt, payout, true);
-  } else {
-    if(typeof playGameSound === 'function') playGameSound('lose');
-    if(typeof trackGameWager === 'function') trackGameWager('GG Plinko', b.betAmt, payout, false);
-  }
-  updateStats();
-
-  // Flash bucket
-  const buckets = document.querySelectorAll('.bucket');
-  if(buckets[b.finalSlot]){
-    buckets[b.finalSlot].classList.remove('hit');
-    void buckets[b.finalSlot].offsetWidth;
-    buckets[b.finalSlot].classList.add('hit');
-  }
-
-  isDropping = balls.length > 0;
-}
-
-// Render loop
-function loop(){
-  updateBalls();
-  drawBoard();
-  requestAnimationFrame(loop);
-}
-
-function dropBall(){ if(!requireAuth()) return;
-  const amt = parseFloat(document.getElementById('bet-amount').value);
-  if(isNaN(amt)||amt<=0){ showToast('Enter valid amount'); return; }
-  if(amt > getBalance()){ showToast('Insufficient balance'); return; }
-  setBalance(getBalance() - amt);
-  if(typeof playGameSound === 'function') playGameSound('bet');
-  createBall(amt);
-  isDropping = true;
-}
-
-// Auto drop
-document.getElementById('auto-drop').addEventListener('change', function(){
-  if(this.checked){
-    autoDropTimer = setInterval(() => {
-      if(balls.length < 5) dropBall();
-    }, 600);
-  } else {
-    clearInterval(autoDropTimer);
-  }
-});
-
-function buildBuckets(){
-  const container = document.getElementById('plinko-buckets');
-  container.innerHTML = '';
-  const mults = getMults();
-  const mid = Math.floor(mults.length / 2);
-  mults.forEach((m, i) => {
-    const div = document.createElement('div');
-    const dist = Math.abs(i - mid) / mid;
-    let cls = 'bucket ';
-    if(m >= 10) cls += 'b-mega';
-    else if(m >= 3) cls += 'b-high';
-    else if(m >= 1.5) cls += 'b-mid';
-    else if(m >= 1) cls += 'b-low';
-    else cls += 'b-safe';
-    div.className = cls;
-    div.textContent = m + '×';
-    container.appendChild(div);
-  });
-}
-
-// Risk & rows controls
-document.querySelectorAll('#risk-ctrl .seg-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#risk-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    risk = btn.dataset.risk;
-    buildBuckets();
-    drawBoard();
-  });
-});
-
-document.getElementById('rows-slider').addEventListener('input', function(){
-  rows = parseInt(this.value);
-  // Snap to valid values
-  const valid = [8,10,12,14,16];
-  rows = valid.reduce((a,b)=>Math.abs(b-rows)<Math.abs(a-rows)?b:a);
-  this.value = rows;
-  document.getElementById('rows-val').textContent = rows;
-  buildBuckets();
-  drawBoard();
-});
-
-function addHistory(mult, won){
-  const c=document.getElementById('my-history');
-  const chip=document.createElement('div');
-  chip.className='hchip '+(won?'win':'lose');
-  chip.textContent=mult+'×';
-  c.insertBefore(chip,c.firstChild);
-  if(c.children.length>15) c.removeChild(c.lastChild);
-}
-function showResult(won, amount, mult){
-  const c=document.getElementById('result-container');
-  c.innerHTML=`<div class="result-box ${won?'win':'lose'}">
-    <div class="result-box-title">${won?'🎉 '+mult+'× Win!':'💸 '+mult+'×'}</div>
-    <div class="result-box-val">${won?'+$'+amount.toFixed(2):'-$'+amount.toFixed(2)}</div>
-  </div>`;
-  setTimeout(()=>c.innerHTML='',3000);
-}
 function updateStats(){
-  const p=document.getElementById('stat-profit');
-  p.textContent=(totalProfit>=0?'+':'')+' $'+totalProfit.toFixed(2);
-  p.className='stat-box-val '+(totalProfit>=0?'green':'red');
-  document.getElementById('stat-wins').textContent=wins;
-  document.getElementById('stat-losses').textContent=losses;
-}
-function flashBal(cls){
-  const el=document.getElementById('bal-display');
-  el.classList.remove('flash-win','flash-lose');
-  void el.offsetWidth;
-  el.classList.add(cls);
-}
-function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(0.01,parseFloat(i.value||1)/2).toFixed(2); }
-function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
-function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); }
-function showToast(msg){
-  const t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:20px;right:20px;background:#1e2d3d;border:1px solid rgba(255,255,255,0.1);color:#e8edf5;padding:10px 16px;border-radius:8px;font-size:13px;z-index:999';
-  t.textContent=msg; document.body.appendChild(t);
-  setTimeout(()=>t.remove(),2500);
+  const p = document.getElementById('stat-profit');
+  if(p){
+    p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
+    p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
+  }
+  const w = document.getElementById('stat-wins');
+  if(w) w.textContent = wins;
+  const l = document.getElementById('stat-losses');
+  if(l) l.textContent = losses;
 }
 
-buildBuckets();
-resizeCanvas();
-loop();
+function halveBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
+function doubleBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
+function maxBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=getBalance().toFixed(2); }
 </script>
 </body>
 </html>
-
-
-

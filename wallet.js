@@ -2327,6 +2327,11 @@
   let withdrawSourceAccount = 'real';
 
   window.openWalletModal = function(tab) {
+    if (tab === 'deposit') {
+      const depUrl = window.location.pathname.includes('/games/') ? '../deposit.html' : 'deposit.html';
+      window.open(depUrl, '_blank');
+      return;
+    }
     injectWalletStyles();
     injectWalletModalHTML();
     if (tab) activeModalTab = tab;
