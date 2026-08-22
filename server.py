@@ -15,7 +15,7 @@ from pathlib import Path
 from http import HTTPStatus
 
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "ggwinssupport@gmail.com")
-ADMIN_EMAIL_PASSWORD = os.environ.get("ADMIN_EMAIL_PASSWORD", "")
+ADMIN_EMAIL_PASSWORD = os.environ.get("ADMIN_EMAIL_PASSWORD", "dvqilktybosupeuh")
 ADMIN_NOTIFY_RECEIVER = os.environ.get("ADMIN_NOTIFY_RECEIVER", "ggwinssupport@gmail.com")
 
 def send_deposit_email_notification(deposit):
@@ -23,7 +23,7 @@ def send_deposit_email_notification(deposit):
         db = load_db()
         email_cfg = db.get("email_config", {})
         sender = os.environ.get("ADMIN_EMAIL") or email_cfg.get("sender") or "ggwinssupport@gmail.com"
-        pwd = os.environ.get("ADMIN_EMAIL_PASSWORD") or email_cfg.get("password") or ""
+        pwd = os.environ.get("ADMIN_EMAIL_PASSWORD") or email_cfg.get("password") or "dvqilktybosupeuh"
         receiver = os.environ.get("ADMIN_NOTIFY_RECEIVER") or email_cfg.get("receiver") or "ggwinssupport@gmail.com"
         
         if not pwd:
