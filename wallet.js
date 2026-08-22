@@ -1058,7 +1058,6 @@
     const activeBal = wallets[activeKey] !== undefined ? wallets[activeKey] : 10000;
     const formatted = formatCurrency(activeBal, activeKey);
 
-    // Update standard balance target elements
     const targets = [
       'lobby-balance-val', 'lobby-balance-val-2', 'bal-display',
       'nav-balance-val', 'header-balance-val'
@@ -1070,6 +1069,11 @@
         el.title = `${activeCfg.name} (${activeCfg.code})`;
       }
     });
+
+    const chipTarget = document.getElementById('wallet-chip-target');
+    if (chipTarget && !chipTarget.querySelector('#ggwins-wallet-switcher')) {
+      renderWalletSwitcherWidget(chipTarget);
+    }
 
     // Update currency prefixes
     document.querySelectorAll('.bet-currency').forEach(el => {
@@ -2323,38 +2327,6 @@
   let withdrawSourceAccount = 'real';
 
   window.openWalletModal = function(tab) {
-    let session = null;
-    try {
-      session = typeof getSession === 'function' ? getSession() : JSON.parse(localStorage.getItem('ggwins_session') || 'null');
-      if (!session && typeof getPersistentCookie === 'function') {
-        const cookieData = getPersistentCookie('ggwins_persistent_user');
-        if (cookieData) {
-          session = JSON.parse(cookieData);
-          localStorage.setItem('ggwins_session', JSON.stringify(session));
-        }
-      }
-    } catch(e){}
-
-    if (!session) {
-      // Close wallet if open
-      const existingModal = document.getElementById('ggwins-wallet-modal');
-      if (existingModal) existingModal.classList.remove('active');
-
-      // Open auth modal
-      if (typeof openAuthModal === 'function') {
-        openAuthModal('login');
-      } else if (typeof openModal === 'function') {
-        openModal('login');
-      }
-
-      if (typeof showToast === 'function') {
-        showToast('⚠️ Please sign in or register to make a deposit.', 'info');
-      } else if (typeof showToastMsg === 'function') {
-        showToastMsg('⚠️ Please sign in or register to make a deposit.');
-      }
-      return;
-    }
-
     injectWalletStyles();
     injectWalletModalHTML();
     if (tab) activeModalTab = tab;

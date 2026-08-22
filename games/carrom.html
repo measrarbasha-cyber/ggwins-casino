@@ -170,19 +170,8 @@
   <div class="gnav-game-name">Carrom 3D Pro</div>
   <span class="gnav-game-badge" style="background:#00e676;color:#000">CARROM KING MASTER AI</span>
   <div class="gnav-spacer"></div>
-  <div id="wallet-chip-target">
-    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
-      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
-        <span class="wallet-active-icon">🎮</span>
-        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
-        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
-        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
-      </button>
-    </div>
-  </div>
-  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
-    💳 Deposit
-  </button>
+  <div id="wallet-chip-target"></div>
+  <button class="btn-wallet-game" onclick="if(typeof openWalletModal==='function') openWalletModal('deposit')">💳 Deposit</button>
 </nav>
 
 <div class="game-layout">
@@ -1172,5 +1161,6 @@ window.addEventListener('load', () => {
   if (ts) ts.innerHTML = `👆 Select a pool and click <strong>"Join Battle"</strong> to start!`;
 });
 </script>
+<script src="../auth-guard.js"></script>
 </body>
 </html>
