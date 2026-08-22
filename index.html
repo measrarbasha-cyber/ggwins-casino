@@ -1201,7 +1201,10 @@
                     <span class="w-opt-badge" style="background:#7c4dff;color:#fff">RISK FREE</span>
                   </div>
                 </div>
-                <span class="w-opt-bal" id="bal-txt-demo">₹10,000.00</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span class="w-opt-bal" id="bal-txt-demo">₹10,000.00</span>
+                  <button class="btn-refresh-demo" onclick="event.stopPropagation(); refreshDemoBalance();" title="Refill ₹10,000 Demo Practice Credits" style="background:rgba(124,77,255,0.22);border:1px solid #7c4dff;border-radius:6px;color:#c084fc;cursor:pointer;padding:3px 7px;font-size:11px;font-weight:800;transition:all 0.2s" onmouseover="this.style.background='#7c4dff';this.style.color='#fff'" onmouseout="this.style.background='rgba(124,77,255,0.22)';this.style.color='#c084fc'">🔄 Refill</button>
+                </div>
               </div>
               <div class="wallet-option" id="w-opt-real" onclick="selectActiveAccount('real', event)">
                 <div class="w-opt-left">
@@ -1505,7 +1508,10 @@
               <span class="w-opt-badge" style="background:#7c4dff;color:#fff">100% RISK FREE</span>
             </div>
           </div>
-          <span class="w-opt-bal" id="m-bal-txt-demo" style="font-size:15px">₹10,000.00</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="w-opt-bal" id="m-bal-txt-demo" style="font-size:15px">₹10,000.00</span>
+            <button onclick="event.stopPropagation(); refreshDemoBalance();" title="Refill ₹10,000 Demo Practice Credits" style="background:rgba(124,77,255,0.25);border:1px solid #7c4dff;border-radius:8px;color:#c084fc;cursor:pointer;padding:4px 9px;font-size:11px;font-weight:800;transition:all 0.2s" onmouseover="this.style.background='#7c4dff';this.style.color='#fff'" onmouseout="this.style.background='rgba(124,77,255,0.25)';this.style.color='#c084fc'">🔄 Refill</button>
+          </div>
         </div>
 
         <!-- 2. Real INR Account -->
@@ -1517,7 +1523,7 @@
               <span class="w-opt-badge" style="background:#00e676;color:#000">INSTANT UPI CASH</span>
             </div>
           </div>
-          <span class="w-opt-bal" id="m-bal-txt-real" style="font-size:15px;color:var(--gold)">₹25,000.00</span>
+          <span class="w-opt-bal" id="m-bal-txt-real" style="font-size:15px;color:var(--gold)">₹0.00</span>
         </div>
 
         <!-- 3. USDT Crypto Account -->
@@ -1529,7 +1535,7 @@
               <span class="w-opt-badge" style="background:#26a17b;color:#fff">TRC20 / ERC20</span>
             </div>
           </div>
-          <span class="w-opt-bal" id="m-bal-txt-usdt" style="font-size:15px;color:#26a17b">$500.00</span>
+          <span class="w-opt-bal" id="m-bal-txt-usdt" style="font-size:15px;color:#26a17b">$0.00</span>
         </div>
       </div>
 
@@ -1795,7 +1801,7 @@
     }
 
     function updateAccountModalDisplay() {
-      const wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 25000, usdt: 500 };
+      const wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 0, usdt: 0 };
       const active = localStorage.getItem('ggwins_active_wallet') || 'demo';
 
       ['demo', 'real', 'usdt'].forEach(k => {
@@ -1814,10 +1820,31 @@
       const dEl = document.getElementById('m-bal-txt-demo');
       const rEl = document.getElementById('m-bal-txt-real');
       const uEl = document.getElementById('m-bal-txt-usdt');
-      if (dEl) dEl.textContent = '₹' + (parseFloat(wallets.demo)||10000).toLocaleString('en-IN', {minimumFractionDigits: 2});
-      if (rEl) rEl.textContent = '₹' + (parseFloat(wallets.real)||25000).toLocaleString('en-IN', {minimumFractionDigits: 2});
-      if (uEl) uEl.textContent = '$' + (parseFloat(wallets.usdt)||500).toLocaleString('en-US', {minimumFractionDigits: 2});
+      const dNum = (wallets && typeof wallets.demo === 'number') ? wallets.demo : 10000;
+      const rNum = (wallets && typeof wallets.real === 'number') ? wallets.real : 0;
+      const uNum = (wallets && typeof wallets.usdt === 'number') ? wallets.usdt : 0;
+
+      if (dEl) dEl.textContent = '₹' + dNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
+      if (rEl) rEl.textContent = '₹' + rNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
+      if (uEl) uEl.textContent = '$' + uNum.toLocaleString('en-US', {minimumFractionDigits: 2});
     }
+
+    window.refreshDemoBalance = function() {
+      let wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 0, usdt: 0 };
+      wallets.demo = 10000.00;
+      if (typeof saveWallets === 'function') {
+        saveWallets(wallets);
+      } else {
+        localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
+        localStorage.setItem('ggwins_wallets', JSON.stringify(wallets));
+      }
+      updateWalletUI();
+      if (typeof showToastMsg === 'function') {
+        showToastMsg('🔄 Demo Practice balance refilled to ₹10,000.00!');
+      } else if (typeof showToast === 'function') {
+        showToast('🔄 Demo Practice balance refilled to ₹10,000.00!', 'success');
+      }
+    };
 
     function toggleWalletMenu(e) {
       if (e) e.stopPropagation();
@@ -1853,7 +1880,7 @@
     }
 
     function updateWalletUI() {
-      const wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 25000, usdt: 500 };
+      const wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 0, usdt: 0 };
       const active = localStorage.getItem('ggwins_active_wallet') || 'demo';
 
       // Update dropdown option styles
@@ -1865,12 +1892,16 @@
         }
       });
 
+      const dNum = (wallets && typeof wallets.demo === 'number') ? wallets.demo : 10000;
+      const rNum = (wallets && typeof wallets.real === 'number') ? wallets.real : 0;
+      const uNum = (wallets && typeof wallets.usdt === 'number') ? wallets.usdt : 0;
+
       const dEl = document.getElementById('bal-txt-demo');
       const rEl = document.getElementById('bal-txt-real');
       const uEl = document.getElementById('bal-txt-usdt');
-      if (dEl) dEl.textContent = '₹' + (parseFloat(wallets.demo)||10000).toLocaleString('en-IN', {minimumFractionDigits: 2});
-      if (rEl) rEl.textContent = '₹' + (parseFloat(wallets.real)||25000).toLocaleString('en-IN', {minimumFractionDigits: 2});
-      if (uEl) uEl.textContent = '$' + (parseFloat(wallets.usdt)||500).toLocaleString('en-US', {minimumFractionDigits: 2});
+      if (dEl) dEl.textContent = '₹' + dNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
+      if (rEl) rEl.textContent = '₹' + rNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
+      if (uEl) uEl.textContent = '$' + uNum.toLocaleString('en-US', {minimumFractionDigits: 2});
 
       // Update header top balance display
       const topBal = document.getElementById('top-bal-display');
@@ -1879,19 +1910,19 @@
       if (active === 'demo') {
         if (topIcon) topIcon.textContent = '🎮';
         if (topBal) {
-          topBal.textContent = '₹' + (parseFloat(wallets.demo)||10000).toLocaleString('en-IN', {minimumFractionDigits: 0});
+          topBal.textContent = '₹' + dNum.toLocaleString('en-IN', {minimumFractionDigits: 0});
           topBal.style.color = '#00e676';
         }
       } else if (active === 'real') {
         if (topIcon) topIcon.textContent = '🇮🇳';
         if (topBal) {
-          topBal.textContent = '₹' + (parseFloat(wallets.real)||25000).toLocaleString('en-IN', {minimumFractionDigits: 0});
+          topBal.textContent = '₹' + rNum.toLocaleString('en-IN', {minimumFractionDigits: 0});
           topBal.style.color = '#ffd700';
         }
       } else {
         if (topIcon) topIcon.textContent = '₮';
         if (topBal) {
-          topBal.textContent = '$' + (parseFloat(wallets.usdt)||500).toLocaleString('en-US', {minimumFractionDigits: 0});
+          topBal.textContent = '$' + uNum.toLocaleString('en-US', {minimumFractionDigits: 0});
           topBal.style.color = '#26a17b';
         }
       }

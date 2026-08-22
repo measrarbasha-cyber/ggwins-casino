@@ -77,20 +77,26 @@
     const txs = JSON.parse(localStorage.getItem('ggwins_transactions') || '[]');
     const hasApprovedDeposit = txs.some(t => t.type === 'deposit' && (t.status === 'Completed' || t.status === 'Approved') && t.wallet === 'real');
 
-    if (!wallets || (!hasApprovedDeposit && (wallets.real === 25000 || wallets.real > 0 && !localStorage.getItem('ggwins_session')))) {
+    if (!wallets) {
       wallets = {
         demo: 10000.00,
         real: 0.00,
         usdt: 0.00
       };
-      localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
-      localStorage.setItem('ggwins_wallets', JSON.stringify(wallets));
     } else {
-      if (wallets.real === 25000) wallets.real = 0.00;
-      if (wallets.usdt === 500) wallets.usdt = 0.00;
-      localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
-      localStorage.setItem('ggwins_wallets', JSON.stringify(wallets));
+      // Enforce 0rs default for real and USDT unless legitimately approved
+      if (wallets.real === 25000 || (!hasApprovedDeposit && wallets.real > 0 && !localStorage.getItem('ggwins_session'))) {
+        wallets.real = 0.00;
+      }
+      if (wallets.usdt === 500) {
+        wallets.usdt = 0.00;
+      }
+      if (typeof wallets.demo !== 'number' || isNaN(wallets.demo)) {
+        wallets.demo = 10000.00;
+      }
     }
+    localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
+    localStorage.setItem('ggwins_wallets', JSON.stringify(wallets));
 
     if (!localStorage.getItem('ggwins_active_wallet')) {
       localStorage.setItem('ggwins_active_wallet', 'demo');
@@ -103,6 +109,20 @@
     }
   }
   initWalletStorage();
+
+  window.refreshDemoBalance = function() {
+    let wallets = getWallets();
+    wallets.demo = 10000.00;
+    saveWallets(wallets);
+    if (typeof showToast === 'function') {
+      showToast('🔄 Demo Practice balance refilled to ₹10,000.00!', 'success');
+    } else if (typeof showToastMsg === 'function') {
+      showToastMsg('🔄 Demo Practice balance refilled to ₹10,000.00!');
+    }
+    updateAllWalletDisplays();
+    if (typeof updateWalletUI === 'function') updateWalletUI();
+    return formatCurrency(10000.00, 'demo');
+  };
 
   // ── CORE WALLET GETTERS / SETTERS ────────────────────────────
   window.getWallets = function() {
