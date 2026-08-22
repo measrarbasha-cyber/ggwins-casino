@@ -647,15 +647,9 @@
   window.syncWalletStatusFromServer = async function() {
     try {
       const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
-      let url = '/api/user-status';
-      if (session && (session.id || session.username)) {
-        const p = new URLSearchParams();
-        if (session.id) p.append('userId', session.id);
-        if (session.username) p.append('username', session.username);
-        if (session.email) p.append('email', session.email);
-        if (session.vipLevel) p.append('vipLevel', session.vipLevel);
-        url = `/api/user-status?${p.toString()}`;
-      }
+      const url = session.id 
+        ? `/api/user-status?userId=${encodeURIComponent(session.id)}` 
+        : (session.username ? `/api/user-status?username=${encodeURIComponent(session.username)}` : '/api/user-status');
 
       const res = await fetch(url);
       if (!res.ok) return;
@@ -783,23 +777,6 @@
           }
           if (typeof updateAuthUI === 'function') updateAuthUI();
           if (typeof checkVipAccess === 'function') checkVipAccess();
-      // 5. Direct Admin Balance Adjustment Live Sync
-      if (data.wallets && typeof data.wallets === 'object') {
-        const sReal = parseFloat(data.wallets.real);
-        const sDemo = parseFloat(data.wallets.demo);
-        const sUsdt = parseFloat(data.wallets.usdt);
-
-        if (!isNaN(sReal) && Math.abs((parseFloat(wallets.real) || 0) - sReal) > 0.001) {
-          wallets.real = sReal;
-          updated = true;
-        }
-        if (!isNaN(sDemo) && Math.abs((parseFloat(wallets.demo) || 0) - sDemo) > 0.001) {
-          wallets.demo = sDemo;
-          updated = true;
-        }
-        if (!isNaN(sUsdt) && Math.abs((parseFloat(wallets.usdt) || 0) - sUsdt) > 0.001) {
-          wallets.usdt = sUsdt;
-          updated = true;
         }
       }
 
