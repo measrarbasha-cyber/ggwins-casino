@@ -8,8 +8,74 @@ import hashlib
 import threading
 import urllib.parse
 import re
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from http import HTTPStatus
+
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "ggwinssupport@gmail.com")
+ADMIN_EMAIL_PASSWORD = os.environ.get("ADMIN_EMAIL_PASSWORD", "")
+ADMIN_NOTIFY_RECEIVER = os.environ.get("ADMIN_NOTIFY_RECEIVER", "ggwinssupport@gmail.com")
+
+def send_deposit_email_notification(deposit):
+    def _send():
+        db = load_db()
+        email_cfg = db.get("email_config", {})
+        sender = os.environ.get("ADMIN_EMAIL") or email_cfg.get("sender") or "ggwinssupport@gmail.com"
+        pwd = os.environ.get("ADMIN_EMAIL_PASSWORD") or email_cfg.get("password") or ""
+        receiver = os.environ.get("ADMIN_NOTIFY_RECEIVER") or email_cfg.get("receiver") or "ggwinssupport@gmail.com"
+        
+        if not pwd:
+            print("[Email Alert Info] Gmail App Password not configured yet. Deposit saved in database.")
+            return
+
+        try:
+            msg = MIMEMultipart("alternative")
+            amt = deposit.get("amount", 0)
+            u = deposit.get("username", "Player")
+            qr = deposit.get("qrLabel") or f"QR {deposit.get('qrNumber', 1)}"
+            utr = deposit.get("utr", "N/A")
+            order_id = deposit.get("orderId", "N/A")
+
+            msg["Subject"] = f"🚨 [GG WINS] New Deposit Request: ₹{amt:,.2f} from @{u} ({qr})"
+            msg["From"] = f"GG WINS System <{sender}>"
+            msg["To"] = receiver
+
+            html = f"""
+            <div style="font-family: Arial, sans-serif; background-color: #0f172a; padding: 24px; color: #f8fafc; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1.5px solid #ffd700;">
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <h2 style="color: #ffd700; margin: 0;">🎮 GG WINS – New Deposit Alert</h2>
+                    <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">A player has submitted a new deposit request on your platform.</p>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                    <p style="margin: 6px 0; font-size: 14px;"><strong>👤 Player Username:</strong> <span style="color: #38bdf8; font-weight: bold;">@{u}</span></p>
+                    <p style="margin: 6px 0; font-size: 14px;"><strong>💰 Deposit Amount:</strong> <span style="color: #00e676; font-size: 16px; font-weight: bold;">₹{amt:,.2f}</span></p>
+                    <p style="margin: 6px 0; font-size: 14px;"><strong>🎯 Payment Gateway / QR:</strong> <span style="color: #c084fc; font-weight: bold;">{qr}</span></p>
+                    <p style="margin: 6px 0; font-size: 14px;"><strong>🔢 12-Digit UTR Number:</strong> <span style="background: #1e293b; padding: 3px 8px; border-radius: 4px; font-family: monospace; color: #ffd700; font-weight: bold;">{utr}</span></p>
+                    <p style="margin: 6px 0; font-size: 14px;"><strong>📦 Order ID:</strong> {order_id}</p>
+                    <p style="margin: 6px 0; font-size: 13px; color: #94a3b8;"><strong>⏰ Submitted At:</strong> {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deposit.get('timestamp', time.time()*1000)/1000))}</p>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://ggwins.site/host/index.html" style="background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+                        🔓 Open Admin Terminal to Approve
+                    </a>
+                </div>
+            </div>
+            """
+
+            msg.attach(MIMEText(html, "html"))
+
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+                server.login(sender, pwd)
+                server.sendmail(sender, receiver, msg.as_string())
+            print(f"[Email Alert] Successfully sent deposit alert email to {receiver} for {order_id}")
+        except Exception as e:
+            print(f"[Email Alert Error] Failed to send email: {e}")
+
+    threading.Thread(target=_send, daemon=True).start()
 
 BASE_DIR = Path(__file__).resolve().parent
 USER_DIR = BASE_DIR
@@ -454,7 +520,24 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
             }
             db.setdefault("deposits", []).insert(0, deposit_record)
             save_db(db)
+            send_deposit_email_notification(deposit_record)
             self.send_json({"success": True, "deposit": deposit_record, "message": "Deposit request submitted successfully."})
+            return
+
+        # ── EMAIL NOTIFICATION CONFIGURATION ────────────────────────
+        elif url_path == "/api/admin/set-email-config":
+            sender = req_data.get("sender", "ggwinssupport@gmail.com")
+            password = req_data.get("password", "").strip()
+            receiver = req_data.get("receiver", sender)
+
+            db["email_config"] = {
+                "sender": sender,
+                "password": password,
+                "receiver": receiver,
+                "updatedAt": int(time.time() * 1000)
+            }
+            save_db(db)
+            self.send_json({"success": True, "message": "Email notification credentials configured successfully."})
             return
 
         # ── 5. APPROVE DEPOSIT ──────────────────────────────────────
