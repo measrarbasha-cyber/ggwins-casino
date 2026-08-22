@@ -121,6 +121,7 @@ def load_db():
             return initial_data
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
                 data.setdefault("users", [])
                 data.setdefault("deposits", [])
                 data.setdefault("withdrawals", [])
