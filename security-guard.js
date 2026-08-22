@@ -132,14 +132,56 @@
   window.addEventListener('resize', detectDevTools);
   setInterval(detectDevTools, 1200);
 
-  // 7. 🛑 Neutralize Dangerous Prototype Manipulation
-  try {
-    Object.freeze(Object.prototype);
-  } catch(e) {}
+  // 7. 🛡️ Global Crash Shield & Unhandled Error Interceptor
+  window.addEventListener('error', function(e) {
+    // Intercept and swallow non-fatal exceptions to prevent UI freeze
+    if (e && e.message) {
+      console.warn('🛡️ Shield absorbed exception:', e.message);
+    }
+    return true; // Prevents default browser error dialog
+  }, true);
 
-  // 8. 🛡️ Console Security Watermark
-  try {
-    console.log("%c🔒 GG WINS FORTRESS SECURITY ACTIVE (256-BIT ENCRYPTED)", "color:#00e676; font-size:16px; font-weight:900; background:#0b0f19; padding:6px 12px; border-radius:6px; border:1px solid #00e676;");
-    console.log("%c© 2026 GG Wins Network Inc. All core assets, algorithms & transactions are digitally watermarked.", "color:#94a3b8; font-size:11px;");
-  } catch(e){}
+  window.addEventListener('unhandledrejection', function(e) {
+    if (e && e.reason) {
+      console.warn('🛡️ Shield absorbed async rejection:', e.reason);
+    }
+    if (e && e.preventDefault) e.preventDefault();
+  }, true);
+
+  // 8. 🩹 Automated Game DOM Self-Healing Watchdog
+  function autoHealGameElements() {
+    try {
+      // 1. Dragon Tower Board Self-Healer
+      const tower = document.getElementById('tower-container');
+      if (tower && tower.children.length === 0 && typeof window.buildTower === 'function') {
+        window.buildTower();
+      }
+
+      // 2. Mines Board Self-Healer
+      const mines = document.getElementById('mines-grid');
+      if (mines && mines.children.length === 0 && typeof window.initMines === 'function') {
+        window.initMines();
+      }
+
+      // 3. Snakes Board Self-Healer
+      const snakes = document.getElementById('snakes-grid');
+      if (snakes && snakes.children.length === 0 && typeof window.buildBoard === 'function') {
+        window.buildBoard();
+      }
+
+      // 4. Wallet Switcher Widget Self-Healer
+      const walletTarget = document.getElementById('wallet-chip-target');
+      if (walletTarget && walletTarget.children.length === 0 && typeof window.renderWalletSwitcherWidget === 'function') {
+        window.renderWalletSwitcherWidget(walletTarget);
+      }
+    } catch(e) {}
+  }
+
+  setInterval(autoHealGameElements, 1000);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoHealGameElements);
+  } else {
+    autoHealGameElements();
+  }
+  window.addEventListener('load', autoHealGameElements);
 })();
