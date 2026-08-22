@@ -1724,7 +1724,7 @@
             <div id="username-suggestions-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
           </div>
         </div>
-        <div class="form-group"><label class="form-label">Email (Real Google / Gmail Account)</label><input type="email" class="form-input" id="auth-reg-email" placeholder="e.g. yourname@gmail.com" /></div>
+        <div class="form-group"><label class="form-label">Google Account Email (@gmail.com only)</label><input type="email" class="form-input" id="auth-reg-email" placeholder="e.g. yourname@gmail.com" /></div>
         <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="auth-reg-pass" placeholder="Choose a password" /></div>
         
         <!-- Referral Code Input -->
@@ -2620,9 +2620,9 @@
 
       if (!u || !e || !p) { showToastMsg('⚠️ Please fill in all fields.'); return; }
       
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|googlemail\.com|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/i;
-      if (!emailRegex.test(e) || e.length < 6) {
-        showToastMsg('⚠️ Please enter a valid real Google / Gmail address.');
+      const googleEmailRegex = /^[a-zA-Z0-9][a-zA-Z0-9.]{4,28}[a-zA-Z0-9]@(gmail\.com|googlemail\.com)$/i;
+      if (!googleEmailRegex.test(e)) {
+        showToastMsg('⚠️ Only valid Google / Gmail accounts (@gmail.com) are accepted.');
         return;
       }
 

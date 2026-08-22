@@ -307,8 +307,11 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
             if not username or len(username) < 3:
                 self.send_json({"success": False, "message": "Username must be at least 3 characters long."}, status=HTTPStatus.BAD_REQUEST)
                 return
-            if not email or "@" not in email or not re.match(r"^[a-zA-Z0-9._%+-]+@(gmail\.com|googlemail\.com|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$", email, re.I):
-                self.send_json({"success": False, "message": "Please enter a valid email address associated with a real Google / Gmail account."}, status=HTTPStatus.BAD_REQUEST)
+            
+            # Strict Google / Gmail registration validation
+            google_email_pattern = r"^[a-zA-Z0-9][a-zA-Z0-9.]{4,28}[a-zA-Z0-9]@(gmail\.com|googlemail\.com)$"
+            if not email or not re.match(google_email_pattern, email, re.I):
+                self.send_json({"success": False, "message": "⚠️ Only valid Google Account emails (@gmail.com) are accepted for registration on GG WINS."}, status=HTTPStatus.BAD_REQUEST)
                 return
             if not password or len(password) < 6:
                 self.send_json({"success": False, "message": "Password must be at least 6 characters long."}, status=HTTPStatus.BAD_REQUEST)
