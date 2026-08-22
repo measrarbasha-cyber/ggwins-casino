@@ -2712,6 +2712,22 @@
       if (earningsEl) earningsEl.textContent = '₹' + (parseFloat(stats.referralEarnings || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 });
       if (countEl) countEl.textContent = (stats.referralCount || 0) + ' Players';
 
+      // Real-time server sync for instant referral reward reflection
+      fetch(`/api/user-profile?username=${encodeURIComponent(session.username)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.user) {
+            session.stats = data.user.stats || session.stats;
+            session.wallets = data.user.wallets || session.wallets;
+            localStorage.setItem('ggwins_session', JSON.stringify(session));
+            localStorage.setItem('ggwins_wallets_v2', JSON.stringify(session.wallets));
+            localStorage.setItem('ggwins_wallets', JSON.stringify(session.wallets));
+            if (earningsEl) earningsEl.textContent = '₹' + (parseFloat(session.stats?.referralEarnings || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            if (countEl) countEl.textContent = (session.stats?.referralCount || 0) + ' Players';
+            if (typeof updateAllWalletDisplays === 'function') updateAllWalletDisplays();
+          }
+        }).catch(() => {});
+
       const m = document.getElementById('refer-modal');
       if (m) m.classList.add('active');
     }

@@ -361,16 +361,17 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
             ref_code = str(req_data.get("referralCode", "")).strip().upper()
             referred_by = None
             if ref_code:
-                # Find referrer by username, ID, or GG-code
-                referrer_user = next((u for u in users if u.get("username", "").upper() == ref_code or u.get("id", "").upper() == ref_code or f"GG-{u.get('username','').upper()}" == ref_code), None)
+                # Normalize ref_code (supports 'SUMIT', 'GG-SUMIT', 'GG_SUMIT', '@SUMIT', or user ID)
+                clean_ref = ref_code.replace("GG-", "").replace("GG_", "").replace("@", "").strip()
+                referrer_user = next((u for u in users if u.get("username", "").upper() == ref_code or u.get("username", "").upper() == clean_ref or u.get("id", "").upper() == ref_code or f"GG-{u.get('username','').upper()}" == ref_code), None)
                 if referrer_user and referrer_user.get("id") != user_id:
                     referred_by = referrer_user["username"]
-                    # Add ₹50.00 Real Cash to the Referrer!
+                    # Add ₹50.00 Real Cash directly to Referrer's Real Wallet!
                     referrer_user.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
-                    referrer_user["wallets"]["real"] = referrer_user["wallets"].get("real", 0.0) + 50.0
+                    referrer_user["wallets"]["real"] = round(float(referrer_user["wallets"].get("real", 0.0)) + 50.0, 2)
                     referrer_user.setdefault("stats", {})
-                    referrer_user["stats"]["referralCount"] = referrer_user["stats"].get("referralCount", 0) + 1
-                    referrer_user["stats"]["referralEarnings"] = referrer_user["stats"].get("referralEarnings", 0.0) + 50.0
+                    referrer_user["stats"]["referralCount"] = int(referrer_user["stats"].get("referralCount", 0)) + 1
+                    referrer_user["stats"]["referralEarnings"] = round(float(referrer_user["stats"].get("referralEarnings", 0.0)) + 50.0, 2)
 
                     ref_tx_id = f"REF-{os.urandom(4).hex().upper()}"
                     ref_tx = {
