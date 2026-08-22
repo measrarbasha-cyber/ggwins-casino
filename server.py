@@ -115,6 +115,15 @@ in_memory_db = {
     "transactions": []
 }
 
+def generate_referral_code(existing_users=None):
+    if existing_users is None:
+        existing_users = []
+    existing_codes = {str(u.get("referralCode", "")).upper() for u in existing_users}
+    while True:
+        code = f"GG-{os.urandom(3).hex().upper()}"
+        if code not in existing_codes:
+            return code
+
 def load_db():
     global in_memory_db
     with db_lock:
@@ -136,8 +145,9 @@ def load_db():
         in_memory_db.setdefault("transactions", [])
         in_memory_db.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
 
-        # Automatically assign unique User IDs to any legacy/existing users without an ID
+        # Automatically assign unique User IDs and unique Referral Codes to any legacy/existing users
         dirty = False
+        existing_codes = set()
         for u in in_memory_db["users"]:
             if not u.get("id"):
                 u["id"] = f"USER-{os.urandom(4).hex().upper()}"
@@ -145,6 +155,11 @@ def load_db():
             if not u.get("wallets"):
                 u["wallets"] = {"demo": 10000.0, "real": 0.0, "usdt": 0.0}
                 dirty = True
+            ref = str(u.get("referralCode", "")).strip().upper()
+            if not ref or not ref.startswith("GG-") or ref in existing_codes or ref == str(u.get("username", "")).upper():
+                u["referralCode"] = generate_referral_code(in_memory_db["users"])
+                dirty = True
+            existing_codes.add(u["referralCode"])
 
         if dirty and DB_FILE.is_file():
             try:
@@ -351,6 +366,7 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                         "username": u.get("username", ""),
                         "email": u.get("email", ""),
                         "avatar": u.get("avatar", "👑"),
+                        "referralCode": u.get("referralCode", ""),
                         "wallets": u.get("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0}),
                         "vipLevel": u.get("vipLevel", "None"),
                         "stats": u.get("stats", {}),
@@ -369,12 +385,12 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 target = None
 
                 if q_term:
-                    # 1. Exact match on ID, username, or email (case-insensitive)
-                    target = next((u for u in users if u.get("id", "").upper() == q_term.upper() or u.get("username", "").lower() == q_term.lower() or u.get("email", "").lower() == q_term.lower()), None)
+                    # 1. Exact match on ID, username, referralCode, or email (case-insensitive)
+                    target = next((u for u in users if u.get("id", "").upper() == q_term.upper() or str(u.get("referralCode", "")).upper() == q_term.upper() or u.get("username", "").lower() == q_term.lower() or u.get("email", "").lower() == q_term.lower()), None)
                     
-                    # 2. Substring / partial match on ID or username
+                    # 2. Substring / partial match on ID or username or referralCode
                     if not target:
-                        target = next((u for u in users if q_term.upper() in u.get("id", "").upper() or q_term.lower() in u.get("username", "").lower()), None)
+                        target = next((u for u in users if q_term.upper() in u.get("id", "").upper() or q_term.upper() in str(u.get("referralCode", "")).upper() or q_term.lower() in u.get("username", "").lower()), None)
 
                     # 3. If Admin enters an ID like USER-4DA4F6FA that was generated on client, auto-provision and inspect!
                     if not target:
@@ -383,6 +399,7 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                             "id": q_term.upper() if q_term.upper().startswith("USER-") else f"USER-{os.urandom(4).hex().upper()}",
                             "username": q_term if not q_term.upper().startswith("USER-") else f"Player_{q_term[-4:]}",
                             "email": f"{q_term.lower().replace('-', '')}@gmail.com",
+                            "referralCode": generate_referral_code(users),
                             "avatar": "👑",
                             "wallets": {"demo": 10000.0, "real": 0.0, "usdt": 0.0},
                             "vipLevel": "None",
@@ -410,14 +427,16 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 # Gather all users who registered using this user's referral code/username
                 target_uname = target.get("username", "").lower()
                 target_uid = target.get("id", "").upper()
+                target_ref = str(target.get("referralCode", "")).strip().lower()
                 referred_users = []
                 for u in users:
                     ref_by = str(u.get("referredBy", "")).strip().lower()
-                    if ref_by and (ref_by == target_uname or ref_by == target_uid.lower() or ref_by == f"gg-{target_uname}" or ref_by == f"gg_{target_uname}"):
+                    if ref_by and (ref_by == target_uname or ref_by == target_uid.lower() or (target_ref and ref_by == target_ref) or ref_by == f"gg-{target_uname}" or ref_by == f"gg_{target_uname}"):
                         referred_users.append({
                             "id": u.get("id", ""),
                             "username": u.get("username", ""),
                             "email": u.get("email", ""),
+                            "referralCode": u.get("referralCode", ""),
                             "createdAt": u.get("createdAt", 0),
                             "wallets": u.get("wallets", {}),
                             "bonusAwarded": 50.0
@@ -507,18 +526,28 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 return
 
             user_id = f"USER-{os.urandom(4).hex().upper()}"
+            user_ref_code = generate_referral_code(users)
             emojis = ['🎮','🎰','🚀','💎','🦁','🐉','⚡','🌟','🔥','🎯','🏆','💫']
             avatar = emojis[ord(username[0]) % len(emojis)]
 
             ref_code = str(req_data.get("referralCode", "")).strip().upper()
             referred_by = None
             if ref_code:
-                # Normalize ref_code (supports 'SUMIT', 'GG-SUMIT', 'GG_SUMIT', '@SUMIT', or user ID)
+                # Normalize ref_code (supports 'GG-XXXXXX', 'XXXXXX', User ID, or legacy username)
                 clean_ref = ref_code.replace("GG-", "").replace("GG_", "").replace("@", "").strip()
-                referrer_user = next((u for u in users if u.get("username", "").upper() == ref_code or u.get("username", "").upper() == clean_ref or u.get("id", "").upper() == ref_code or f"GG-{u.get('username','').upper()}" == ref_code), None)
+                referrer_user = next((
+                    u for u in users 
+                    if str(u.get("referralCode", "")).upper() == ref_code
+                    or str(u.get("referralCode", "")).upper() == f"GG-{clean_ref}"
+                    or str(u.get("referralCode", "")).replace("GG-", "").upper() == clean_ref
+                    or str(u.get("id", "")).upper() == ref_code
+                    or str(u.get("username", "")).upper() == ref_code
+                    or str(u.get("username", "")).upper() == clean_ref
+                ), None)
+
                 if referrer_user and referrer_user.get("id") != user_id:
                     referred_by = referrer_user["username"]
-                    # Add ₹50.00 Real Cash directly to Referrer's Real Wallet!
+                    # Instantly credit ₹50.00 Real Cash to Referrer's Real Wallet!
                     referrer_user.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
                     referrer_user["wallets"]["real"] = round(float(referrer_user["wallets"].get("real", 0.0)) + 50.0, 2)
                     referrer_user.setdefault("stats", {})
@@ -535,9 +564,9 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                         "wallet": "real",
                         "amount": 50.0,
                         "currency": "INR",
-                        "method": "Refer & Earn Reward",
+                        "method": "Refer & Earn Bonus",
                         "status": "Completed",
-                        "description": f"Earned ₹50 referral reward for inviting {username}",
+                        "description": f"🎁 Earned ₹50.00 instant referral cash! New player @{username} used your code {referrer_user.get('referralCode', ref_code)}",
                         "timestamp": int(time.time() * 1000)
                     }
                     referrer_user.setdefault("transactions", []).insert(0, ref_tx)
@@ -552,6 +581,7 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 "dob": dob,
                 "mobile": mobile,
                 "referredBy": referred_by,
+                "referralCode": user_ref_code,
                 "wallets": {
                     "demo": 10000.0,   # demo practice credits (non-withdrawable)
                     "real": 0.0,       # new users start with 0 Rs real money

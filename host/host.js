@@ -873,6 +873,7 @@
     setElText('u-username', u.username || 'Player');
     setElText('u-vip-badge', u.vipLevel && u.vipLevel !== 'None' ? `👑 ${u.vipLevel} VIP` : 'Standard Member');
     setElText('u-id', u.id || 'USER-N/A');
+    setElText('u-referral-code', u.referralCode || ('GG-' + (u.id ? u.id.replace('USER-', '').substr(0, 6) : 'WIN777')));
     setElText('u-email', u.email || 'N/A');
     setElText('u-created-at', u.createdAt ? new Date(u.createdAt).toLocaleString('en-IN') : 'N/A');
     setElText('u-last-login', u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-IN') : 'Just now');
@@ -1222,6 +1223,7 @@
       const regDate = u.createdAt ? new Date(u.createdAt).toLocaleString('en-IN') : 'N/A';
       const isVip = u.vipLevel && u.vipLevel !== 'None' && u.vipLevel !== 'Standard';
 
+      const refCode = u.referralCode || ('GG-' + (u.id ? u.id.replace('USER-', '').substr(0, 6) : 'N/A'));
       return `
         <tr>
           <td>
@@ -1232,6 +1234,12 @@
             </div>
           </td>
           <td><strong>${u.avatar || '👑'} ${u.username || 'Player'}</strong></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <code style="color:#ffd700;font-family:monospace;font-weight:900;background:#0f172a;padding:3px 6px;border-radius:4px;border:1px solid rgba(255,215,0,0.3)">${refCode}</code>
+              <button class="btn-copy-mini" onclick="copyText('${refCode}', this)">Copy</button>
+            </div>
+          </td>
           <td style="color:#cbd5e1">${u.email || '-'}</td>
           <td class="tx-amount inr" style="font-size:14px;font-weight:900">₹${real.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
           <td style="color:#c084fc;font-weight:700">₹${demo.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>

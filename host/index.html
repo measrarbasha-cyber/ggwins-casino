@@ -743,6 +743,9 @@
                   <span><strong>User ID:</strong> <code id="u-id" style="color:#00e676;background:#1e293b;padding:2px 6px;border-radius:4px;font-weight:800">USER-XXXX</code></span>
                   <button class="btn-copy-mini" onclick="copyText(document.getElementById('u-id').textContent, this)">Copy ID</button>
                   <span>•</span>
+                  <span><strong>Ref Code:</strong> <code id="u-referral-code" style="color:#ffd700;background:#1e293b;padding:2px 6px;border-radius:4px;font-weight:900">GG-XXXXXX</code></span>
+                  <button class="btn-copy-mini" onclick="copyText(document.getElementById('u-referral-code').textContent, this)">Copy Ref</button>
+                  <span>•</span>
                   <span><strong>Email:</strong> <span id="u-email" style="color:#cbd5e1">player@gmail.com</span></span>
                 </div>
                 <!-- Referral summary pill -->
@@ -964,6 +967,7 @@
               <tr>
                 <th>User ID</th>
                 <th>Username</th>
+                <th>Referral Code</th>
                 <th>Email</th>
                 <th>Real INR Balance</th>
                 <th>Demo INR Balance</th>
@@ -975,7 +979,7 @@
             </thead>
             <tbody id="all-users-tbody">
               <tr>
-                <td colspan="9" class="empty-state">
+                <td colspan="10" class="empty-state">
                   <div class="empty-icon">⏳</div>
                   <p>Loading registered players...</p>
                 </td>
