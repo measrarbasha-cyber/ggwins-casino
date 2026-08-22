@@ -720,7 +720,7 @@
           <button class="btn btn-primary" style="padding:12px 22px;font-size:14px;font-weight:800;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;border:none;border-radius:10px;cursor:pointer" onclick="searchUserWallet()">
             🔍 Search User
           </button>
-          <button class="btn" style="padding:12px 18px;background:rgba(255,255,255,0.06);border:1px solid #334155;border-radius:10px;color:#cbd5e1;cursor:pointer" onclick="loadAllUsersDirectory()">
+          <button class="btn" style="padding:12px 18px;background:rgba(255,255,255,0.06);border:1px solid #334155;border-radius:10px;color:#cbd5e1;cursor:pointer" onclick="showAllUsersDirectoryExplicit()">
             📋 Show All Users
           </button>
         </div>
@@ -938,14 +938,26 @@
         </section>
       </div>
 
-      <!-- Directory of All Users Table -->
+      <!-- Directory of All Users Table with Show More / Show Less -->
       <section class="panel" id="all-users-directory-panel">
         <div class="panel-header">
           <div class="panel-title">
             <span>📋</span>
             <span>All Registered Platform Players (<span id="all-users-count">0</span>)</span>
           </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span id="showing-users-range-txt" style="font-size:11.5px;color:#94a3b8;font-weight:700"></span>
+            <button 
+              id="btn-toggle-users-dir-top" 
+              class="btn" 
+              style="display:none;background:rgba(0,230,118,0.15);border:1px solid #00e676;color:#00e676;font-size:11.5px;font-weight:800;padding:5px 14px;border-radius:6px;cursor:pointer;transition:all 0.2s" 
+              onclick="toggleUsersDirectoryExpansion()"
+            >
+              🔽 Show More
+            </button>
+          </div>
         </div>
+
         <div class="table-container">
           <table>
             <thead>
@@ -970,6 +982,18 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Bottom Show More / Show Less Action Bar -->
+        <div id="users-dir-bottom-bar" style="margin-top:12px;display:none;text-align:center">
+          <button 
+            id="btn-toggle-users-dir-bottom" 
+            class="btn" 
+            style="width:100%;padding:11px;background:linear-gradient(135deg,rgba(0,230,118,0.12),rgba(56,189,248,0.12));border:1.5px solid rgba(0,230,118,0.4);color:#00e676;font-size:13px;font-weight:900;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s" 
+            onclick="toggleUsersDirectoryExpansion()"
+          >
+            <span>🔽</span> <span id="btn-toggle-users-dir-bottom-txt">Show More Registered Players</span>
+          </button>
         </div>
       </section>
     </div>

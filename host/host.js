@@ -1098,15 +1098,52 @@
     }).join('');
   }
 
+  let isUserDirectoryExpanded = false;
+  const USER_DIR_COLLAPSED_LIMIT = 5;
+
+  window.toggleUsersDirectoryExpansion = function() {
+    isUserDirectoryExpanded = !isUserDirectoryExpanded;
+    renderAllUsersTable();
+  };
+
+  window.showAllUsersDirectoryExplicit = function() {
+    isUserDirectoryExpanded = true;
+    renderAllUsersTable();
+    const dirPanel = document.getElementById('all-users-directory-panel');
+    if (dirPanel) {
+      dirPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   window.loadAllUsersDirectory = async function() {
     const tbody = document.getElementById('all-users-tbody');
     if (!tbody) return;
 
     try {
       const res = await fetch('/api/admin/all-users');
-      if (!res.ok) return;
-      const data = await res.json();
-      allUsersData = data.users || [];
+      if (res.ok) {
+        const data = await res.json();
+        allUsersData = data.users || [];
+      }
+
+      // Check local storage for any legacy users that may exist
+      try {
+        const localUsers = JSON.parse(localStorage.getItem('ggwins_users') || '[]');
+        localUsers.forEach(lu => {
+          if (!allUsersData.some(u => (u.id && u.id === lu.id) || (u.username && lu.username && u.username.toLowerCase() === lu.username.toLowerCase()))) {
+            allUsersData.push({
+              id: lu.id || ('USER-' + Math.random().toString(36).substr(2, 8).toUpperCase()),
+              username: lu.username || 'Player',
+              email: lu.email || '-',
+              avatar: lu.avatar || '👑',
+              wallets: lu.wallets || { demo: 10000, real: 0, usdt: 0 },
+              vipLevel: lu.vipLevel || 'None',
+              createdAt: lu.createdAt || Date.now(),
+              lastLogin: lu.lastLogin || Date.now()
+            });
+          }
+        });
+      } catch(e){}
 
       setElText('all-users-count', allUsersData.length);
       setElText('nav-users-count', allUsersData.length);
@@ -1129,51 +1166,87 @@
       setElText('stat-total-players-usdt', `${totalPlayerUsdt.toFixed(2)} ₮`);
       setElText('stat-total-vip-players', totalVipCount);
 
-      if (allUsersData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><p>No registered players on platform yet.</p></td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = allUsersData.map((u, idx) => {
-        const w = u.wallets || { demo: 10000, real: 0, usdt: 0 };
-        const real = parseFloat(w.real || 0);
-        const demo = parseFloat(w.demo || 0);
-        const usdt = parseFloat(w.usdt || 0);
-        const regDate = u.createdAt ? new Date(u.createdAt).toLocaleString('en-IN') : 'N/A';
-        const isVip = u.vipLevel && u.vipLevel !== 'None' && u.vipLevel !== 'Standard';
-
-        return `
-          <tr>
-            <td>
-              <div style="display:flex;align-items:center;gap:6px">
-                <span style="font-size:11px;color:#64748b;font-weight:700">#${idx + 1}</span>
-                <code style="color:#00e676;font-family:monospace;font-weight:800;background:#0f172a;padding:3px 6px;border-radius:4px;border:1px solid rgba(0,230,118,0.3)">${u.id || 'USER-N/A'}</code>
-                <button class="btn-copy-mini" onclick="copyText('${u.id}', this)">Copy</button>
-              </div>
-            </td>
-            <td><strong>${u.avatar || '👑'} ${u.username || 'Player'}</strong></td>
-            <td style="color:#cbd5e1">${u.email || '-'}</td>
-            <td class="tx-amount inr" style="font-size:14px;font-weight:900">₹${real.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
-            <td style="color:#c084fc;font-weight:700">₹${demo.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
-            <td style="color:#38bdf8;font-weight:700">${usdt.toFixed(2)} ₮</td>
-            <td>
-              <span class="badge-status" style="background:${isVip ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.05)'};border:1px solid ${isVip ? '#ffd700' : '#475569'};color:${isVip ? '#ffd700' : '#94a3b8'};font-weight:800">
-                ${isVip ? '👑 ' + u.vipLevel : 'Standard'}
-              </span>
-            </td>
-            <td style="color:#94a3b8;font-size:12px">${regDate}</td>
-            <td>
-              <button class="btn btn-primary" style="padding:6px 12px;font-size:11.5px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;border:none;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 10px rgba(0,230,118,0.2)" onclick="searchUserWallet('${u.id}')">
-                🔍 Inspect &amp; Edit Wallet
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+      renderAllUsersTable();
     } catch(e) {
       console.error(e);
     }
   };
+
+  function renderAllUsersTable() {
+    const tbody = document.getElementById('all-users-tbody');
+    const rangeTxt = document.getElementById('showing-users-range-txt');
+    const topToggleBtn = document.getElementById('btn-toggle-users-dir-top');
+    const bottomBar = document.getElementById('users-dir-bottom-bar');
+    const bottomTxt = document.getElementById('btn-toggle-users-dir-bottom-txt');
+    if (!tbody) return;
+
+    if (allUsersData.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><p>No registered players on platform yet.</p></td></tr>`;
+      if (rangeTxt) rangeTxt.textContent = '0 players';
+      if (topToggleBtn) topToggleBtn.style.display = 'none';
+      if (bottomBar) bottomBar.style.display = 'none';
+      return;
+    }
+
+    const total = allUsersData.length;
+    let usersToDisplay = allUsersData;
+
+    if (!isUserDirectoryExpanded && total > USER_DIR_COLLAPSED_LIMIT) {
+      usersToDisplay = allUsersData.slice(0, USER_DIR_COLLAPSED_LIMIT);
+      if (rangeTxt) rangeTxt.textContent = `Showing ${USER_DIR_COLLAPSED_LIMIT} of ${total} players`;
+      if (topToggleBtn) {
+        topToggleBtn.style.display = 'inline-flex';
+        topToggleBtn.innerHTML = `🔽 Show All (${total})`;
+      }
+      if (bottomBar) bottomBar.style.display = 'block';
+      if (bottomTxt) bottomTxt.textContent = `🔽 Show All ${total} Registered Players (+${total - USER_DIR_COLLAPSED_LIMIT} More)`;
+    } else {
+      if (rangeTxt) rangeTxt.textContent = `Showing all ${total} players`;
+      if (topToggleBtn) {
+        topToggleBtn.style.display = total > USER_DIR_COLLAPSED_LIMIT ? 'inline-flex' : 'none';
+        topToggleBtn.innerHTML = `🔼 Show Less`;
+      }
+      if (bottomBar) bottomBar.style.display = total > USER_DIR_COLLAPSED_LIMIT ? 'block' : 'none';
+      if (bottomTxt) bottomTxt.textContent = `🔼 Show Less (Collapse to ${USER_DIR_COLLAPSED_LIMIT} Players)`;
+    }
+
+    tbody.innerHTML = usersToDisplay.map((u, idx) => {
+      const w = u.wallets || { demo: 10000, real: 0, usdt: 0 };
+      const real = parseFloat(w.real || 0);
+      const demo = parseFloat(w.demo || 0);
+      const usdt = parseFloat(w.usdt || 0);
+      const regDate = u.createdAt ? new Date(u.createdAt).toLocaleString('en-IN') : 'N/A';
+      const isVip = u.vipLevel && u.vipLevel !== 'None' && u.vipLevel !== 'Standard';
+
+      return `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;color:#64748b;font-weight:700">#${idx + 1}</span>
+              <code style="color:#00e676;font-family:monospace;font-weight:800;background:#0f172a;padding:3px 6px;border-radius:4px;border:1px solid rgba(0,230,118,0.3)">${u.id || 'USER-N/A'}</code>
+              <button class="btn-copy-mini" onclick="copyText('${u.id}', this)">Copy</button>
+            </div>
+          </td>
+          <td><strong>${u.avatar || '👑'} ${u.username || 'Player'}</strong></td>
+          <td style="color:#cbd5e1">${u.email || '-'}</td>
+          <td class="tx-amount inr" style="font-size:14px;font-weight:900">₹${real.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+          <td style="color:#c084fc;font-weight:700">₹${demo.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+          <td style="color:#38bdf8;font-weight:700">${usdt.toFixed(2)} ₮</td>
+          <td>
+            <span class="badge-status" style="background:${isVip ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.05)'};border:1px solid ${isVip ? '#ffd700' : '#475569'};color:${isVip ? '#ffd700' : '#94a3b8'};font-weight:800">
+              ${isVip ? '👑 ' + u.vipLevel : 'Standard'}
+            </span>
+          </td>
+          <td style="color:#94a3b8;font-size:12px">${regDate}</td>
+          <td>
+            <button class="btn btn-primary" style="padding:6px 12px;font-size:11.5px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;border:none;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 10px rgba(0,230,118,0.2)" onclick="searchUserWallet('${u.id}')">
+              🔍 Inspect &amp; Edit Wallet
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
 
   // ── 9. BOOTSTRAP (MANUAL REFRESH ONLY • NO AUTO-RELOAD) ─────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
