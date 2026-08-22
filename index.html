@@ -792,15 +792,23 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-    .bot-tag {
-      background: rgba(56, 189, 248, 0.2);
-      color: #38bdf8;
-      border: 1px solid #38bdf8;
-      font-size: 7.5px;
+    .tourn-player-tag {
+      font-size: 8px;
       font-weight: 900;
-      padding: 0 3px;
+      padding: 1px 5px;
       border-radius: 3px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .tourn-player-tag.vip-tag {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      box-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
+    }
+    .tourn-player-tag.pro-tag {
+      background: rgba(0, 230, 118, 0.18);
+      color: #00e676;
+      border: 1px solid rgba(0, 230, 118, 0.4);
     }
     .tourn-score { font-weight: 800; color: var(--gold); }
     .btn-join-tourn {
@@ -2052,132 +2060,132 @@
       }, 3200);
     }
 
-    // ── ALL 20 TOURNAMENTS WITH BOTS AT TOP ──
+    // ── ALL 20 TOURNAMENTS WITH TOP LEADERBOARD PLAYERS ──
     const TOURNAMENTS_DATA = [
       { id: 't_crash', name: 'GG Crash Grand Prix', icon: '🚀', pool: '₹50,000', bots: [
-        { name: '🤖 AlphaRocket_AI', score: '99,420 pts', isBot: true },
-        { name: '🤖 QuantumDerby_Bot', score: '96,180 pts', isBot: true },
-        { name: '🤖 HyperCrash_AI', score: '91,750 pts', isBot: true }
+        { name: 'Kabir_Sharma', baseScore: 99420, tag: 'VIP' },
+        { name: 'Aarav_Patel', baseScore: 96180, tag: 'PRO' },
+        { name: 'Rohan_Mehta', baseScore: 91750, tag: 'PRO' }
       ]},
       { id: 't_mines', name: 'GG Mines Gold Hunt', icon: '💣', pool: '₹45,000', bots: [
-        { name: '🤖 DiamondSeeker_AI', score: '98,900 pts', isBot: true },
-        { name: '🤖 MineSweeper_Bot', score: '94,620 pts', isBot: true },
-        { name: '🤖 GridMaster_AI', score: '89,400 pts', isBot: true }
+        { name: 'Vikram_Reddy', baseScore: 98900, tag: 'VIP' },
+        { name: 'Deepak_Verma', baseScore: 94620, tag: 'PRO' },
+        { name: 'Aditya_Roy', baseScore: 89400, tag: 'PRO' }
       ]},
       { id: 't_limbo', name: 'Limbo Rocket Challenge', icon: '📈', pool: '₹35,000', bots: [
-        { name: '🤖 TargetHunter_AI', score: '97,800 pts', isBot: true },
-        { name: '🤖 RocketStrike_Bot', score: '93,150 pts', isBot: true },
-        { name: '🤖 MoonLander_AI', score: '88,900 pts', isBot: true }
+        { name: 'Siddharth_R', baseScore: 97800, tag: 'VIP' },
+        { name: 'Karthik_Chauhan', baseScore: 93150, tag: 'PRO' },
+        { name: 'Pranav_B', baseScore: 88900, tag: 'PRO' }
       ]},
       { id: 't_dragontower', name: 'Dragon Tower Apex', icon: '🐉', pool: '₹40,000', bots: [
-        { name: '🤖 DragonClimber_AI', score: '98,200 pts', isBot: true },
-        { name: '🤖 FireMaster_Bot', score: '92,400 pts', isBot: true },
-        { name: '🤖 SkyTower_AI', score: '87,600 pts', isBot: true }
+        { name: 'Sameer_Khan', baseScore: 98200, tag: 'VIP' },
+        { name: 'Harsh_Vardhan', baseScore: 92400, tag: 'PRO' },
+        { name: 'Arjun_Nair', baseScore: 87600, tag: 'PRO' }
       ]},
       { id: 't_diamonds', name: 'Diamond Rush Cup', icon: '💎', pool: '₹30,000', bots: [
-        { name: '🤖 JewelKing_AI', score: '96,500 pts', isBot: true },
-        { name: '🤖 GemBlitz_Bot', score: '91,200 pts', isBot: true },
-        { name: '🤖 Sparkle_AI', score: '86,750 pts', isBot: true }
+        { name: 'Yash_Singhania', baseScore: 96500, tag: 'VIP' },
+        { name: 'Manish_Gupta', baseScore: 91200, tag: 'PRO' },
+        { name: 'Naveen_Kumar', baseScore: 86750, tag: 'PRO' }
       ]},
       { id: 't_slots', name: 'Fortune Slots Mega Jackpot', icon: '🎰', pool: '₹60,000', bots: [
-        { name: '🤖 TripleSeven_AI', score: '99,800 pts', isBot: true },
-        { name: '🤖 SpinMaster_Bot', score: '95,300 pts', isBot: true },
-        { name: '🤖 MegaReel_AI', score: '90,100 pts', isBot: true }
+        { name: 'Gaurav_Joshi', baseScore: 99800, tag: 'VIP' },
+        { name: 'Tanmay_Bhatia', baseScore: 95300, tag: 'PRO' },
+        { name: 'Kunal_Mehra', baseScore: 90100, tag: 'PRO' }
       ]},
       { id: 't_plinko', name: 'Plinko Drop Extravaganza', icon: '⚽', pool: '₹35,000', bots: [
-        { name: '🤖 PegboardAce_AI', score: '97,400 pts', isBot: true },
-        { name: '🤖 PinDropper_Bot', score: '92,800 pts', isBot: true },
-        { name: '🤖 BounceElite_AI', score: '87,200 pts', isBot: true }
+        { name: 'Abhishek_Roy', baseScore: 97400, tag: 'VIP' },
+        { name: 'Sahil_Chopra', baseScore: 92800, tag: 'PRO' },
+        { name: 'Dev_Malhotra', baseScore: 87200, tag: 'PRO' }
       ]},
       { id: 't_rummy', name: 'Indian Rummy 3D Masters', icon: '🃏', pool: '₹75,000', bots: [
-        { name: '🤖 DesiRummyPro_AI', score: '104,200 pts', isBot: true },
-        { name: '🤖 PureSequence_Bot', score: '98,900 pts', isBot: true },
-        { name: '🤖 JokerSlam_AI', score: '93,400 pts', isBot: true }
+        { name: 'Rajesh_Bansal', baseScore: 104200, tag: 'VIP' },
+        { name: 'Sunil_Rathore', baseScore: 98900, tag: 'PRO' },
+        { name: 'Vivek_Mishra', baseScore: 93400, tag: 'PRO' }
       ]},
       { id: 't_baccarat', name: 'Royale Baccarat High Rollers', icon: '👑', pool: '₹55,000', bots: [
-        { name: '🤖 BankerKing_AI', score: '99,100 pts', isBot: true },
-        { name: '🤖 NaturalNine_Bot', score: '94,500 pts', isBot: true },
-        { name: '🤖 PuntoBanco_AI', score: '89,800 pts', isBot: true }
+        { name: 'Ankit_Saxena', baseScore: 99100, tag: 'VIP' },
+        { name: 'Rishi_Kapoor', baseScore: 94500, tag: 'PRO' },
+        { name: 'Varun_Kashyap', baseScore: 89800, tag: 'PRO' }
       ]},
       { id: 't_blackjack', name: 'Blackjack 21 Pro League', icon: '♣️', pool: '₹65,000', bots: [
-        { name: '🤖 CardCounter_AI', score: '101,400 pts', isBot: true },
-        { name: '🤖 DealerBust_Bot', score: '96,700 pts', isBot: true },
-        { name: '🤖 AceTenMaster_AI', score: '91,250 pts', isBot: true }
+        { name: 'Chirag_Doshi', baseScore: 101400, tag: 'VIP' },
+        { name: 'Mayank_Agarwal', baseScore: 96700, tag: 'PRO' },
+        { name: 'Tarun_Grover', baseScore: 91250, tag: 'PRO' }
       ]},
       { id: 't_roulette', name: 'Roulette Royale Wheel Cup', icon: '🔴', pool: '₹50,000', bots: [
-        { name: '🤖 SpinViper_AI', score: '98,700 pts', isBot: true },
-        { name: '🤖 ZeroSector_Bot', score: '93,900 pts', isBot: true },
-        { name: '🤖 RedBlack_AI', score: '88,600 pts', isBot: true }
+        { name: 'Pankaj_Bhardwaj', baseScore: 98700, tag: 'VIP' },
+        { name: 'Sanjay_Tripathi', baseScore: 93900, tag: 'PRO' },
+        { name: 'Kishan_Sen', baseScore: 88600, tag: 'PRO' }
       ]},
       { id: 't_sicbo', name: 'Sic Bo 3-Dice Championship', icon: '🎲', pool: '₹35,000', bots: [
-        { name: '🤖 TripleDice_AI', score: '96,200 pts', isBot: true },
-        { name: '🤖 BigSmall_Bot', score: '91,800 pts', isBot: true },
-        { name: '🤖 DiceRoller_AI', score: '86,400 pts', isBot: true }
+        { name: 'Rohit_Chhabra', baseScore: 96200, tag: 'VIP' },
+        { name: 'Ayush_Thakur', baseScore: 91800, tag: 'PRO' },
+        { name: 'Bhavin_Shah', baseScore: 86400, tag: 'PRO' }
       ]},
       { id: 't_hilo', name: 'Hilo Master Predictor', icon: '🃏', pool: '₹30,000', bots: [
-        { name: '🤖 HighLowAce_AI', score: '95,800 pts', isBot: true },
-        { name: '🤖 NextCard_Bot', score: '90,400 pts', isBot: true },
-        { name: '🤖 KingQueen_AI', score: '85,900 pts', isBot: true }
+        { name: 'Girish_Rawat', baseScore: 95800, tag: 'VIP' },
+        { name: 'Praveen_Gowda', baseScore: 90400, tag: 'PRO' },
+        { name: 'Sumit_Pandey', baseScore: 85900, tag: 'PRO' }
       ]},
       { id: 't_coinflip', name: 'Coin Flip 3D Streak Arena', icon: '🪙', pool: '₹40,000', bots: [
-        { name: '🤖 HeadsTails_AI', score: '97,600 pts', isBot: true },
-        { name: '🤖 FlipStreak_Bot', score: '92,100 pts', isBot: true },
-        { name: '🤖 GoldenCoin_AI', score: '87,300 pts', isBot: true }
+        { name: 'Nikhil_Khatri', baseScore: 97600, tag: 'VIP' },
+        { name: 'Tejas_Deshmukh', baseScore: 92100, tag: 'PRO' },
+        { name: 'Mohit_Sarin', baseScore: 87300, tag: 'PRO' }
       ]},
       { id: 't_penalty', name: 'Penalty Shootout Golden Cup', icon: '⚽', pool: '₹45,000', bots: [
-        { name: '🤖 TopCorner_AI', score: '98,500 pts', isBot: true },
-        { name: '🤖 GoalKeeper_Bot', score: '93,700 pts', isBot: true },
-        { name: '🤖 StrikerAce_AI', score: '88,900 pts', isBot: true }
+        { name: 'Dhruv_Goswami', baseScore: 98500, tag: 'VIP' },
+        { name: 'Bharat_Solanki', baseScore: 93700, tag: 'PRO' },
+        { name: 'Hardik_Purohit', baseScore: 88900, tag: 'PRO' }
       ]},
       { id: 't_cups', name: 'Magic Shells Wizard Trophy', icon: '🪄', pool: '₹35,000', bots: [
-        { name: '🤖 ShellFinder_AI', score: '96,900 pts', isBot: true },
-        { name: '🤖 MagicEye_Bot', score: '91,600 pts', isBot: true },
-        { name: '🤖 CupTrick_AI', score: '86,800 pts', isBot: true }
+        { name: 'Chetan_Raval', baseScore: 96900, tag: 'VIP' },
+        { name: 'Alok_Dubey', baseScore: 91600, tag: 'PRO' },
+        { name: 'Lalit_Kishore', baseScore: 86800, tag: 'PRO' }
       ]},
       { id: 't_ludo', name: 'Ludo Champions 4-Player Clash', icon: '🎲', pool: '₹50,000', bots: [
-        { name: '🤖 LudoKing_AI', score: '99,300 pts', isBot: true },
-        { name: '🤖 TokenRunner_Bot', score: '94,200 pts', isBot: true },
-        { name: '🤖 SixMaster_AI', score: '89,500 pts', isBot: true }
+        { name: 'Ashok_Naidu', baseScore: 99300, tag: 'VIP' },
+        { name: 'Dharmesh_Modi', baseScore: 94200, tag: 'PRO' },
+        { name: 'Kamal_Hassan_K', baseScore: 89500, tag: 'PRO' }
       ]},
       { id: 't_dice', name: 'Classic Dice 3D Duel', icon: '🎲', pool: '₹30,000', bots: [
-        { name: '🤖 OverUnder_AI', score: '95,400 pts', isBot: true },
-        { name: '🤖 RollAce_Bot', score: '90,800 pts', isBot: true },
-        { name: '🤖 LuckySeven_AI', score: '85,300 pts', isBot: true }
+        { name: 'Subhash_Yadav', baseScore: 95400, tag: 'VIP' },
+        { name: 'Hemant_Garg', baseScore: 90800, tag: 'PRO' },
+        { name: 'Umesh_Chander', baseScore: 85300, tag: 'PRO' }
       ]},
       { id: 't_wheel', name: 'Wheel of Fortune Mega Spin', icon: '🎡', pool: '₹55,000', bots: [
-        { name: '🤖 FortuneWheel_AI', score: '98,800 pts', isBot: true },
-        { name: '🤖 BigMultiplier_Bot', score: '93,400 pts', isBot: true },
-        { name: '🤖 JackpotSpin_AI', score: '88,700 pts', isBot: true }
+        { name: 'Manoj_Pawar', baseScore: 98800, tag: 'VIP' },
+        { name: 'Raghav_Nambiar', baseScore: 93400, tag: 'PRO' },
+        { name: 'Bhupendra_Jain', baseScore: 88700, tag: 'PRO' }
       ]},
       { id: 't_keno', name: 'Keno Classic Number Sprint', icon: '🎱', pool: '₹30,000', bots: [
-        { name: '🤖 LuckyNumber_AI', baseScore: 95100, isBot: true },
-        { name: '🤖 KenoDraw_Bot', baseScore: 90200, isBot: true },
-        { name: '🤖 BallSelect_AI', baseScore: 85600, isBot: true }
+        { name: 'Vinay_Kulkarni', baseScore: 95100, tag: 'VIP' },
+        { name: 'Jayesh_Sanghvi', baseScore: 90200, tag: 'PRO' },
+        { name: 'Srinivas_Rao', baseScore: 85600, tag: 'PRO' }
       ]},
       { id: 't_snakes', name: 'Snakes & Ladders 3D Clash', icon: '🐍', pool: '₹50,000', bots: [
-        { name: '🤖 SnakeMaster_AI', baseScore: 99600, isBot: true },
-        { name: '🤖 LadderClimber_Bot', baseScore: 94800, isBot: true },
-        { name: '🤖 DiceKing_AI', baseScore: 89900, isBot: true }
+        { name: 'Mahesh_Kulkarni', baseScore: 99600, tag: 'VIP' },
+        { name: 'Santosh_Hegde', baseScore: 94800, tag: 'PRO' },
+        { name: 'Ganesh_Pillai', baseScore: 89900, tag: 'PRO' }
       ]},
       { id: 't_andarbahar', name: 'Andar Bahar 3D Championship', icon: '🃏', pool: '₹60,000', bots: [
-        { name: '🤖 JokerHunter_AI', baseScore: 102400, isBot: true },
-        { name: '🤖 AndarStreak_Bot', baseScore: 96800, isBot: true },
-        { name: '🤖 BaharKing_AI', baseScore: 91500, isBot: true }
+        { name: 'Kalyan_Reddy', baseScore: 102400, tag: 'VIP' },
+        { name: 'Vijay_Raghavan', baseScore: 96800, tag: 'PRO' },
+        { name: 'Balaji_Sundaram', baseScore: 91500, tag: 'PRO' }
       ]},
       { id: 't_teenpatti', name: 'Teen Patti 3D Royal Showdown', icon: '👑', pool: '₹80,000', bots: [
-        { name: '🤖 RoyalTrail_AI', baseScore: 105800, isBot: true },
-        { name: '🤖 PureSeq_Bot', baseScore: 98900, isBot: true },
-        { name: '🤖 ChaalMaster_AI', baseScore: 93200, isBot: true }
+        { name: 'Suraj_Singhania', baseScore: 105800, tag: 'VIP' },
+        { name: 'Dileep_Verma', baseScore: 98900, tag: 'PRO' },
+        { name: 'Hitesh_Chaudhary', baseScore: 93200, tag: 'PRO' }
       ]},
       { id: 't_aviator', name: 'Aviator Jet 3D Supersonic Cup', icon: '🚀', pool: '₹1,00,000', bots: [
-        { name: '🤖 Supersonic_AI', baseScore: 108900, isBot: true },
-        { name: '🤖 HighAltitude_Bot', baseScore: 99800, isBot: true },
-        { name: '🤖 CashoutKing_AI', baseScore: 94500, isBot: true }
+        { name: 'Rupesh_Dewan', baseScore: 108900, tag: 'VIP' },
+        { name: 'Anirudh_Bose', baseScore: 99800, tag: 'PRO' },
+        { name: 'Satyajit_Mitra', baseScore: 94500, tag: 'PRO' }
       ]},
       { id: 't_carrom', name: 'Carrom 3D Master League', icon: '🎯', pool: '₹50,000', bots: [
-        { name: '🤖 StrikerPro_AI', baseScore: 99800, isBot: true },
-        { name: '🤖 QueenCover_Bot', baseScore: 95400, isBot: true },
-        { name: '🤖 PocketMaster_AI', baseScore: 89900, isBot: true }
+        { name: 'Faizan_Qureshi', baseScore: 99800, tag: 'VIP' },
+        { name: 'Syed_Irfan', baseScore: 95400, tag: 'PRO' },
+        { name: 'Asif_Ali_Khan', baseScore: 89900, tag: 'PRO' }
       ]}
     ];
 
@@ -2242,7 +2250,6 @@
         const userEntry = registered[t.id] || { points: 0, wins: 0, losses: 0, matches: 0 };
         const userPts = userEntry.points || 0;
 
-        // 🤖 Bots ALWAYS Stay at the Top of the Leaderboard
         const bot3Score = Math.max(t.bots[2].baseScore || 85000, userPts + 5000);
         const bot2Score = Math.max(t.bots[1].baseScore || 92000, userPts + 10000);
         const bot1Score = Math.max(t.bots[0].baseScore || 98000, userPts + 15000);
@@ -2269,23 +2276,23 @@
               </div>
               <div class="tourn-row">
                 <span class="tourn-rank rank-1">#1</span>
-                <span class="tourn-user"><span>👑</span> ${t.bots[0].name} <span class="bot-tag">BOT</span></span>
+                <span class="tourn-user"><span>👑</span> @${t.bots[0].name} <span class="tourn-player-tag vip-tag">${t.bots[0].tag || 'VIP'}</span></span>
                 <span class="tourn-score">${bot1Score.toLocaleString()} pts</span>
               </div>
               <div class="tourn-row">
                 <span class="tourn-rank rank-2">#2</span>
-                <span class="tourn-user">${t.bots[1].name} <span class="bot-tag">BOT</span></span>
+                <span class="tourn-user"><span>🥈</span> @${t.bots[1].name} <span class="tourn-player-tag pro-tag">${t.bots[1].tag || 'PRO'}</span></span>
                 <span class="tourn-score">${bot2Score.toLocaleString()} pts</span>
               </div>
               <div class="tourn-row">
                 <span class="tourn-rank rank-3">#3</span>
-                <span class="tourn-user">${t.bots[2].name} <span class="bot-tag">BOT</span></span>
+                <span class="tourn-user"><span>🥉</span> @${t.bots[2].name} <span class="tourn-player-tag pro-tag">${t.bots[2].tag || 'PRO'}</span></span>
                 <span class="tourn-score">${bot3Score.toLocaleString()} pts</span>
               </div>
               ${isJoined ? `
                 <div class="tourn-row" style="background:rgba(0,230,118,0.14);border:1px solid rgba(0,230,118,0.4);padding:3px 6px;border-radius:6px;margin-top:3px">
                   <span class="tourn-rank" style="color:var(--green)">#4</span>
-                  <span class="tourn-user" style="color:var(--green);font-weight:800"><span>👤</span> ${playerName}</span>
+                  <span class="tourn-user" style="color:var(--green);font-weight:800"><span>👤</span> @${playerName}</span>
                   <span class="tourn-score" style="color:var(--green);font-weight:900">${userPts} pts (${userEntry.wins || 0}W / ${userEntry.losses || 0}L)</span>
                 </div>
               ` : `
@@ -2309,7 +2316,7 @@
 
     function registerTournament(tournId, tournName) {
       const activeWallet = localStorage.getItem('ggwins_active_wallet') || 'demo';
-      const wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 25000, usdt: 500 };
+      const wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 0, usdt: 0 };
 
       const fee = 50.0;
       let currKey = activeWallet === 'real' ? 'real' : 'demo';
