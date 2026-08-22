@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -403,6 +403,17 @@ function updateStats(){
 function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
 function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
 function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); }
+
+// Auto Initialize Dragon Tower Board
+buildTower();
+updateStats();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { buildTower(); updateStats(); });
+} else {
+  buildTower();
+  updateStats();
+}
+window.addEventListener('load', () => { buildTower(); updateStats(); });
 </script>
 </body>
 </html>
