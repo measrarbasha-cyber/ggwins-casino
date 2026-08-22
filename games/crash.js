@@ -37,8 +37,6 @@ window.addEventListener('resize', resizeCanvas);
 
 // ── CRASH POINT GENERATION (HEAVILY HOUSE-BIASED) ────
 function genCrashPoint(){
-  const isDemo = (typeof getActiveWalletKey === 'function' ? getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
-  if (isDemo) return parseFloat((4.50 + Math.random() * 10.0).toFixed(2));
   const r = Math.random();
   // 50% instant crash between 1.00x and 1.16x
   if(r < 0.50) return parseFloat((1.00 + Math.random() * 0.10).toFixed(2));
@@ -518,7 +516,7 @@ function addMyHistory(mult, won){
 // ── STATS ─────────────────────────────────────
 function updateStats(){
   const profEl = document.getElementById('stat-profit');
-  profEl.textContent = (totalProfit >= 0 ? '+' : '') + '₹' + totalProfit.toFixed(2);
+  profEl.textContent = (totalProfit >= 0 ? '+' : '') + '$' + totalProfit.toFixed(2);
   profEl.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
   document.getElementById('stat-wins').textContent = wins;
   document.getElementById('stat-losses').textContent = losses;
@@ -529,7 +527,7 @@ function showResult(won, amount, mult){
   const c = document.getElementById('result-container');
   c.innerHTML = `<div class="result-box ${won?'win':'lose'}">
     <div class="result-box-title">${won ? '🎉 Cashed Out' : '💥 Crashed at'}</div>
-    <div class="result-box-val">${won ? '+₹'+amount.toFixed(2) : mult.toFixed(2)+'×'}</div>
+    <div class="result-box-val">${won ? '+$'+amount.toFixed(2) : mult.toFixed(2)+'×'}</div>
   </div>`;
   setTimeout(() => c.innerHTML = '', 4000);
 }

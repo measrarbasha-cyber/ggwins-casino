@@ -555,7 +555,6 @@ function setTargetsDisabled(disabled){
 
 
 function startShootout(){
-  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   if(!requireAuth()) return;
   if(inRound) return;
 
@@ -678,7 +677,6 @@ function cashOutPenalty(){
 }
 
 function endShootout(won, payoutAmt = 0){
-  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   inRound = false;
   isAnimating = false;
   setTargetsDisabled(true);

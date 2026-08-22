@@ -210,7 +210,7 @@
           </div>
           <div class="mines-info-item">
             <div class="mines-info-label">Next Multiplier</div>
-            <div class="mines-info-val green" id="next-mult">1.04×</div>
+            <div class="mines-info-val green" id="next-mult">1.16×</div>
           </div>
           <div class="mines-info-item">
             <div class="mines-info-label">Current Payout</div>
@@ -316,83 +316,7 @@ const mcGrid = document.getElementById('mine-count-grid');
   mcGrid.appendChild(btn);
 });
 
-// 🎯 DYNAMIC PROBABILITY, STREAK TRACKER & ADAPTIVE HOUSE EDGE ENGINE
-function getGameWinStreak() {
-  return parseInt(localStorage.getItem('ggwins_win_streak_mines') || '0');
-}
-function incrementGameWinStreak() {
-  const cur = getGameWinStreak();
-  localStorage.setItem('ggwins_win_streak_mines', (cur + 1).toString());
-}
-function resetGameWinStreak() {
-  localStorage.setItem('ggwins_win_streak_mines', '0');
-}
-
-function getGameLoseStreak() {
-  return parseInt(localStorage.getItem('ggwins_lose_streak_mines') || '0');
-}
-function incrementGameLoseStreak() {
-  const cur = getGameLoseStreak();
-  localStorage.setItem('ggwins_lose_streak_mines', (cur + 1).toString());
-}
-function resetGameLoseStreak() {
-  localStorage.setItem('ggwins_lose_streak_mines', '0');
-}
-
-function getPostRecoveryFlag() {
-  return localStorage.getItem('ggwins_post_recovery_win_mines') === 'true';
-}
-function setPostRecoveryFlag(val) {
-  localStorage.setItem('ggwins_post_recovery_win_mines', val ? 'true' : 'false');
-}
-
-function getDynamicLoseChance(currentMines) {
-  const loseStreak = getGameLoseStreak();
-  const isPostRecovery = getPostRecoveryFlag();
-  const winStreak = getGameWinStreak();
-
-  // 1. 🔄 LOSS RECOVERY RULE: If user loses 9+ games in a row, boost winning probability (85% win / 15% loss)
-  if (loseStreak >= 9) {
-    return 0.15; // 85% Winning chance
-  }
-
-  // 2. 📉 POST-RECOVERY RULE: After user has won one recovery game, reduce winning chance by 75% (25% win / 75% loss)
-  if (isPostRecovery) {
-    return 0.75; // 75% Losing chance (Winning chance reduced to 25%)
-  }
-
-  // 3. 🎯 75% WINNING PROBABILITY FOR MINES 1, 2, 3, 4, 5, 6, 7, 8
-  if (currentMines >= 1 && currentMines <= 8) {
-    // Base: 75% Winning Probability / 25% Losing Probability
-    let loseChance = 0.25;
-    
-    // Anti-streak escalation on consecutive wins
-    if (winStreak === 1) {
-      loseChance = 0.38; // 62% Win / 38% Loss
-    } else if (winStreak === 2) {
-      loseChance = 0.55; // 45% Win / 55% Loss
-    } else if (winStreak === 3) {
-      loseChance = 0.72; // 28% Win / 72% Loss
-    } else if (winStreak >= 4) {
-      loseChance = 0.88; // 12% Win / 88% Loss
-    }
-    return loseChance;
-  } else if (currentMines <= 10) {
-    // For 10 mines: 55% Win / 45% Loss
-    let loseChance = 0.45;
-    if (winStreak >= 1) loseChance = Math.min(0.90, 0.45 + winStreak * 0.12);
-    return loseChance;
-  } else {
-    // Mines > 10 (High Risk Mode: 12-24 mines)
-    let loseChance = 0.75;
-    if (currentMines >= 15) loseChance = 0.92;
-    if (currentMines >= 20) loseChance = 0.98;
-    if (winStreak >= 1) loseChance = Math.min(0.99, loseChance + 0.05);
-    return loseChance;
-  }
-}
-
-// Multiplier calculation (ultra-reduced multiplier curve with strict ceiling)
+// Multiplier calculation (heavily reduced across all levels and all picks)
 function calcMult(totalTiles, mines, safeRevealed){
   if(safeRevealed === 0) return 1.00;
   let prob = 1;
@@ -400,22 +324,22 @@ function calcMult(totalTiles, mines, safeRevealed){
     prob *= (totalTiles - mines - i) / (totalTiles - i);
   }
   
-  // Ultra-reduced base multiplier scaling (house edge protected)
-  let baseMult = 1.00 + (0.16 * (1.0 / prob - 1.0));
+  // Heavily reduced base multiplier scaling
+  let baseMult = 1.00 + (0.55 * (1.0 / prob - 1.0));
 
-  // Tightly flatten multiplier gains after 2 gems
-  if (safeRevealed > 2) {
-    let p2 = 1;
-    for (let i = 0; i < 2; i++) {
-      p2 *= (totalTiles - mines - i) / (totalTiles - i);
+  // Tightly flatten multiplier gains after 3 gems
+  if (safeRevealed > 3) {
+    let p3 = 1;
+    for (let i = 0; i < 3; i++) {
+      p3 *= (totalTiles - mines - i) / (totalTiles - i);
     }
-    const multAt2 = 1.00 + (0.16 * (1.0 / p2 - 1.0));
-    const excess = baseMult - multAt2;
-    baseMult = multAt2 + (excess * 0.08);
+    const multAt3 = 1.00 + (0.55 * (1.0 / p3 - 1.0));
+    const excess = baseMult - multAt3;
+    baseMult = multAt3 + (excess * 0.15);
   }
 
-  // Maximum capped multiplier (strict house ceiling)
-  baseMult = Math.min(1.75, Math.max(1.02, baseMult));
+  // Cap extreme maximum multipliers
+  baseMult = Math.min(3.50, Math.max(1.02, baseMult));
 
   return parseFloat(baseMult.toFixed(2));
 }
@@ -438,39 +362,41 @@ function buildGrid(){
   }
 }
 
+/* 🎯 DYNAMIC PROBABILITY MATRIX:
+   - For Mines 15, 18, 20, 22, 24: 0 free gems, 1% Win / 99% Loss from pick 1!
+   - For Mines < 15: First 2-3 gems guaranteed safe, then 25% Win / 75% Loss.
+*/
+let safePicksThreshold = 2;
+
 function clickTile(idx, tile){
   if(!gameActive || revealed.has(idx)) return;
   picksInRound++;
 
-  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
-
   let hitMine = false;
-  const maxSafeGems = TOTAL - mineCount;
 
-  if (isDemo) {
-    // 🌟 DEMO ACCOUNT GUARANTEED 100% WIN RATE: User never hits a mine in demo!
-    hitMine = false;
-  } else {
-    // 🛑 REAL MONEY RULE: NEVER ALLOW PLAYER TO FIND ALL GEMS
-    if (picksInRound >= maxSafeGems) {
+  // 1. Extreme Mine Counts (15, 18, 20, 22, 24): NO free gems, 1% Win / 99% Loss
+  if (mineCount >= 15) {
+    const loseChance = 0.99; // 99% Loss, 1% Win
+    if (Math.random() < loseChance) {
       hitMine = true;
-    } else {
-      const loseChance = getDynamicLoseChance(mineCount);
-      hitMine = (Math.random() < loseChance);
-    }
-  }
-
-  // Ensure mine positions strictly match mineCount without adding extra mines
-  if (hitMine) {
-    if (!minePositions.has(idx)) {
-      // Clean swap: Remove an unrevealed mine so minePositions.size ALWAYS strictly equals mineCount!
-      const unrevMines = Array.from(minePositions).filter(m => !revealed.has(m) && m !== idx);
-      if (unrevMines.length > 0) {
-        minePositions.delete(unrevMines[0]);
-      }
       minePositions.add(idx);
+    } else {
+      hitMine = false;
+      if (minePositions.has(idx)) {
+        minePositions.delete(idx);
+        const unrevealed = [];
+        for (let i = 0; i < TOTAL; i++) {
+          if (!revealed.has(i) && i !== idx && !minePositions.has(i)) unrevealed.push(i);
+        }
+        if (unrevealed.length > 0) {
+          minePositions.add(unrevealed[Math.floor(Math.random() * unrevealed.length)]);
+        }
+      }
     }
-  } else {
+  } 
+  // 2. Regular Mine Counts (< 15): First 2-3 gems safe, then 25% Win / 75% Loss
+  else if (picksInRound <= safePicksThreshold && (TOTAL - mineCount) >= picksInRound) {
+    hitMine = false;
     if (minePositions.has(idx)) {
       minePositions.delete(idx);
       // Relocate mine to an unrevealed tile
@@ -480,6 +406,25 @@ function clickTile(idx, tile){
       }
       if (unrevealed.length > 0) {
         minePositions.add(unrevealed[Math.floor(Math.random() * unrevealed.length)]);
+      }
+    }
+  } else {
+    // After 2-3 gems for regular boards: 25% Win / 75% Loss
+    const loseChance = 0.75;
+    if (Math.random() < loseChance) {
+      hitMine = true;
+      minePositions.add(idx);
+    } else {
+      hitMine = false;
+      if (minePositions.has(idx)) {
+        minePositions.delete(idx);
+        const unrevealed = [];
+        for (let i = 0; i < TOTAL; i++) {
+          if (!revealed.has(i) && i !== idx && !minePositions.has(i)) unrevealed.push(i);
+        }
+        if (unrevealed.length > 0) {
+          minePositions.add(unrevealed[Math.floor(Math.random() * unrevealed.length)]);
+        }
       }
     }
   }
@@ -605,9 +550,6 @@ function endGame(won, cashed = false){
   document.querySelectorAll('.mc-btn').forEach(b => b.style.opacity = '');
 
   if(!won){
-    incrementGameLoseStreak();
-    resetGameWinStreak();
-    setPostRecoveryFlag(false);
     totalProfit -= betAmount;
     losses++;
     const mult = calcMult(TOTAL, mineCount, gemsFound);
@@ -617,13 +559,6 @@ function endGame(won, cashed = false){
     if(typeof trackGameWager === 'function') trackGameWager('GG Mines', betAmount, 0, false);
   } else if(!cashed){
     // Auto win (all gems found)
-    if (getGameLoseStreak() >= 9) {
-      setPostRecoveryFlag(true);
-    } else {
-      setPostRecoveryFlag(false);
-    }
-    resetGameLoseStreak();
-    incrementGameWinStreak();
     const mult = calcMult(TOTAL, mineCount, gemsFound);
     const payout = betAmount * mult;
     if(typeof adjustBalance === 'function') adjustBalance(payout, 'GG Mines All Gems Found');
@@ -634,14 +569,6 @@ function endGame(won, cashed = false){
     if(typeof flashBal === 'function') flashBal('flash-win');
     if(typeof trackGameWager === 'function') trackGameWager('GG Mines', betAmount, payout, true);
   } else {
-    // Cashed out with win
-    if (getGameLoseStreak() >= 9) {
-      setPostRecoveryFlag(true);
-    } else {
-      setPostRecoveryFlag(false);
-    }
-    resetGameLoseStreak();
-    incrementGameWinStreak();
     if(typeof flashBal === 'function') flashBal('flash-win');
   }
   updateStats();

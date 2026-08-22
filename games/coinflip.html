@@ -377,8 +377,6 @@ updateBetLabels();
 
 
 function flipCoin(){
-  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
-  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   if(!requireAuth()) return;
   if(isFlipping) return;
 

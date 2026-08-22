@@ -526,7 +526,6 @@ function renderCard(card, containerId){
 
 
 function dealBaccarat(){
-  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   if(!requireAuth()) return;
   if(isDealing) return;
 

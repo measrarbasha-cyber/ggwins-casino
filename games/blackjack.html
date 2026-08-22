@@ -233,7 +233,7 @@
     <div class="stats-row">
       <div class="stat-box">
         <div class="stat-box-label">Net Profit</div>
-        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">Wins</div>
@@ -388,7 +388,6 @@ function hit(){
 }
 
 function stand(){
-  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   if(gameOver) return;
   document.getElementById('bj-actions').style.display='none';
 
@@ -459,7 +458,7 @@ function endGame(outcome){
   switch(outcome){
     case 'blackjack':
       payout=betAmt* 1.75;
-      cls='win'; title='🃏 BLACKJACK!'; sub='+₹'+payout.toFixed(2);
+      cls='win'; title='🃏 BLACKJACK!'; sub='+$'+payout.toFixed(2);
       totalProfit+=payout-betAmt; wins++;
       if(typeof playGameSound === 'function') playGameSound('win');
       if(typeof trackGameWager === 'function') trackGameWager('GG Blackjack', betAmt, payout, true);
@@ -468,7 +467,7 @@ function endGame(outcome){
     case 'dealer-bust':
       payout=betAmt* 1.70;
       cls='win'; title=outcome==='dealer-bust'?'🎉 Dealer Bust!':'🎉 You Win!';
-      sub='+₹'+payout.toFixed(2);
+      sub='+$'+payout.toFixed(2);
       totalProfit+=payout-betAmt; wins++;
       if(typeof playGameSound === 'function') playGameSound('win');
       if(typeof trackGameWager === 'function') trackGameWager('GG Blackjack', betAmt, payout, true);
@@ -478,13 +477,13 @@ function endGame(outcome){
       cls='push'; title='🤝 Push'; sub='Bet returned';
       break;
     case 'bust':
-      cls='lose'; title='💥 Bust!'; sub='-₹'+betAmt.toFixed(2);
+      cls='lose'; title='💥 Bust!'; sub='-$'+betAmt.toFixed(2);
       totalProfit-=betAmt; losses++;
       if(typeof playGameSound === 'function') playGameSound('lose');
       if(typeof trackGameWager === 'function') trackGameWager('GG Blackjack', betAmt, 0, false);
       break;
     case 'lose':
-      cls='lose'; title='😔 Dealer Wins'; sub='-₹'+betAmt.toFixed(2);
+      cls='lose'; title='😔 Dealer Wins'; sub='-$'+betAmt.toFixed(2);
       totalProfit-=betAmt; losses++;
       if(typeof playGameSound === 'function') playGameSound('lose');
       if(typeof trackGameWager === 'function') trackGameWager('GG Blackjack', betAmt, 0, false);

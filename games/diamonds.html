@@ -407,7 +407,6 @@ function closeOverlayModal(){
 
 
 function spinDiamonds(){
-  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   if(!requireAuth()) return;
   if(isSpinning) return;
 
@@ -443,7 +442,7 @@ function spinDiamonds(){
 }
 
 function resolveDiamonds(bet){
-  const finalGems = isDemo ? ['💎','💎','💎','💎','💎'] : Array.from({length:5}, () => GEMS[Math.floor(Math.random()*GEMS.length)]);
+  const finalGems = [];
   for(let i=0; i<5; i++){
     finalGems.push(GEMS[Math.floor(Math.random()*GEMS.length)]);
   }

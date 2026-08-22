@@ -193,7 +193,7 @@
     <div class="stats-row">
       <div class="stat-box">
         <div class="stat-box-label">Profit</div>
-        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">Wins</div>
@@ -304,8 +304,7 @@ function updatePayoutsStrip(activeHits = null){
   }
 }
 
-function playKeno(){
-  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo"; if(!requireAuth()) return;
+function playKeno(){ if(!requireAuth()) return;
   if(isPlaying) return;
   if(selected.size === 0){ showToast('Select at least 1 number'); return; }
 

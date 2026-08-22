@@ -649,29 +649,7 @@ function executeRoll() {
   dice.classList.add('rolling');
 
   const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-  let rollVal = Math.floor(Math.random() * 6) + 1;
-  const isDemo = (typeof getActiveWalletKey === 'function' ? getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
-
-  if (isDemo) {
-    // 🌟 DEMO ACCOUNT GUARANTEED WIN: Player gets fast winning rolls and climbs ladders!
-    if (currentTurn === 0) {
-      const playerPos = PLAYERS[0].pos;
-      if (playerPos >= 94) {
-        rollVal = 100 - playerPos; // Exact roll to reach 100!
-      } else {
-        let foundLadderRoll = null;
-        for (let r = 1; r <= 6; r++) {
-          if (LADDERS[playerPos + r]) {
-            foundLadderRoll = r;
-            break;
-          }
-        }
-        rollVal = foundLadderRoll || (Math.random() < 0.6 ? 6 : 5);
-      }
-    } else {
-      rollVal = Math.floor(Math.random() * 3) + 1;
-    }
-  }
+  const rollVal = Math.floor(Math.random() * 6) + 1;
 
   setTimeout(() => {
     dice.classList.remove('rolling');

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -183,7 +183,7 @@
     <div class="stats-row">
       <div class="stat-box">
         <div class="stat-box-label">Profit</div>
-        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">Wins</div>
@@ -336,16 +336,9 @@ function spinWheel(){ if(!requireAuth()) return;
   const count = segments.length;
   const arc = (Math.PI * 2) / count;
 
-  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
-
+  // 🎯 Exactly 20% User Win Chance / 80% Loss Chance
   let targetIdx;
-  if (isDemo) {
-    // 🌟 DEMO ACCOUNT GUARANTEED WIN: Always land on profitable multiplier (>= 1.5x)!
-    const winIndices = [];
-    segments.forEach((s, idx) => { if(s.mult >= 1.5) winIndices.push(idx); });
-    targetIdx = winIndices.length > 0 ? winIndices[Math.floor(Math.random() * winIndices.length)] : 0;
-  } else if(Math.random() < 0.80){
-    // Real money odds: 20% win chance
+  if(Math.random() < 0.80){
     const lossIndices = [];
     segments.forEach((s, idx) => { if(s.mult === 0 || s.mult < 1.0) lossIndices.push(idx); });
     targetIdx = lossIndices.length > 0 ? lossIndices[Math.floor(Math.random() * lossIndices.length)] : 0;

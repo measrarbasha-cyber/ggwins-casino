@@ -417,28 +417,11 @@ function startNewHand() {
   document.getElementById('result-container').innerHTML = '';
   document.getElementById('hand-rank-badge').textContent = 'Blind';
 
-  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
   const deck = createDeck();
-
-  if (isDemo) {
-    // 🌟 DEMO ACCOUNT GUARANTEED WIN: Always deal unbeatable Trio/Trail hand (Aces/Kings/Queens)!
-    const topRanks = ['A', 'K', 'Q'];
-    const r = topRanks[Math.floor(Math.random() * topRanks.length)];
-    const val = RANK_VALUES[r];
-    playerHand = [
-      { rank: r, suit: '♠', val: val, color: 'black' },
-      { rank: r, suit: '♥', val: val, color: 'red' },
-      { rank: r, suit: '♦', val: val, color: 'red' }
-    ];
-    bot1Hand   = [deck.pop(), deck.pop(), deck.pop()];
-    bot2Hand   = [deck.pop(), deck.pop(), deck.pop()];
-    bot3Hand   = [deck.pop(), deck.pop(), deck.pop()];
-  } else {
-    playerHand = [deck.pop(), deck.pop(), deck.pop()];
-    bot1Hand   = [deck.pop(), deck.pop(), deck.pop()];
-    bot2Hand   = [deck.pop(), deck.pop(), deck.pop()];
-    bot3Hand   = [deck.pop(), deck.pop(), deck.pop()];
-  }
+  playerHand = [deck.pop(), deck.pop(), deck.pop()];
+  bot1Hand   = [deck.pop(), deck.pop(), deck.pop()];
+  bot2Hand   = [deck.pop(), deck.pop(), deck.pop()];
+  bot3Hand   = [deck.pop(), deck.pop(), deck.pop()];
 
   // Render Face Down Cards
   ['player', 'bot1', 'bot2', 'bot3'].forEach(who => {

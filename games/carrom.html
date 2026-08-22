@@ -615,7 +615,7 @@ function strikePlayer() {
   }, 3500);
 }
 
-/* 🤖 GOD-LEVEL GRANDMASTER BOT AI (PHYSICS-PERFECT TRAJECTORY SOLVER) */
+/* 🤖 MASTER-CLASS BOT AI (100% DIRECT CENTERLINE ALIGNMENT) */
 function botTurn() {
   if (!matchActive || currentTurn !== 'bot' || hasShot) return;
   setTimeout(() => {
@@ -624,65 +624,41 @@ function botTurn() {
     if (activeP.length === 0) return;
 
     let bestShot = null;
-    let maxQuality = -999999;
+    let minScore = 99999;
 
     activeP.forEach(p => {
-      // Prioritize Queen, then Black coins (Bot color), then White coins
-      let priorityScore = (p.type === 'queen') ? 500 : (p.type === 'black' ? 300 : 100);
+      // Prioritize Queen if available
+      const priorityWeight = (p.type === 'queen') ? 0.6 : 1.0;
 
       POCKETS.forEach(pkt => {
-        const dx = pkt.x - p.x;
-        const dy = pkt.y - p.y;
-        const distToPocket = Math.hypot(dx, dy) || 1;
-        const normPktX = dx / distToPocket;
-        const normPktY = dy / distToPocket;
+        const toPktDx = pkt.x - p.x;
+        const toPktDy = pkt.y - p.y;
+        const toPktDist = Math.hypot(toPktDx, toPktDy) || 1;
+        const normPktX = toPktDx / toPktDist;
+        const normPktY = toPktDy / toPktDist;
 
-        // Ghost contact point behind coin along pocket trajectory line
+        // Ghost contact point behind coin along pocket line
         const contactX = p.x - normPktX * (p.r + striker.r);
         const contactY = p.y - normPktY * (p.r + striker.r);
 
-        // Mathematical baseline alignment for Bot baseline (y = 95)
+        // Centerline baseline position for 100% direct strike
         let idealStrikerX = contactX;
-        if (Math.abs(normPktY) > 0.02) {
+        if (Math.abs(normPktY) > 0.05) {
           idealStrikerX = contactX - (contactY - 95) * (normPktX / normPktY);
         }
-        
-        // Clamp striker within valid baseline limits [115, 325]
-        const clampedStrikerX = Math.max(115, Math.min(325, idealStrikerX));
-        const clampPenalty = Math.abs(clampedStrikerX - idealStrikerX) * 2.5;
+        idealStrikerX = Math.max(115, Math.min(325, idealStrikerX));
 
-        // Calculate precision vector from striker baseline to contact point
-        const shotAngle = Math.atan2(contactY - 95, contactX - clampedStrikerX);
-        const distStrikerToContact = Math.hypot(contactX - clampedStrikerX, contactY - 95);
+        // Precision strike angle from baseline straight through contact point
+        const shotAngle = Math.atan2(contactY - 95, contactX - idealStrikerX);
 
-        // Check path clearance from other pieces
-        let obstaclePenalty = 0;
-        pieces.forEach(other => {
-          if (other.id === p.id || other.x < 0) return;
-          // Distance from other coin to line from striker to contact
-          const lineDx = contactX - clampedStrikerX;
-          const lineDy = contactY - 95;
-          const lineLen = Math.hypot(lineDx, lineDy) || 1;
-          const t = Math.max(0, Math.min(1, ((other.x - clampedStrikerX) * lineDx + (other.y - 95) * lineDy) / (lineLen * lineLen)));
-          const projX = clampedStrikerX + t * lineDx;
-          const projY = 95 + t * lineDy;
-          const perpDist = Math.hypot(other.x - projX, other.y - projY);
-          if (perpDist < (striker.r + other.r - 2)) {
-            obstaclePenalty += 400;
-          }
-        });
-
-        // Calibrated God-level quality score
-        const quality = priorityScore - distToPocket * 0.4 - distStrikerToContact * 0.3 - clampPenalty - obstaclePenalty;
-
-        if (quality > maxQuality) {
-          maxQuality = quality;
-          // Calibrated precision velocity
-          const calibratedPower = Math.min(27, Math.max(18, 17.5 + distToPocket * 0.035 + distStrikerToContact * 0.025));
+        // Quality score: distance + angle alignment
+        const score = toPktDist * priorityWeight;
+        if (score < minScore) {
+          minScore = score;
           bestShot = {
-            strikerX: clampedStrikerX,
+            strikerX: idealStrikerX,
             angle: shotAngle,
-            power: calibratedPower
+            power: Math.min(28, Math.max(18, toPktDist * 0.08 + 17))
           };
         }
       });
@@ -697,8 +673,8 @@ function botTurn() {
     } else {
       const target = activeP[0];
       const angle = Math.atan2(target.y - striker.y, target.x - striker.x);
-      striker.vx = Math.cos(angle) * 21;
-      striker.vy = Math.sin(angle) * 21;
+      striker.vx = Math.cos(angle) * 20;
+      striker.vy = Math.sin(angle) * 20;
     }
 
     hasShot = true;
@@ -714,7 +690,7 @@ function botTurn() {
         pieces.forEach(p => { p.vx = 0; p.vy = 0; });
       }
     }, 3500);
-  }, 700);
+  }, 800);
 }
 
 /* ── 2D 2-BODY ELASTIC MOMENTUM COLLISION RESOLUTION ── */
@@ -776,18 +752,14 @@ function updatePhysics() {
   if (striker.y < 36) { striker.y = 36; striker.vy = Math.abs(striker.vy) * 0.82; playCarromClick(); }
   if (striker.y > 404) { striker.y = 404; striker.vy = -Math.abs(striker.vy) * 0.82; playCarromClick(); }
 
-  // Check Striker Pocket Drop (Foul -> Hand striker over to opponent)
+  // Check Striker Pocket Drop
   POCKETS.forEach(pkt => {
     if (Math.hypot(striker.x - pkt.x, striker.y - pkt.y) < pkt.r + 2) {
       striker.vx = 0; striker.vy = 0;
       striker.x = -999;
       strikerFoul = true;
       playFoulSound();
-      if (currentTurn === 'player') {
-        showToast(`⚠️ FOUL! You potted the striker! Striker given to Bot.`, 'error');
-      } else {
-        showToast(`⚠️ FOUL! Bot potted the striker! Striker given to You.`, 'info');
-      }
+      showToast(`⚠️ FOUL! Striker Pocketed! Turn passes to opponent.`, 'error');
     }
   });
 
@@ -855,10 +827,10 @@ function updatePhysics() {
     if (fs.alpha <= 0) floatingScores.splice(i, 1);
   }
 
-  // 🏆 Check Match Completion ONLY WHEN THE LAST COIN IS POTTED (activeRemaining === 0)
+  // 🏆 Check Match Completion ONLY when all coins are pocketed or target reached
   if (matchActive && !isMatchSettled && turnCount > 0) {
     const activeRemaining = pieces.filter(p => p.x > 0).length;
-    if (activeRemaining === 0) {
+    if (playerPts >= 40 || botPts >= 40 || activeRemaining === 0) {
       const isMotionStopped = (striker.vx === 0 && striker.vy === 0) &&
         pieces.every(p => p.x < 0 || (p.vx === 0 && p.vy === 0));
       if (isMotionStopped) {
@@ -868,7 +840,7 @@ function updatePhysics() {
     }
   }
 
-  // Turn Passing Rules (and striker foul handover)
+  // Turn Passing Rules
   if (matchActive && hasShot) {
     const isStrikerSettled = (striker.vx === 0 && striker.vy === 0);
     const allPiecesSettled = pieces.every(p => p.x < 0 || (p.vx === 0 && p.vy === 0));
@@ -876,7 +848,6 @@ function updatePhysics() {
     if (isStrikerSettled && allPiecesSettled) {
       clearTimeout(turnWatchdog);
       if (strikerFoul) {
-        // FOUL: Hand over striker immediately to opponent
         currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
         resetStriker();
         if (currentTurn === 'bot') botTurn();
@@ -896,7 +867,7 @@ function updatePhysics() {
   }
 }
 
-/* 👑 DECIDE WINNER AFTER LAST COIN IS POTTED & PAYOUT WINNING AMOUNT TO USER */
+/* 👑 DECIDE WINNER BY EARNED POINTS AND PAYOUT ONLY IF USER WINS */
 function endCarromMatch() {
   if (isMatchSettled) return;
   isMatchSettled = true;
@@ -909,10 +880,9 @@ function endCarromMatch() {
   }
 
   const pool = POOLS[activePool];
-  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
-  // 🌟 DEMO ACCOUNT GUARANTEED WIN: Player always wins in demo mode!
-  const isPlayerWin = isDemo || (playerPts > botPts);
-  const isDraw = !isDemo && (playerPts === botPts);
+  // Strict points comparison: Player wins ONLY if their score is strictly higher than bot
+  const isPlayerWin = (playerPts > botPts);
+  const isDraw = (playerPts === botPts);
   const res = document.getElementById('result-container');
 
   if (isPlayerWin) {
@@ -920,15 +890,9 @@ function endCarromMatch() {
     const profit = pool.prize - pool.entry;
     statsProfit += profit;
 
-    // 💰 CREDITING WINNING AMOUNT DIRECTLY TO ACTIVE BALANCE
+    // 💰 ADD WINNING AMOUNT OF SELECTED POOL TO REAL USER BALANCE (ONLY ON USER WIN)
     if (typeof window.adjustBalance === 'function') {
-      window.adjustBalance(pool.prize, `Carrom 3D 1st Prize Victory – ${pool.name}`);
-    } else if (typeof window.setBalance === 'function') {
-      const cur = (typeof window.getBalance === 'function') ? window.getBalance() : 50000;
-      window.setBalance(cur + pool.prize);
-    }
-    if (typeof window.updateAllWalletDisplays === 'function') {
-      window.updateAllWalletDisplays();
+      window.adjustBalance(pool.prize, `Carrom 3D 1st Prize – ${pool.name}`);
     }
     if (typeof flashBal === 'function') flashBal('flash-win');
     launchCarromConfetti();
@@ -936,19 +900,16 @@ function endCarromMatch() {
     if (res) {
       res.innerHTML = `
         <div class="result-box win">
-          <div class="result-box-title">👑 VICTORY! ALL COINS POTTED! (${playerPts} vs ${botPts} pts)</div>
+          <div class="result-box-title">👑 VICTORY! YOU WON (${playerPts} vs ${botPts} pts)</div>
           <div class="result-box-val">+₹${pool.prize.toLocaleString()}</div>
         </div>
       `;
     }
-    showToast(`🏆 VICTORY! You won ₹${pool.prize.toLocaleString()}! Credited to your account.`, 'success');
+    showToast(`🏆 VICTORY! You won ₹${pool.prize.toLocaleString()}! Credited to your balance.`, 'success');
   } else if (isDraw) {
     // Refund on draw
     if (typeof window.adjustBalance === 'function') {
       window.adjustBalance(pool.entry, `Carrom 3D Draw Refund – ${pool.name}`);
-    }
-    if (typeof window.updateAllWalletDisplays === 'function') {
-      window.updateAllWalletDisplays();
     }
     if (res) {
       res.innerHTML = `
@@ -960,7 +921,7 @@ function endCarromMatch() {
     }
     showToast(`🤝 Match Tied! Entry fee refunded.`, 'info');
   } else {
-    // Bot Won -> Player Loss
+    // Bot Won -> Player Loss (No money added)
     statsLosses++;
     statsProfit -= pool.entry;
     if (typeof flashBal === 'function') flashBal('flash-lose');

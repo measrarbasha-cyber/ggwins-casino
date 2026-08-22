@@ -387,7 +387,7 @@
     <div class="stats-row">
       <div class="stat-box">
         <div class="stat-box-label">Profit</div>
-        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">Wins</div>
@@ -595,8 +595,7 @@ function setStatus(msg, color='#94a3b8'){
 
 /* ===== DICE ROLL ===== */
 const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
-function rollLudoDice(){
-  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo"; if(!requireAuth()) return;
+function rollLudoDice(){ if(!requireAuth()) return;
   if(!gameActive || currentTurn!=='player' || !canRoll || isAnimating) return;
   canRoll = false;
 
