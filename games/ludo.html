@@ -250,7 +250,20 @@
   pointer-events: none; z-index: 50;
 }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initLudo === 'function') {
+    window.initLudo = initLudo;
+    initLudo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initLudo === 'function') initLudo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initLudo === 'function') initLudo(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -401,8 +414,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initLudo === 'function') {
+    window.initLudo = initLudo;
+    initLudo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initLudo === 'function') initLudo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initLudo === 'function') initLudo(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initLudo === 'function') {
+    window.initLudo = initLudo;
+    initLudo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initLudo === 'function') initLudo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initLudo === 'function') initLudo(); } catch(e) {} });
+
+</script>
 <script>
 updateAllWalletDisplays();
 
@@ -879,6 +918,19 @@ function updateStats(){
   document.getElementById('stat-wins').textContent   = wins;
   document.getElementById('stat-losses').textContent = losses;
 }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initLudo === 'function') {
+    window.initLudo = initLudo;
+    initLudo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initLudo === 'function') initLudo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initLudo === 'function') initLudo(); } catch(e) {} });
+
 </script>
 </body>
 </html>

@@ -152,7 +152,20 @@
   pointer-events: none; z-index: 60;
 }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCarrom === 'function') {
+    window.initCarrom = initCarrom;
+    initCarrom();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -276,7 +289,20 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCarrom === 'function') {
+    window.initCarrom = initCarrom;
+    initCarrom();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
+
+</script>
 <script>
 // 🛡️ Global Error Boundary
 window.onerror = function(msg, url, line) {
@@ -1209,6 +1235,19 @@ window.addEventListener('load', () => {
   const ts = document.getElementById('turn-status');
   if (ts) ts.innerHTML = `👆 Select a pool and click <strong>"Join Battle"</strong> to start!`;
 });
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCarrom === 'function') {
+    window.initCarrom = initCarrom;
+    initCarrom();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
+
 </script>
 </body>
 </html>

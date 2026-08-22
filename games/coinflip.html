@@ -5,7 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coin Flip 3D – GG Wins</title>
 <link rel="stylesheet" href="../game-shell.css">
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCoin === 'function') {
+    window.initCoin = initCoin;
+    initCoin();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCoin === 'function') initCoin(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCoin === 'function') initCoin(); } catch(e) {} });
+
+</script>
 <style>
 .coin-area {
   flex: 1;
@@ -338,8 +351,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCoin === 'function') {
+    window.initCoin = initCoin;
+    initCoin();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCoin === 'function') initCoin(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCoin === 'function') initCoin(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCoin === 'function') {
+    window.initCoin = initCoin;
+    initCoin();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCoin === 'function') initCoin(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCoin === 'function') initCoin(); } catch(e) {} });
+
+</script>
 <script>
 updateAllWalletDisplays();
 
@@ -488,6 +527,19 @@ function launchCoinConfetti(){
   }
   render();
 }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCoin === 'function') {
+    window.initCoin = initCoin;
+    initCoin();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCoin === 'function') initCoin(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCoin === 'function') initCoin(); } catch(e) {} });
+
 </script>
 </body>
 </html>

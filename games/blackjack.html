@@ -133,7 +133,20 @@
 .gb-title { font-size:20px;font-weight:900;margin-bottom:2px; }
 .gb-sub { font-size:13px;color:var(--text2); }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initBlackjack === 'function') {
+    window.initBlackjack = initBlackjack;
+    initBlackjack();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initBlackjack === 'function') initBlackjack(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initBlackjack === 'function') initBlackjack(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -252,8 +265,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initBlackjack === 'function') {
+    window.initBlackjack = initBlackjack;
+    initBlackjack();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initBlackjack === 'function') initBlackjack(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initBlackjack === 'function') initBlackjack(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initBlackjack === 'function') {
+    window.initBlackjack = initBlackjack;
+    initBlackjack();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initBlackjack === 'function') initBlackjack(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initBlackjack === 'function') initBlackjack(); } catch(e) {} });
+
+</script>
 <script>
 function updateBal(){ updateAllWalletDisplays(); }
 
@@ -528,6 +567,19 @@ function showToast(msg){
   t.textContent=msg; document.body.appendChild(t);
   setTimeout(()=>t.remove(),2500);
 }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initBlackjack === 'function') {
+    window.initBlackjack = initBlackjack;
+    initBlackjack();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initBlackjack === 'function') initBlackjack(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initBlackjack === 'function') initBlackjack(); } catch(e) {} });
+
 </script>
 </body>
 </html>

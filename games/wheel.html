@@ -103,7 +103,20 @@
 .wh-chip.low { background: #00e676; color: #000; }
 .wh-chip.zero { background: #ef4444; color: #fff; }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof drawWheel === 'function') {
+    window.drawWheel = drawWheel;
+    drawWheel();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof drawWheel === 'function') drawWheel(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof drawWheel === 'function') drawWheel(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -197,8 +210,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof drawWheel === 'function') {
+    window.drawWheel = drawWheel;
+    drawWheel();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof drawWheel === 'function') drawWheel(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof drawWheel === 'function') drawWheel(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof drawWheel === 'function') {
+    window.drawWheel = drawWheel;
+    drawWheel();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof drawWheel === 'function') drawWheel(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof drawWheel === 'function') drawWheel(); } catch(e) {} });
+
+</script>
 <script>
 function updateBal(){ updateAllWalletDisplays(); }
 updateBal();
@@ -250,6 +289,7 @@ let totalProfit = 0, wins = 0, losses = 0;
 const canvas = document.getElementById('wheel-canvas');
 const ctx = canvas.getContext('2d');
 
+window.drawWheel = drawWheel;
 function drawWheel(){
   const segments = WHEEL_PRESETS[currentRisk];
   const count = segments.length;
@@ -470,6 +510,19 @@ function updateStats(){
 function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
 function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
 function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof drawWheel === 'function') {
+    window.drawWheel = drawWheel;
+    drawWheel();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof drawWheel === 'function') drawWheel(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof drawWheel === 'function') drawWheel(); } catch(e) {} });
+
 </script>
 </body>
 </html>

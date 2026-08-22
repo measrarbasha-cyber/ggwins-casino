@@ -188,7 +188,20 @@
 .mode-btn.over.active { background: rgba(0,230,118,0.2); color: var(--green); }
 .mode-btn.under.active { background: rgba(239,83,80,0.2); color: var(--red); }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof updateDiceUI === 'function') {
+    window.updateDiceUI = updateDiceUI;
+    updateDiceUI();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof updateDiceUI === 'function') updateDiceUI(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof updateDiceUI === 'function') updateDiceUI(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -353,8 +366,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof updateDiceUI === 'function') {
+    window.updateDiceUI = updateDiceUI;
+    updateDiceUI();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof updateDiceUI === 'function') updateDiceUI(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof updateDiceUI === 'function') updateDiceUI(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof updateDiceUI === 'function') {
+    window.updateDiceUI = updateDiceUI;
+    updateDiceUI();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof updateDiceUI === 'function') updateDiceUI(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof updateDiceUI === 'function') updateDiceUI(); } catch(e) {} });
+
+</script>
 <script>
 // ── BALANCE ──────────────────────────────────
 function updateBal(){ updateAllWalletDisplays(); }
@@ -601,6 +640,19 @@ function showToast(msg){
 // Bet amount input change → update odds display
 document.getElementById('bet-amount').addEventListener('input', updateSliderUI);
 updateSliderUI();
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof updateDiceUI === 'function') {
+    window.updateDiceUI = updateDiceUI;
+    updateDiceUI();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof updateDiceUI === 'function') updateDiceUI(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof updateDiceUI === 'function') updateDiceUI(); } catch(e) {} });
+
 </script>
 </body>
 </html>

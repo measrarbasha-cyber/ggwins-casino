@@ -287,7 +287,20 @@
   pointer-events: none; z-index: 60;
 }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof buildBoard === 'function') {
+    window.buildBoard = buildBoard;
+    buildBoard();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof buildBoard === 'function') buildBoard(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof buildBoard === 'function') buildBoard(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -404,7 +417,20 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof buildBoard === 'function') {
+    window.buildBoard = buildBoard;
+    buildBoard();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof buildBoard === 'function') buildBoard(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof buildBoard === 'function') buildBoard(); } catch(e) {} });
+
+</script>
 <script>
 /* ── SNAKES & LADDERS ENGINE ── */
 const POOLS = {
@@ -431,6 +457,7 @@ const PLAYERS = [
 const LADDERS = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 };
 const SNAKES  = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
 
+window.buildBoard = buildBoard;
 function buildBoard() {
   const grid = document.getElementById('snakes-grid');
   grid.innerHTML = '';
@@ -820,6 +847,19 @@ window.addEventListener('load', () => {
     drawSnakesAndLaddersGraphics();
   });
 });
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof buildBoard === 'function') {
+    window.buildBoard = buildBoard;
+    buildBoard();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof buildBoard === 'function') buildBoard(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof buildBoard === 'function') buildBoard(); } catch(e) {} });
+
 </script>
 </body>
 </html>

@@ -174,7 +174,20 @@
   pointer-events: none; z-index: 60;
 }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initTeenPatti === 'function') {
+    window.initTeenPatti = initTeenPatti;
+    initTeenPatti();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initTeenPatti === 'function') initTeenPatti(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initTeenPatti === 'function') initTeenPatti(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -320,7 +333,20 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initTeenPatti === 'function') {
+    window.initTeenPatti = initTeenPatti;
+    initTeenPatti();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initTeenPatti === 'function') initTeenPatti(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initTeenPatti === 'function') initTeenPatti(); } catch(e) {} });
+
+</script>
 <script>
 /* ── TEEN PATTI ENGINE ── */
 const SUITS = ['♠', '♥', '♦', '♣'];
@@ -599,6 +625,19 @@ function launchTPConfetti() {
   }
   render();
 }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initTeenPatti === 'function') {
+    window.initTeenPatti = initTeenPatti;
+    initTeenPatti();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initTeenPatti === 'function') initTeenPatti(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initTeenPatti === 'function') initTeenPatti(); } catch(e) {} });
+
 </script>
 </body>
 </html>

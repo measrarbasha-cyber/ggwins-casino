@@ -57,7 +57,20 @@
   max-width: 560px;
 }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initPlinko === 'function') {
+    window.initPlinko = initPlinko;
+    initPlinko();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initPlinko === 'function') initPlinko(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initPlinko === 'function') initPlinko(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -164,8 +177,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initPlinko === 'function') {
+    window.initPlinko = initPlinko;
+    initPlinko();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initPlinko === 'function') initPlinko(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initPlinko === 'function') initPlinko(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initPlinko === 'function') {
+    window.initPlinko = initPlinko;
+    initPlinko();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initPlinko === 'function') initPlinko(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initPlinko === 'function') initPlinko(); } catch(e) {} });
+
+</script>
 <script>
 function updateBal(){ updateAllWalletDisplays(); }
 updateBal();
@@ -563,6 +602,19 @@ function showToast(msg){
 buildBuckets();
 resizeCanvas();
 loop();
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initPlinko === 'function') {
+    window.initPlinko = initPlinko;
+    initPlinko();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initPlinko === 'function') initPlinko(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initPlinko === 'function') initPlinko(); } catch(e) {} });
+
 </script>
 </body>
 </html>

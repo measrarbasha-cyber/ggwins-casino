@@ -5,7 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GG Sic Bo 3-Dice – GG Wins</title>
 <link rel="stylesheet" href="../game-shell.css">
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initSicbo === 'function') {
+    window.initSicbo = initSicbo;
+    initSicbo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initSicbo === 'function') initSicbo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initSicbo === 'function') initSicbo(); } catch(e) {} });
+
+</script>
 <style>
 .sicbo-area {
   flex: 1;
@@ -390,8 +403,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initSicbo === 'function') {
+    window.initSicbo = initSicbo;
+    initSicbo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initSicbo === 'function') initSicbo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initSicbo === 'function') initSicbo(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initSicbo === 'function') {
+    window.initSicbo = initSicbo;
+    initSicbo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initSicbo === 'function') initSicbo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initSicbo === 'function') initSicbo(); } catch(e) {} });
+
+</script>
 <script>
 updateAllWalletDisplays();
 
@@ -637,6 +676,19 @@ function launchSicBoConfetti(){
   }
   render();
 }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initSicbo === 'function') {
+    window.initSicbo = initSicbo;
+    initSicbo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initSicbo === 'function') initSicbo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initSicbo === 'function') initSicbo(); } catch(e) {} });
+
 </script>
 </body>
 </html>

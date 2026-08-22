@@ -171,7 +171,20 @@
   text-shadow: 0 0 25px rgba(255,215,0,0.6);
 }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCard === 'function') {
+    window.initCard = initCard;
+    initCard();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCard === 'function') initCard(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCard === 'function') initCard(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -283,8 +296,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCard === 'function') {
+    window.initCard = initCard;
+    initCard();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCard === 'function') initCard(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCard === 'function') initCard(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCard === 'function') {
+    window.initCard = initCard;
+    initCard();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCard === 'function') initCard(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCard === 'function') initCard(); } catch(e) {} });
+
+</script>
 <script>
 function updateBal(){ updateAllWalletDisplays(); }
 updateBal();
@@ -527,6 +566,19 @@ function updateStats(){
 function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
 function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
 function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initCard === 'function') {
+    window.initCard = initCard;
+    initCard();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCard === 'function') initCard(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initCard === 'function') initCard(); } catch(e) {} });
+
 </script>
 </body>
 </html>

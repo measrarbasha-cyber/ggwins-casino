@@ -221,7 +221,20 @@
   pointer-events: none; z-index: 50;
 }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initDiamonds === 'function') {
+    window.initDiamonds = initDiamonds;
+    initDiamonds();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initDiamonds === 'function') initDiamonds(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initDiamonds === 'function') initDiamonds(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -342,8 +355,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initDiamonds === 'function') {
+    window.initDiamonds = initDiamonds;
+    initDiamonds();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initDiamonds === 'function') initDiamonds(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initDiamonds === 'function') initDiamonds(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initDiamonds === 'function') {
+    window.initDiamonds = initDiamonds;
+    initDiamonds();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initDiamonds === 'function') initDiamonds(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initDiamonds === 'function') initDiamonds(); } catch(e) {} });
+
+</script>
 <script>
 updateAllWalletDisplays();
 
@@ -582,6 +621,19 @@ function launchDiamondsConfetti(){
   }
   render();
 }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initDiamonds === 'function') {
+    window.initDiamonds = initDiamonds;
+    initDiamonds();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initDiamonds === 'function') initDiamonds(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initDiamonds === 'function') initDiamonds(); } catch(e) {} });
+
 </script>
 </body>
 </html>

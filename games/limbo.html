@@ -103,7 +103,20 @@
   100% { transform: translate(var(--tx),var(--ty)) scale(0); opacity: 0; }
 }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initLimbo === 'function') {
+    window.initLimbo = initLimbo;
+    initLimbo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initLimbo === 'function') initLimbo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initLimbo === 'function') initLimbo(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -238,8 +251,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initLimbo === 'function') {
+    window.initLimbo = initLimbo;
+    initLimbo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initLimbo === 'function') initLimbo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initLimbo === 'function') initLimbo(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initLimbo === 'function') {
+    window.initLimbo = initLimbo;
+    initLimbo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initLimbo === 'function') initLimbo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initLimbo === 'function') initLimbo(); } catch(e) {} });
+
+</script>
 <script>
 function updateBal(){ updateAllWalletDisplays(); }
 updateBal();
@@ -435,6 +474,19 @@ function showToast(msg){
   t.textContent=msg; document.body.appendChild(t);
   setTimeout(()=>t.remove(),2500);
 }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initLimbo === 'function') {
+    window.initLimbo = initLimbo;
+    initLimbo();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initLimbo === 'function') initLimbo(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initLimbo === 'function') initLimbo(); } catch(e) {} });
+
 </script>
 </body>
 </html>

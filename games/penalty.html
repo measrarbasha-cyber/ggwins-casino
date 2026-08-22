@@ -5,7 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GG Penalty Shootout – GG Wins</title>
 <link rel="stylesheet" href="../game-shell.css">
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initPenalty === 'function') {
+    window.initPenalty = initPenalty;
+    initPenalty();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initPenalty === 'function') initPenalty(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initPenalty === 'function') initPenalty(); } catch(e) {} });
+
+</script>
 <style>
 /* Football Pitch Arena */
 .penalty-area {
@@ -456,8 +469,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initPenalty === 'function') {
+    window.initPenalty = initPenalty;
+    initPenalty();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initPenalty === 'function') initPenalty(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initPenalty === 'function') initPenalty(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initPenalty === 'function') {
+    window.initPenalty = initPenalty;
+    initPenalty();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initPenalty === 'function') initPenalty(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initPenalty === 'function') initPenalty(); } catch(e) {} });
+
+</script>
 <script>
 updateAllWalletDisplays();
 
@@ -757,6 +796,19 @@ function launchPenaltyConfetti(){
   }
   render();
 }
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initPenalty === 'function') {
+    window.initPenalty = initPenalty;
+    initPenalty();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initPenalty === 'function') initPenalty(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initPenalty === 'function') initPenalty(); } catch(e) {} });
+
 </script>
 </body>
 </html>

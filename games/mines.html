@@ -161,7 +161,20 @@
 .mc-btn:hover { border-color: var(--border2); color: var(--text); }
 .mc-btn.active { background: rgba(239,83,80,0.15); border-color: rgba(239,83,80,0.4); color: var(--red); }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initMines === 'function') {
+    window.initMines = initMines;
+    initMines();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initMines === 'function') initMines(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initMines === 'function') initMines(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -286,7 +299,20 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initMines === 'function') {
+    window.initMines = initMines;
+    initMines();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initMines === 'function') initMines(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initMines === 'function') initMines(); } catch(e) {} });
+
+</script>
 <script>
 let mineCount = 3;
 let gameActive = false;
@@ -701,6 +727,19 @@ function showToast(msg, type = 'info'){
 
 buildGrid();
 updateNextMult(0);
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof initMines === 'function') {
+    window.initMines = initMines;
+    initMines();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initMines === 'function') initMines(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof initMines === 'function') initMines(); } catch(e) {} });
+
 </script>
 </body>
 </html>

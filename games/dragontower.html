@@ -92,7 +92,20 @@
   opacity: 0.6;
 }
 </style>
-<script src="../security-guard.js"></script>
+<script src="../security-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof buildTower === 'function') {
+    window.buildTower = buildTower;
+    buildTower();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof buildTower === 'function') buildTower(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof buildTower === 'function') buildTower(); } catch(e) {} });
+
+</script>
 </head>
 <body>
 
@@ -186,8 +199,34 @@
   </div>
 </div>
 
-<script src="../wallet.js"></script>
-<script src="../auth-guard.js"></script>
+<script src="../wallet.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof buildTower === 'function') {
+    window.buildTower = buildTower;
+    buildTower();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof buildTower === 'function') buildTower(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof buildTower === 'function') buildTower(); } catch(e) {} });
+
+</script>
+<script src="../auth-guard.js">
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof buildTower === 'function') {
+    window.buildTower = buildTower;
+    buildTower();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof buildTower === 'function') buildTower(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof buildTower === 'function') buildTower(); } catch(e) {} });
+
+</script>
 <script>
 function updateBal(){ updateAllWalletDisplays(); }
 updateBal();
@@ -204,6 +243,7 @@ let currentFloor = 0;
 let betAmt = 100;
 let totalProfit = 0, wins = 0, losses = 0;
 
+window.buildTower = buildTower;
 function buildTower(){
   const container = document.getElementById('tower-container');
   container.innerHTML = '';
@@ -414,6 +454,19 @@ if (document.readyState === 'loading') {
   updateStats();
 }
 window.addEventListener('load', () => { buildTower(); updateStats(); });
+
+// 🛡️ Safe Multi-Lifecycle Auto-Initializer
+try {
+  if (typeof buildTower === 'function') {
+    window.buildTower = buildTower;
+    buildTower();
+  }
+} catch(e) {}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { try { if (typeof buildTower === 'function') buildTower(); } catch(e) {} });
+}
+window.addEventListener('load', () => { try { if (typeof buildTower === 'function') buildTower(); } catch(e) {} });
+
 </script>
 </body>
 </html>
