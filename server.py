@@ -106,53 +106,68 @@ db_lock = threading.Lock()
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
+in_memory_db = {
+    "users": [],
+    "wallets": {"demo": 10000.0, "real": 0.0, "usdt": 0.0},
+    "deposits": [],
+    "withdrawals": [],
+    "vip_requests": [],
+    "transactions": []
+}
+
 def load_db():
+    global in_memory_db
     with db_lock:
-        if not DB_FILE.is_file():
-            initial_data = {
-                "users": [],
-                "wallets": {"demo": 10000.0, "real": 0.0, "usdt": 0.0},
-                "deposits": [],
-                "withdrawals": [],
-                "transactions": []
-            }
-            with open(DB_FILE, "w", encoding="utf-8") as f:
-                json.dump(initial_data, f, indent=2)
-            return initial_data
-        try:
-            with open(DB_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                data.setdefault("users", [])
-                data.setdefault("deposits", [])
-                data.setdefault("withdrawals", [])
-                data.setdefault("vip_requests", [])
-                data.setdefault("transactions", [])
-                data.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
+        if DB_FILE.is_file():
+            try:
+                with open(DB_FILE, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    if content:
+                        loaded = json.loads(content)
+                        if isinstance(loaded, dict) and "users" in loaded:
+                            in_memory_db = loaded
+            except Exception:
+                pass
 
-                # Automatically assign unique User IDs to any legacy/existing users without an ID
-                dirty = False
-                for u in data["users"]:
-                    if not u.get("id"):
-                        u["id"] = f"USER-{os.urandom(4).hex().upper()}"
-                        dirty = True
-                    if not u.get("wallets"):
-                        u["wallets"] = {"demo": 10000.0, "real": 0.0, "usdt": 0.0}
-                        dirty = True
-                if dirty:
-                    try:
-                        with open(DB_FILE, "w", encoding="utf-8") as wf:
-                            json.dump(data, wf, indent=2)
-                    except Exception:
-                        pass
+        in_memory_db.setdefault("users", [])
+        in_memory_db.setdefault("deposits", [])
+        in_memory_db.setdefault("withdrawals", [])
+        in_memory_db.setdefault("vip_requests", [])
+        in_memory_db.setdefault("transactions", [])
+        in_memory_db.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
 
-                return data
-        except Exception:
-            return {"users": [], "wallets": {"demo": 10000.0, "real": 0.0, "usdt": 0.0}, "deposits": [], "withdrawals": [], "vip_requests": [], "transactions": []}
+        # Automatically assign unique User IDs to any legacy/existing users without an ID
+        dirty = False
+        for u in in_memory_db["users"]:
+            if not u.get("id"):
+                u["id"] = f"USER-{os.urandom(4).hex().upper()}"
+                dirty = True
+            if not u.get("wallets"):
+                u["wallets"] = {"demo": 10000.0, "real": 0.0, "usdt": 0.0}
+                dirty = True
+
+        if dirty and DB_FILE.is_file():
+            try:
+                temp_file = DB_FILE.with_suffix('.tmp')
+                with open(temp_file, "w", encoding="utf-8") as wf:
+                    json.dump(in_memory_db, wf, indent=2)
+                temp_file.replace(DB_FILE)
+            except Exception:
+                pass
+
+        return in_memory_db
 
 def save_db(data):
+    global in_memory_db
     with db_lock:
-        with open(DB_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+        in_memory_db = data
+        try:
+            temp_file = DB_FILE.with_suffix('.tmp')
+            with open(temp_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            temp_file.replace(DB_FILE)
+        except Exception:
+            pass
 
 STATIC_DIR = r"C:\Users\ASRAR BASHA\.gemini\antigravity\scratch\ggwins"
 
