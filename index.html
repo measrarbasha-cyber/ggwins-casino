@@ -1262,10 +1262,13 @@
             <button class="btn-register" onclick="openAuthModal('register')">Register</button>
           </div>
 
-          <!-- Logged-in user pill with Awarded VIP Badge -->
-          <div class="user-pill" id="user-pill" onclick="logoutUser()">
+          <!-- Logged-in user pill with Awarded VIP Badge & User ID -->
+          <div class="user-pill" id="user-pill" onclick="logoutUser()" title="Click to logout">
             <span id="user-avatar-lbl">👑</span>
-            <span id="username-lbl">Player</span>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.1">
+              <span id="username-lbl" style="font-weight:900">Player</span>
+              <span id="user-id-lbl" style="font-size:9.5px;color:#00e676;font-family:monospace;font-weight:800"></span>
+            </div>
             <span class="user-vip-awarded-badge" id="user-vip-awarded-badge">👑 VIP</span>
             <span style="font-size:9px;color:#ef4444;margin-left:2px">✕</span>
           </div>
@@ -1294,6 +1297,9 @@
           <div class="hero-strip-right" style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="tab-btn" onclick="openAccountSwitchModal()" style="background:rgba(0,230,118,0.15);border:1px solid var(--green);color:var(--green)">
               <span>🔄</span> Switch Account
+            </button>
+            <button class="tab-btn" onclick="openReferModal()" style="background:rgba(255,140,0,0.18);border:1px solid #ff9100;color:#ff9100;font-weight:800">
+              <span>🎁</span> Refer &amp; Earn (₹50)
             </button>
             <button class="tab-btn" onclick="openTournamentsModal()" style="background:rgba(255,215,0,0.15);border:1px solid var(--gold);color:var(--gold)">
               <span>🏆</span> Tournaments (₹50)
@@ -1706,9 +1712,9 @@
         <button class="modal-tab" id="modal-tab-reg" onclick="switchAuthTab('register')">Register</button>
       </div>
 
-      <!-- Login Form -->
+      <!-- Login Form (Supports Multi-Device Sign In) -->
       <div id="auth-login-form">
-        <div class="form-group"><label class="form-label">Username or Email</label><input type="text" class="form-input" id="auth-login-user" placeholder="Enter username or email" /></div>
+        <div class="form-group"><label class="form-label">Username, Email, or User ID</label><input type="text" class="form-input" id="auth-login-user" placeholder="Enter Username, Email, or User ID (e.g. USER-XXXX)" /></div>
         <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="auth-login-pass" placeholder="Enter password" /></div>
         <button class="btn-submit" onclick="submitLogin()">⚡ Sign In</button>
       </div>
@@ -1724,7 +1730,7 @@
             <div id="username-suggestions-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
           </div>
         </div>
-        <div class="form-group"><label class="form-label">Email (Real Google / Gmail Account)</label><input type="email" class="form-input" id="auth-reg-email" placeholder="e.g. yourname@gmail.com" /></div>
+        <div class="form-group"><label class="form-label">Google Account Email (@gmail.com only)</label><input type="email" class="form-input" id="auth-reg-email" placeholder="e.g. yourname@gmail.com" /></div>
         <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="auth-reg-pass" placeholder="Choose a password" /></div>
         
         <!-- Referral Code Input -->
@@ -2620,9 +2626,9 @@
 
       if (!u || !e || !p) { showToastMsg('⚠️ Please fill in all fields.'); return; }
       
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|googlemail\.com|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/i;
-      if (!emailRegex.test(e) || e.length < 6) {
-        showToastMsg('⚠️ Please enter a valid real Google / Gmail address.');
+      const googleEmailRegex = /^[a-zA-Z0-9][a-zA-Z0-9.]{4,28}[a-zA-Z0-9]@(gmail\.com|googlemail\.com)$/i;
+      if (!googleEmailRegex.test(e)) {
+        showToastMsg('⚠️ Only valid Google / Gmail accounts (@gmail.com) are accepted.');
         return;
       }
 
@@ -2701,7 +2707,13 @@
         return;
       }
 
-      const refCode = session.username.toUpperCase();
+      let refCode = session.referralCode;
+      if (!refCode || !refCode.startsWith('GG-')) {
+        refCode = session.id ? 'GG-' + session.id.replace('USER-', '').substr(0, 6) : 'GG-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        session.referralCode = refCode;
+        localStorage.setItem('ggwins_session', JSON.stringify(session));
+      }
+
       const codeInput = document.getElementById('my-ref-code-input');
       if (codeInput) codeInput.value = refCode;
 
@@ -2711,6 +2723,27 @@
       const countEl = document.getElementById('ref-stat-count');
       if (earningsEl) earningsEl.textContent = '₹' + (parseFloat(stats.referralEarnings || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 });
       if (countEl) countEl.textContent = (stats.referralCount || 0) + ' Players';
+
+      // Real-time server sync for instant referral reward reflection
+      const syncUrl = session.id ? `/api/user-status?userId=${encodeURIComponent(session.id)}` : `/api/user-status?username=${encodeURIComponent(session.username)}`;
+      fetch(syncUrl)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.user) {
+            if (data.user.referralCode) {
+              session.referralCode = data.user.referralCode;
+              if (codeInput) codeInput.value = data.user.referralCode;
+            }
+            session.stats = data.user.stats || session.stats;
+            session.wallets = data.user.wallets || session.wallets;
+            localStorage.setItem('ggwins_session', JSON.stringify(session));
+            localStorage.setItem('ggwins_wallets_v2', JSON.stringify(session.wallets));
+            localStorage.setItem('ggwins_wallets', JSON.stringify(session.wallets));
+            if (earningsEl) earningsEl.textContent = '₹' + (parseFloat(session.stats?.referralEarnings || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            if (countEl) countEl.textContent = (session.stats?.referralCount || 0) + ' Players';
+            if (typeof updateAllWalletDisplays === 'function') updateAllWalletDisplays();
+          }
+        }).catch(() => {});
 
       const m = document.getElementById('refer-modal');
       if (m) m.classList.add('active');
@@ -2723,16 +2756,16 @@
 
     function copyReferralCode() {
       const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
-      const refCode = (session.username || 'PLAYER').toUpperCase();
+      const refCode = (session.referralCode || (session.id ? 'GG-' + session.id.replace('USER-', '').substr(0, 6) : 'GG-WINNER')).toUpperCase();
       if (navigator.clipboard) {
         navigator.clipboard.writeText(refCode);
       }
-      showToastMsg(`📋 Referral Code Copied: ${refCode}`);
+      showToastMsg(`📋 Unique Referral Code Copied: ${refCode}`);
     }
 
     function copyReferralLink() {
       const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
-      const refCode = (session.username || 'PLAYER').toUpperCase();
+      const refCode = (session.referralCode || (session.id ? 'GG-' + session.id.replace('USER-', '').substr(0, 6) : 'GG-WINNER')).toUpperCase();
       const link = `${window.location.origin}/?ref=${encodeURIComponent(refCode)}`;
       if (navigator.clipboard) {
         navigator.clipboard.writeText(link);
@@ -2742,9 +2775,9 @@
 
     function shareReferralWhatsApp() {
       const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
-      const refCode = (session.username || 'PLAYER').toUpperCase();
+      const refCode = (session.referralCode || (session.id ? 'GG-' + session.id.replace('USER-', '').substr(0, 6) : 'GG-WINNER')).toUpperCase();
       const link = `${window.location.origin}/?ref=${encodeURIComponent(refCode)}`;
-      const msg = `🔥 Hey! Join me on GG WINS - India's #1 Casino & Skill Gaming Platform! Use my Referral Code [${refCode}] to signup and claim your ₹10,000 Demo Bonus!\n\nPlay here: ${link}`;
+      const msg = `🔥 Hey! Join me on GG WINS - India's #1 Casino & Skill Gaming Platform! Use my Referral Code [${refCode}] to get bonus real cash on registration!\n\nPlay here: ${link}`;
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
@@ -2821,6 +2854,12 @@
         if (authBtns) authBtns.style.display = 'none';
         if (userPill) userPill.style.display = 'flex';
         if (userLbl) userLbl.textContent = session.username;
+        const userIdLbl = document.getElementById('user-id-lbl');
+        if (!session.id) {
+          session.id = 'USER-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+          localStorage.setItem('ggwins_session', JSON.stringify(session));
+        }
+        if (userIdLbl) userIdLbl.textContent = `ID: ${session.id}`;
 
         if (session.isVIP || session.vipApproved || (session.vipLevel && session.vipLevel !== 'Standard' && session.vipLevel !== 'Bronze_Pending')) {
           isVipApproved = true;
@@ -2831,6 +2870,10 @@
           const res = await fetch('/api/user-status?username=' + encodeURIComponent(session.username));
           const data = await res.json();
           if (data && data.user) {
+            if (data.user.id) {
+              session.id = data.user.id;
+              if (userIdLbl) userIdLbl.textContent = `ID: ${session.id}`;
+            }
             if (data.user.vipApproved || (data.user.vipLevel && !data.user.vipLevel.includes('Pending') && data.user.vipLevel !== 'Standard')) {
               isVipApproved = true;
               vipTierName = data.user.vipLevel;
