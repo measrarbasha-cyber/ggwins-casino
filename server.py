@@ -20,27 +20,26 @@ ADMIN_NOTIFY_RECEIVER = os.environ.get("ADMIN_NOTIFY_RECEIVER", "ggwinssupport@g
 
 def send_deposit_email_notification(deposit):
     def _send():
-        db = load_db()
-        email_cfg = db.get("email_config", {})
-        sender = os.environ.get("ADMIN_EMAIL") or email_cfg.get("sender") or "ggwinssupport@gmail.com"
-        pwd = os.environ.get("ADMIN_EMAIL_PASSWORD") or email_cfg.get("password") or "dvqilktybosupeuh"
-        receiver = os.environ.get("ADMIN_NOTIFY_RECEIVER") or email_cfg.get("receiver") or "ggwinssupport@gmail.com"
-        
-        if not pwd:
-            print("[Email Alert Info] Gmail App Password not configured yet. Deposit saved in database.")
-            return
-
         try:
-            msg = MIMEMultipart("alternative")
+            db = load_db()
+            email_cfg = db.get("email_config", {})
+            sender = (os.environ.get("ADMIN_EMAIL") or email_cfg.get("sender") or "ggwinssupport@gmail.com").strip()
+            pwd = (os.environ.get("ADMIN_EMAIL_PASSWORD") or email_cfg.get("password") or "dvqilktybosupeuh").replace(" ", "").strip()
+            receiver = (os.environ.get("ADMIN_NOTIFY_RECEIVER") or email_cfg.get("receiver") or "ggwinssupport@gmail.com").strip()
+
             amt = deposit.get("amount", 0)
             u = deposit.get("username", "Player")
             qr = deposit.get("qrLabel") or f"QR {deposit.get('qrNumber', 1)}"
             utr = deposit.get("utr", "N/A")
             order_id = deposit.get("orderId", "N/A")
 
-            msg["Subject"] = f"🚨 [GG WINS] New Deposit Request: ₹{amt:,.2f} from @{u} ({qr})"
-            msg["From"] = f"GG WINS System <{sender}>"
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = f"🚨 [GG WINS] New Deposit Alert: ₹{amt:,.2f} from @{u} ({qr})"
+            msg["From"] = f"GG WINS Admin Alerts <{sender}>"
             msg["To"] = receiver
+            msg["Reply-To"] = sender
+
+            plain_text = f"GG WINS New Deposit Alert\n\nPlayer: @{u}\nAmount: Rs.{amt:,.2f}\nGateway: {qr}\nUTR: {utr}\nOrder ID: {order_id}\n\nApprove at https://ggwins.site/host/index.html"
 
             html = f"""
             <div style="font-family: Arial, sans-serif; background-color: #0f172a; padding: 24px; color: #f8fafc; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1.5px solid #ffd700;">
@@ -66,14 +65,32 @@ def send_deposit_email_notification(deposit):
             </div>
             """
 
+            msg.attach(MIMEText(plain_text, "plain"))
             msg.attach(MIMEText(html, "html"))
 
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-                server.login(sender, pwd)
-                server.sendmail(sender, receiver, msg.as_string())
-            print(f"[Email Alert] Successfully sent deposit alert email to {receiver} for {order_id}")
+            # Primary: Port 465 SSL
+            sent = False
+            try:
+                with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=12) as server:
+                    server.login(sender, pwd)
+                    server.sendmail(sender, receiver, msg.as_string())
+                print(f"[Email Alert SSL-465] Successfully delivered deposit alert to {receiver} for {order_id}")
+                sent = True
+            except Exception as e465:
+                print(f"[Email Alert SSL-465 Notice] {e465}, trying STARTTLS-587...")
+
+            # Fallback: Port 587 STARTTLS
+            if not sent:
+                try:
+                    with smtplib.SMTP("smtp.gmail.com", 587, timeout=12) as server:
+                        server.starttls()
+                        server.login(sender, pwd)
+                        server.sendmail(sender, receiver, msg.as_string())
+                    print(f"[Email Alert TLS-587] Successfully delivered deposit alert to {receiver} for {order_id}")
+                except Exception as e587:
+                    print(f"[Email Alert TLS-587 Error] Failed to send email: {e587}")
         except Exception as e:
-            print(f"[Email Alert Error] Failed to send email: {e}")
+            print(f"[Email Alert Exception] {e}")
 
     threading.Thread(target=_send, daemon=True).start()
 
