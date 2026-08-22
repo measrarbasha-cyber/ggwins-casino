@@ -85,11 +85,22 @@
     // Deposits stats
     const pendingDeps = depositsData.filter(d => d.status === 'Pending');
     const completedDeps = depositsData.filter(d => d.status === 'Completed');
+    const rejectedDeps = depositsData.filter(d => d.status === 'Rejected');
     
     setElText('stat-pending-count', pendingDeps.length);
     setElText('pending-badge', `${pendingDeps.length} PENDING`);
     setElText('nav-dep-badge', pendingDeps.length);
     setElText('stat-total-count', depositsData.length);
+
+    // Update filter tabs with live counts
+    const depFilterAll = document.querySelector('#section-deposits .filter-tab[data-filter="all"]');
+    if (depFilterAll) depFilterAll.innerHTML = `All History <span style="opacity:0.8;font-size:11px;margin-left:4px">(${depositsData.length})</span>`;
+    const depFilterPending = document.querySelector('#section-deposits .filter-tab[data-filter="Pending"]');
+    if (depFilterPending) depFilterPending.innerHTML = `Pending <span style="background:rgba(255,215,0,0.25);color:#ffd700;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px">${pendingDeps.length}</span>`;
+    const depFilterCompleted = document.querySelector('#section-deposits .filter-tab[data-filter="Completed"]');
+    if (depFilterCompleted) depFilterCompleted.innerHTML = `Approved / History <span style="background:rgba(0,230,118,0.2);color:#00e676;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px">${completedDeps.length}</span>`;
+    const depFilterRejected = document.querySelector('#section-deposits .filter-tab[data-filter="Rejected"]');
+    if (depFilterRejected) depFilterRejected.innerHTML = `Rejected <span style="background:rgba(239,68,68,0.2);color:#ef4444;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px">${rejectedDeps.length}</span>`;
 
     let totalInrDep = 0;
     let totalUsdtDep = 0;
@@ -103,11 +114,19 @@
     // Withdrawals stats
     const pendingWths = withdrawalsData.filter(w => w.status === 'Pending');
     const completedWths = withdrawalsData.filter(w => w.status === 'Completed');
+    const rejectedWths = withdrawalsData.filter(w => w.status === 'Rejected');
 
     setElText('stat-wth-pending-count', pendingWths.length);
     setElText('pending-wth-badge', `${pendingWths.length} PENDING`);
     setElText('nav-wth-badge', pendingWths.length);
     setElText('stat-wth-total-count', withdrawalsData.length);
+
+    const wthFilterAll = document.querySelector('#section-withdrawals .filter-tab[data-filter="all"]');
+    if (wthFilterAll) wthFilterAll.innerHTML = `All History <span style="opacity:0.8;font-size:11px;margin-left:4px">(${withdrawalsData.length})</span>`;
+    const wthFilterPending = document.querySelector('#section-withdrawals .filter-tab[data-filter="Pending"]');
+    if (wthFilterPending) wthFilterPending.innerHTML = `Pending <span style="background:rgba(56,189,248,0.25);color:#38bdf8;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px">${pendingWths.length}</span>`;
+    const wthFilterCompleted = document.querySelector('#section-withdrawals .filter-tab[data-filter="Completed"]');
+    if (wthFilterCompleted) wthFilterCompleted.innerHTML = `Paid / History <span style="background:rgba(0,230,118,0.2);color:#00e676;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px">${completedWths.length}</span>`;
 
     let totalInrWth = 0;
     let totalUsdtWth = 0;
@@ -121,12 +140,20 @@
     // VIP stats
     const pendingVips = vipData.filter(v => v.status === 'Pending');
     const approvedVips = vipData.filter(v => v.status === 'Completed');
+    const rejectedVips = vipData.filter(v => v.status === 'Rejected');
 
     setElText('stat-vip-pending-count', pendingVips.length);
     setElText('pending-vip-badge', `${pendingVips.length} PENDING`);
     setElText('nav-vip-badge', pendingVips.length);
     setElText('stat-vip-approved-count', approvedVips.length);
     setElText('stat-vip-total-count', vipData.length);
+
+    const vipFilterAll = document.querySelector('#section-vip .filter-tab[data-filter="all"]');
+    if (vipFilterAll) vipFilterAll.innerHTML = `All History <span style="opacity:0.8;font-size:11px;margin-left:4px">(${vipData.length})</span>`;
+    const vipFilterPending = document.querySelector('#section-vip .filter-tab[data-filter="Pending"]');
+    if (vipFilterPending) vipFilterPending.innerHTML = `Pending <span style="background:rgba(255,215,0,0.25);color:#ffd700;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px">${pendingVips.length}</span>`;
+    const vipFilterCompleted = document.querySelector('#section-vip .filter-tab[data-filter="Completed"]');
+    if (vipFilterCompleted) vipFilterCompleted.innerHTML = `Approved VIPs <span style="background:rgba(0,230,118,0.2);color:#00e676;padding:1px 6px;border-radius:10px;font-size:11px;margin-left:4px">${approvedVips.length}</span>`;
 
     let totalVipRev = 0;
     approvedVips.forEach(v => { totalVipRev += parseFloat(v.amount) || 0; });
@@ -442,10 +469,18 @@
     }).join('');
   }
 
-  // ── 7. APPROVAL ACTIONS ───────────────────────────────────────
+  // ── 7. APPROVAL ACTIONS (PERMANENT HISTORY PRESERVED) ───────
   window.approveDeposit = async function(id) {
     if (!confirm(`Are you sure you want to APPROVE deposit ${id} and credit user balance?`)) return;
     try {
+      const target = depositsData.find(d => d.id === id || d.orderId === id);
+      if (target) {
+        target.status = 'Completed';
+        target.approvedAt = Date.now();
+        renderDepositsTable();
+        updateAllStats();
+      }
+
       const res = await fetch('/api/approve-deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -453,7 +488,7 @@
       });
       if (res.ok) {
         fetchAllData();
-        showNotification(`✅ Deposit ${id} APPROVED and credited!`, '#00e676');
+        showNotification(`✅ Deposit ${id} APPROVED & Recorded in History!`, '#00e676');
       }
     } catch (e) { console.warn(e); }
   };
@@ -461,6 +496,14 @@
   window.rejectDeposit = async function(id) {
     if (!confirm(`Are you sure you want to REJECT deposit ${id}?`)) return;
     try {
+      const target = depositsData.find(d => d.id === id || d.orderId === id);
+      if (target) {
+        target.status = 'Rejected';
+        target.rejectedAt = Date.now();
+        renderDepositsTable();
+        updateAllStats();
+      }
+
       const res = await fetch('/api/reject-deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -468,7 +511,7 @@
       });
       if (res.ok) {
         fetchAllData();
-        showNotification(`❌ Deposit ${id} Rejected.`, '#ef4444');
+        showNotification(`❌ Deposit ${id} Rejected & Saved to History.`, '#ef4444');
       }
     } catch (e) { console.warn(e); }
   };
@@ -476,6 +519,14 @@
   window.approveWithdrawal = async function(id) {
     if (!confirm(`Mark withdrawal ${id} as PAID?`)) return;
     try {
+      const target = withdrawalsData.find(w => w.id === id || w.orderId === id);
+      if (target) {
+        target.status = 'Completed';
+        target.approvedAt = Date.now();
+        renderWithdrawalsTable();
+        updateAllStats();
+      }
+
       const res = await fetch('/api/approve-withdrawal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -483,7 +534,7 @@
       });
       if (res.ok) {
         fetchAllData();
-        showNotification(`✅ Withdrawal ${id} marked as PAID!`, '#38bdf8');
+        showNotification(`✅ Withdrawal ${id} marked as PAID & Recorded in History!`, '#38bdf8');
       }
     } catch (e) { console.warn(e); }
   };
@@ -491,6 +542,14 @@
   window.rejectWithdrawal = async function(id) {
     if (!confirm(`Reject withdrawal ${id} and REFUND balance to user?`)) return;
     try {
+      const target = withdrawalsData.find(w => w.id === id || w.orderId === id);
+      if (target) {
+        target.status = 'Rejected';
+        target.rejectedAt = Date.now();
+        renderWithdrawalsTable();
+        updateAllStats();
+      }
+
       const res = await fetch('/api/reject-withdrawal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -498,7 +557,7 @@
       });
       if (res.ok) {
         fetchAllData();
-        showNotification(`⚠️ Withdrawal ${id} Rejected & Refunded.`, '#f59e0b');
+        showNotification(`⚠️ Withdrawal ${id} Rejected, Refunded & Logged.`, '#f59e0b');
       }
     } catch (e) { console.warn(e); }
   };
@@ -511,6 +570,13 @@
     if (!confirm(`👑 Approve VIP Upgrade for ${username} to ${tier}? This will instantly grant their Glowing VIP Badge and unlock the VIP Members Lounge for 1 Month (30 Days)!`)) return;
 
     try {
+      if (target) {
+        target.status = 'Completed';
+        target.approvedAt = Date.now();
+        renderVipTable();
+        updateAllStats();
+      }
+
       const res = await fetch('/api/approve-vip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -519,7 +585,7 @@
       const data = await res.json();
       if (data.success) {
         fetchAllData();
-        showNotification(`👑 VIP UPGRADE APPROVED FOR ${username.toUpperCase()}! Badge Activated!`, '#ffd700');
+        showNotification(`👑 VIP UPGRADE APPROVED FOR ${username.toUpperCase()}! Logged in VIP History.`, '#ffd700');
       } else {
         alert(data.message || 'Approval failed');
       }
@@ -529,6 +595,14 @@
   window.rejectVipRequest = async function(id) {
     if (!confirm(`Reject VIP upgrade application ${id}?`)) return;
     try {
+      const target = vipData.find(v => v.id === id || v.orderId === id);
+      if (target) {
+        target.status = 'Rejected';
+        target.rejectedAt = Date.now();
+        renderVipTable();
+        updateAllStats();
+      }
+
       const res = await fetch('/api/reject-vip', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -536,7 +610,7 @@
       });
       if (res.ok) {
         fetchAllData();
-        showNotification(`VIP request rejected.`, '#ef4444');
+        showNotification(`VIP request rejected & Logged.`, '#ef4444');
       }
     } catch(e) { console.warn(e); }
   };
