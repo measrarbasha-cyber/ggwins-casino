@@ -70,6 +70,7 @@
       renderWithdrawalsTable();
       renderVipTable();
       updateAllStats();
+      loadAllUsersDirectory();
 
       const conn = document.getElementById('conn-status');
       if (conn) {
@@ -1031,36 +1032,60 @@
 
       setElText('all-users-count', allUsersData.length);
       setElText('nav-users-count', allUsersData.length);
+      setElText('stat-total-players-count', allUsersData.length);
+
+      let totalPlayerReal = 0;
+      let totalPlayerUsdt = 0;
+      let totalVipCount = 0;
+
+      allUsersData.forEach(u => {
+        const w = u.wallets || {};
+        totalPlayerReal += parseFloat(w.real || 0);
+        totalPlayerUsdt += parseFloat(w.usdt || 0);
+        if (u.vipLevel && u.vipLevel !== 'None' && u.vipLevel !== 'Standard') {
+          totalVipCount++;
+        }
+      });
+
+      setElText('stat-total-players-real', `₹${totalPlayerReal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+      setElText('stat-total-players-usdt', `${totalPlayerUsdt.toFixed(2)} ₮`);
+      setElText('stat-total-vip-players', totalVipCount);
 
       if (allUsersData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><p>No registered players on platform yet.</p></td></tr>`;
         return;
       }
 
-      tbody.innerHTML = allUsersData.map(u => {
+      tbody.innerHTML = allUsersData.map((u, idx) => {
         const w = u.wallets || { demo: 10000, real: 0, usdt: 0 };
         const real = parseFloat(w.real || 0);
         const demo = parseFloat(w.demo || 0);
         const usdt = parseFloat(w.usdt || 0);
-        const regDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : 'N/A';
+        const regDate = u.createdAt ? new Date(u.createdAt).toLocaleString('en-IN') : 'N/A';
+        const isVip = u.vipLevel && u.vipLevel !== 'None' && u.vipLevel !== 'Standard';
 
         return `
           <tr>
             <td>
               <div style="display:flex;align-items:center;gap:6px">
-                <code style="color:#00e676;font-family:monospace;font-weight:800">${u.id || 'USER-N/A'}</code>
+                <span style="font-size:11px;color:#64748b;font-weight:700">#${idx + 1}</span>
+                <code style="color:#00e676;font-family:monospace;font-weight:800;background:#0f172a;padding:3px 6px;border-radius:4px;border:1px solid rgba(0,230,118,0.3)">${u.id || 'USER-N/A'}</code>
                 <button class="btn-copy-mini" onclick="copyText('${u.id}', this)">Copy</button>
               </div>
             </td>
             <td><strong>${u.avatar || '👑'} ${u.username || 'Player'}</strong></td>
             <td style="color:#cbd5e1">${u.email || '-'}</td>
-            <td class="tx-amount inr">₹${real.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td class="tx-amount inr" style="font-size:14px;font-weight:900">₹${real.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
             <td style="color:#c084fc;font-weight:700">₹${demo.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
             <td style="color:#38bdf8;font-weight:700">${usdt.toFixed(2)} ₮</td>
-            <td><span class="badge-status" style="background:rgba(255,215,0,0.12);border:1px solid #ffd700;color:#ffd700">${u.vipLevel || 'None'}</span></td>
+            <td>
+              <span class="badge-status" style="background:${isVip ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.05)'};border:1px solid ${isVip ? '#ffd700' : '#475569'};color:${isVip ? '#ffd700' : '#94a3b8'};font-weight:800">
+                ${isVip ? '👑 ' + u.vipLevel : 'Standard'}
+              </span>
+            </td>
             <td style="color:#94a3b8;font-size:12px">${regDate}</td>
             <td>
-              <button class="btn btn-primary" style="padding:4px 10px;font-size:11px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;border:none;border-radius:6px;font-weight:800;cursor:pointer" onclick="searchUserWallet('${u.id}')">
+              <button class="btn btn-primary" style="padding:6px 12px;font-size:11.5px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;border:none;border-radius:6px;font-weight:900;cursor:pointer;box-shadow:0 0 10px rgba(0,230,118,0.2)" onclick="searchUserWallet('${u.id}')">
                 🔍 Inspect &amp; Edit Wallet
               </button>
             </td>
