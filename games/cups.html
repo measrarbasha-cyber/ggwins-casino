@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -313,9 +313,9 @@
 
       <!-- Levels -->
       <div class="level-tabs">
-        <div class="level-btn active" onclick="selectLevel(3, 2.00, 'Level 1: 3 Cups (Speed Normal)')">Lvl 1 (3 Cups)</div>
-        <div class="level-btn" onclick="selectLevel(4, 3.80, 'Level 2: 4 Cups (Speed Fast)')">Lvl 2 (4 Cups)</div>
-        <div class="level-btn" onclick="selectLevel(5, 5.00, 'Level 3: 5 Cups (Speed Insane)')">Lvl 3 (5 Cups)</div>
+        <div class="level-btn active" onclick="selectLevel(3, 2.00, 'Level 1: 3 Cups (Speed Normal)', this)">Lvl 1 (3 Cups)</div>
+        <div class="level-btn" onclick="selectLevel(4, 3.80, 'Level 2: 4 Cups (Speed Fast)', this)">Lvl 2 (4 Cups)</div>
+        <div class="level-btn" onclick="selectLevel(5, 5.00, 'Level 3: 5 Cups (Speed Insane)', this)">Lvl 3 (5 Cups)</div>
       </div>
 
       <!-- Result Banner -->
@@ -436,8 +436,8 @@ let totalProfit = 0, wins = 0, losses = 0;
 
 function updateBetLabels(){
   const b = parseFloat(document.getElementById('bet-amt').value) || 100;
-  document.getElementById('lbl-bet-val').textContent = b.toFixed(0);
-  document.getElementById('lbl-bet-2x').textContent = (b*2).toFixed(0);
+  const _lv = document.getElementById('lbl-bet-val'); if(_lv) _lv.textContent = b.toFixed(0);
+  const _l2x = document.getElementById('lbl-bet-2x'); if(_l2x) _l2x.textContent = (b*2).toFixed(0);
 }
 
 function halveBet(){ const el=document.getElementById('bet-amt'); el.value = Math.max(1, (parseFloat(el.value)/2)).toFixed(2); updateBetLabels(); }
@@ -452,19 +452,21 @@ function addChip(amount){
   playSynth('chip');
 }
 
-function selectLevel(cups, mult, label){
+function selectLevel(cups, mult, label, btn){
   if(isShuffling || isGuessing) return;
   numCups = cups;
   currentMultiplier = mult;
-  document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  document.querySelectorAll('.level-tabs .level-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
   renderCups();
-  document.getElementById('stage-status-msg').textContent = label;
+  const msg = document.getElementById('stage-status-msg');
+  if (msg) msg.textContent = label;
   playSynth('chip');
 }
 
 function renderCups(){
   const rack = document.getElementById('cups-rack');
+  if (!rack) return;
   rack.innerHTML = '';
   for(let i=0; i<numCups; i++){
     const spot = document.createElement('div');
@@ -500,6 +502,13 @@ function renderCups(){
 
 renderCups();
 updateBetLabels();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { renderCups(); updateBetLabels(); });
+} else {
+  renderCups();
+  updateBetLabels();
+}
+window.addEventListener('load', () => { renderCups(); updateBetLabels(); });
 
 
 

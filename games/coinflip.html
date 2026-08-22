@@ -338,8 +338,8 @@ let totalProfit = 0, wins = 0, losses = 0;
 
 function updateBetLabels(){
   const b = parseFloat(document.getElementById('bet-amount').value) || 100;
-  document.getElementById('lbl-bet-val').textContent = b.toFixed(0);
-  document.getElementById('lbl-bet-2x').textContent = (b*2).toFixed(0);
+  const _lv = document.getElementById('lbl-bet-val'); if(_lv) _lv.textContent = b.toFixed(0);
+  const _l2x = document.getElementById('lbl-bet-2x'); if(_l2x) _l2x.textContent = (b*2).toFixed(0);
 }
 
 function halveBet(){ const el=document.getElementById('bet-amount'); el.value = Math.max(1, (parseFloat(el.value)/2)).toFixed(2); updateBetLabels(); }
