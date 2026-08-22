@@ -553,10 +553,10 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 return
 
             users = db.get("users", [])
-            target = next((u for u in users if u.get("username", "").lower() == identifier.lower() or u.get("email", "").lower() == identifier.lower()), None)
+            target = next((u for u in users if u.get("username", "").lower() == identifier.lower() or u.get("email", "").lower() == identifier.lower() or u.get("id", "").upper() == identifier.upper()), None)
 
             if not target:
-                self.send_json({"success": False, "message": "No account found with this username or email."}, status=HTTPStatus.UNAUTHORIZED)
+                self.send_json({"success": False, "message": "No account found with this User ID, Username, or Email."}, status=HTTPStatus.UNAUTHORIZED)
                 return
 
             # Verify password hash (or plain fallback for legacy)
