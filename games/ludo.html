@@ -1,0 +1,888 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GG Ludo – Pool Battles – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+.ludo-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  gap: 14px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 50%, #0d1b2a 0%, #050a10 100%);
+}
+.ludo-table-felt {
+  padding: 10px;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border-radius: 24px;
+  border: 4px solid #ffd700;
+  box-shadow: 0 0 45px rgba(255,215,0,0.35), 0 16px 40px rgba(0,0,0,0.85);
+  position: relative;
+}
+.ludo-board-grid {
+  position: relative;
+  width: min(440px, 92vw);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  grid-template-rows: repeat(15, 1fr);
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  user-select: none;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.15);
+}
+.board-cell {
+  border: 0.5px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 11px;
+}
+/* Base quadrants */
+.quad-base {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  position: relative;
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.3);
+}
+.base-g { grid-column: 1 / span 6; grid-row: 1 / span 6; background: linear-gradient(135deg, #10b981, #059669); }
+.base-r { grid-column: 10 / span 6; grid-row: 1 / span 6; background: linear-gradient(135deg, #ef4444, #dc2626); }
+.base-b { grid-column: 1 / span 6; grid-row: 10 / span 6; background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.base-y { grid-column: 10 / span 6; grid-row: 10 / span 6; background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+.base-inner-box {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #ffffff 0%, #f8fafc 100%);
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  padding: 8px;
+  gap: 8px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.25);
+}
+.base-tag {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  right: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pocket-circle {
+  background: radial-gradient(circle at center, #e2e8f0 0%, #cbd5e1 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.35);
+  position: relative;
+}
+
+/* Center Home */
+.center-home-area {
+  grid-column: 7 / span 3;
+  grid-row: 7 / span 3;
+  position: relative;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tri-green { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; background: #10b981; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.tri-red { position: absolute; left: 0; top: 0; right: 0; height: 50%; background: #ef4444; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.tri-yellow { position: absolute; right: 0; top: 0; bottom: 0; width: 50%; background: #f59e0b; clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+.tri-blue { position: absolute; left: 0; bottom: 0; right: 0; height: 50%; background: #3b82f6; clip-path: polygon(0 100%, 100% 100%, 50% 0%); }
+
+/* Colored Paths */
+.path-green-home { background: #a7f3d0 !important; }
+.path-red-home   { background: #fecaca !important; }
+.path-yellow-home{ background: #fde68a !important; }
+.path-blue-home  { background: #bfdbfe !important; }
+
+/* Safe star spots */
+.safe-star { background: #fef3c7 !important; }
+.safe-star::before {
+  content: '★';
+  color: #d97706;
+  font-size: 12px;
+  font-weight: 900;
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Pawns */
+.ludo-pawn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  cursor: pointer;
+  z-index: 20;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.7);
+  transition: transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: absolute;
+}
+.pawn-green  { background: radial-gradient(circle at 35% 35%, #6ee7b7, #10b981 60%, #047857 100%); }
+.pawn-red    { background: radial-gradient(circle at 35% 35%, #fca5a5, #ef4444 60%, #991b1b 100%); }
+.pawn-yellow { background: radial-gradient(circle at 35% 35%, #fde047, #f59e0b 60%, #b45309 100%); }
+.pawn-blue   { background: radial-gradient(circle at 35% 35%, #93c5fd, #3b82f6 60%, #1e40af 100%); }
+
+/* Movable pulse */
+.pawn-movable {
+  animation: pawnBounce 0.4s infinite alternate !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 16px #ffd700, 0 4px 10px rgba(0,0,0,0.6) !important;
+  z-index: 30;
+}
+@keyframes pawnBounce {
+  0%  { transform: scale(1.2) translateY(0); }
+  100%{ transform: scale(1.4) translateY(-5px); }
+}
+
+/* Step jump animation */
+.pawn-jumping {
+  animation: pawnJump 0.18s ease-in-out !important;
+}
+@keyframes pawnJump {
+  0%  { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.35) translateY(-8px); }
+  100%{ transform: scale(1) translateY(0); }
+}
+
+/* Controls */
+.ludo-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(440px, 92vw);
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 10px 16px;
+}
+.turn-title-tag {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+}
+/* 3D Dice */
+.dice-stage-box { width: 52px; height: 52px; perspective: 600px; cursor: pointer; }
+.dice-cube-element {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #ffffff, #e2e8f0);
+  border-radius: 12px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 6px 18px rgba(255,215,0,0.5), inset 0 0 8px rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: #0f172a;
+  user-select: none;
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.dice-cube-element:hover:not(.disabled) { transform: scale(1.1) rotate(5deg); }
+.dice-cube-element.rolling {
+  animation: diceRoll3D 0.42s ease-in-out infinite;
+}
+@keyframes diceRoll3D {
+  0%  { transform: rotateX(0)   rotateY(0)   scale(0.95); }
+  25% { transform: rotateX(180deg) rotateY(90deg)  scale(1.15); }
+  50% { transform: rotateX(360deg) rotateY(180deg) scale(0.95); }
+  75% { transform: rotateX(540deg) rotateY(270deg) scale(1.15); }
+  100%{ transform: rotateX(720deg) rotateY(360deg) scale(1); }
+}
+
+/* Pool Cards */
+.pool-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.pool-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.pool-card:hover { border-color: #00e676; }
+.pool-card.selected {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05));
+  box-shadow: 0 0 15px rgba(255,215,0,0.3);
+}
+.pool-name  { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+.pool-entry { font-size: 14px; font-weight: 800; color: #fff; margin-top: 2px; }
+.pool-prize { font-size: 13px; font-weight: 900; color: #00e676; margin-top: 2px; }
+
+#ludo-confetti {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 50;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🎲 GG Ludo Pro</div>
+  </div>
+  <div class="gnav-game-name">GG Ludo</div>
+  <span class="gnav-game-badge" style="background:#7c4dff">ORIGINAL</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area ludo-area">
+    <canvas id="ludo-confetti"></canvas>
+
+    <div class="ludo-table-felt">
+      <div class="ludo-board-grid" id="board-grid">
+        <!-- Bases (positioned via CSS grid) -->
+        <div class="quad-base base-g">
+          <div class="base-tag" id="tag-green">👑 You (Green)</div>
+          <div class="base-inner-box">
+            <div class="pocket-circle" id="pocket-green-0"></div>
+            <div class="pocket-circle" id="pocket-green-1"></div>
+            <div class="pocket-circle" id="pocket-green-2"></div>
+            <div class="pocket-circle" id="pocket-green-3"></div>
+          </div>
+        </div>
+        <div class="quad-base base-r">
+          <div class="base-tag" id="tag-red">🔥 Rahul_Pro</div>
+          <div class="base-inner-box">
+            <div class="pocket-circle" id="pocket-red-0"></div>
+            <div class="pocket-circle" id="pocket-red-1"></div>
+            <div class="pocket-circle" id="pocket-red-2"></div>
+            <div class="pocket-circle" id="pocket-red-3"></div>
+          </div>
+        </div>
+        <div class="quad-base base-b">
+          <div class="base-tag" id="tag-blue">💎 Sneha_Queen</div>
+          <div class="base-inner-box">
+            <div class="pocket-circle" id="pocket-blue-0"></div>
+            <div class="pocket-circle" id="pocket-blue-1"></div>
+            <div class="pocket-circle" id="pocket-blue-2"></div>
+            <div class="pocket-circle" id="pocket-blue-3"></div>
+          </div>
+        </div>
+        <div class="quad-base base-y">
+          <div class="base-tag" id="tag-yellow">⚡ Vikram_King</div>
+          <div class="base-inner-box">
+            <div class="pocket-circle" id="pocket-yellow-0"></div>
+            <div class="pocket-circle" id="pocket-yellow-1"></div>
+            <div class="pocket-circle" id="pocket-yellow-2"></div>
+            <div class="pocket-circle" id="pocket-yellow-3"></div>
+          </div>
+        </div>
+        <!-- Center Home -->
+        <div class="center-home-area" id="center-home">
+          <div class="tri-green"></div>
+          <div class="tri-red"></div>
+          <div class="tri-yellow"></div>
+          <div class="tri-blue"></div>
+          <span style="position:relative;z-index:5;font-size:20px">🏆</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ludo-controls-bar">
+      <div class="turn-title-tag">
+        <span id="turn-status-text" style="color:#10b981">Join a Pool to Start!</span>
+      </div>
+      <div class="dice-stage-box" onclick="rollLudoDice()">
+        <div class="dice-cube-element" id="ludo-dice">🎲</div>
+      </div>
+    </div>
+  
+<div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected. Unauthorized Copying Prohibited.</div>
+</div>
+
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="bet-label">Select Prize Pool</div>
+      <div class="pool-cards">
+        <div class="pool-card selected" data-pool="1" onclick="selectPool(1)">
+          <div class="pool-name">Pool 1</div>
+          <div class="pool-entry">Entry: ₹250</div>
+          <div class="pool-prize">Prize: ₹900</div>
+        </div>
+        <div class="pool-card" data-pool="2" onclick="selectPool(2)">
+          <div class="pool-name">Pool 2</div>
+          <div class="pool-entry">Entry: ₹500</div>
+          <div class="pool-prize">Prize: ₹1,800</div>
+        </div>
+        <div class="pool-card" data-pool="3" onclick="selectPool(3)">
+          <div class="pool-name">Pool 3</div>
+          <div class="pool-entry">Entry: ₹1,500</div>
+          <div class="pool-prize">Prize: ₹5,400</div>
+        </div>
+        <div class="pool-card" data-pool="4" onclick="selectPool(4)">
+          <div class="pool-name">Pool 4</div>
+          <div class="pool-entry">Entry: ₹10,000</div>
+          <div class="pool-prize">Prize: ₹38,000</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <button class="btn-bet" id="join-battle-btn" onclick="startLudoGame()">Join Battle (₹250)</button>
+    </div>
+
+    <div class="bet-section">
+      <div id="result-container"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script>
+updateAllWalletDisplays();
+
+/* ===== POOL CONFIG ===== */
+const POOLS = {
+  1: { entry: 250,   prize: 900 },
+  2: { entry: 500,   prize: 1300 },
+  3: { entry: 1500,  prize: 5400 },
+  4: { entry: 10000, prize: 38000 }
+};
+
+/* ===== RANDOM NAMES ===== */
+const BOT_NAMES = [
+  'Rahul_Pro','Aakash_99','Vikram_King','CryptoRider','Sneha_Queen',
+  'AmitKumar','Kabir_Ludo','Rohan_GG','Priya_Star','Deepak_VIP',
+  'Arjun_Ace','Meera_99','Karan_Boss','Simran_Lucky','Nikhil_Win'
+];
+
+let playerNames = { red: 'Rahul_Pro', yellow: 'Vikram_King', blue: 'Sneha_Queen' };
+
+/* ===== BOARD GEOMETRY (15×15) ===== */
+/*
+  52-step common track (row, col), 0-indexed.
+  Step 0 = green start entry; steps increase clockwise.
+*/
+const COMMON_TRACK = [
+  /* 0  */ {r:6,c:1},{r:6,c:2},{r:6,c:3},{r:6,c:4},{r:6,c:5},
+  /* 5  */ {r:5,c:6},{r:4,c:6},{r:3,c:6},{r:2,c:6},{r:1,c:6},{r:0,c:6},
+  /* 11 */ {r:0,c:7},{r:0,c:8},
+  /* 13 */ {r:1,c:8},{r:2,c:8},{r:3,c:8},{r:4,c:8},{r:5,c:8},
+  /* 18 */ {r:6,c:9},{r:6,c:10},{r:6,c:11},{r:6,c:12},{r:6,c:13},{r:6,c:14},
+  /* 24 */ {r:7,c:14},{r:8,c:14},
+  /* 26 */ {r:8,c:13},{r:8,c:12},{r:8,c:11},{r:8,c:10},{r:8,c:9},
+  /* 31 */ {r:9,c:8},{r:10,c:8},{r:11,c:8},{r:12,c:8},{r:13,c:8},{r:14,c:8},
+  /* 37 */ {r:14,c:7},{r:14,c:6},
+  /* 39 */ {r:13,c:6},{r:12,c:6},{r:11,c:6},{r:10,c:6},{r:9,c:6},
+  /* 44 */ {r:8,c:5},{r:8,c:4},{r:8,c:3},{r:8,c:2},{r:8,c:1},{r:8,c:0},
+  /* 50 */ {r:7,c:0},{r:6,c:0}
+];
+
+/* Home stretches (green goes right along row 7, etc.) */
+const HOME_STRETCH = {
+  green:  [{r:7,c:1},{r:7,c:2},{r:7,c:3},{r:7,c:4},{r:7,c:5},{r:7,c:6}],
+  red:    [{r:1,c:7},{r:2,c:7},{r:3,c:7},{r:4,c:7},{r:5,c:7},{r:6,c:7}],
+  yellow: [{r:7,c:13},{r:7,c:12},{r:7,c:11},{r:7,c:10},{r:7,c:9},{r:7,c:8}],
+  blue:   [{r:13,c:7},{r:12,c:7},{r:11,c:7},{r:10,c:7},{r:9,c:7},{r:8,c:7}]
+};
+
+const START_OFFSET  = { green:0, red:13, yellow:26, blue:39 };
+const SAFE_ABS  = new Set([0,8,13,21,26,34,39,47]); /* safe cell absolute indices */
+
+/* Pawn icons per color */
+const PAWN_ICONS = { green:'👑', red:'⚔️', yellow:'⭐', blue:'🛡️' };
+
+/* ===== STATE ===== */
+const pawns = { green:[-1,-1,-1,-1], red:[-1,-1,-1,-1], yellow:[-1,-1,-1,-1], blue:[-1,-1,-1,-1] };
+let currentPoolId = 1;
+let gameActive    = false;
+let currentTurn   = 'player';
+let diceVal       = 0;
+let canRoll       = false;
+let isAnimating   = false; // lock during step animation
+let playerFavored = true;  // 65% user win
+let totalProfit=0, wins=0, losses=0;
+
+/* ===== BUILD BOARD TRACK CELLS ===== */
+(function buildBoard(){
+  const grid = document.getElementById('board-grid');
+  for(let r=0; r<15; r++){
+    for(let c=0; c<15; c++){
+      const inGB  = r<6 && c<6;
+      const inRB  = r<6 && c>=9;
+      const inBB  = r>=9 && c<6;
+      const inYB  = r>=9 && c>=9;
+      const inCtr = r>=6&&r<=8&&c>=6&&c<=8;
+      if(inGB||inRB||inBB||inYB||inCtr) continue;
+
+      const cell = document.createElement('div');
+      cell.className = 'board-cell';
+      cell.id = `cell-${r}-${c}`;
+      cell.style.gridRow    = `${r+1}`;
+      cell.style.gridColumn = `${c+1}`;
+
+      /* Home-stretch coloring */
+      if(r===7 && c>=1 && c<=5) cell.classList.add('path-green-home');
+      if(c===7 && r>=1 && r<=5) cell.classList.add('path-red-home');
+      if(r===7 && c>=9 && c<=13) cell.classList.add('path-yellow-home');
+      if(c===7 && r>=9 && r<=13) cell.classList.add('path-blue-home');
+
+      /* Safe-star spots */
+      const safeCells = [
+        [6,1],[8,2],[1,8],[2,6],
+        [8,13],[6,12],[13,6],[12,8]
+      ];
+      if(safeCells.some(([sr,sc])=>sr===r&&sc===c)) cell.classList.add('safe-star');
+
+      grid.appendChild(cell);
+    }
+  }
+})();
+
+/* ===== GET CELL ELEMENT FOR A PAWN STEP ===== */
+function getCellForPawn(color, step){
+  if(step === -1) return document.getElementById(`pocket-${color}-0`); // placeholder
+  if(step >= 56)  return document.getElementById('center-home');
+  if(step >= 51){
+    const coords = HOME_STRETCH[color][step-51];
+    return document.getElementById(`cell-${coords.r}-${coords.c}`);
+  }
+  const absIdx = (START_OFFSET[color] + step) % 52;
+  const coords = COMMON_TRACK[absIdx];
+  return document.getElementById(`cell-${coords.r}-${coords.c}`);
+}
+
+/* ===== RENDER ALL PAWNS (snap placement) ===== */
+function renderAllPawns(){
+  document.querySelectorAll('.ludo-pawn').forEach(p=>p.remove());
+
+  ['green','red','yellow','blue'].forEach(col=>{
+    pawns[col].forEach((step, idx)=>{
+      const pawn = document.createElement('div');
+      pawn.className  = `ludo-pawn pawn-${col}`;
+      pawn.id         = `pawn-${col}-${idx}`;
+      pawn.textContent= PAWN_ICONS[col];
+      if(col==='green') pawn.onclick = ()=> onPlayerPawnClick(idx);
+
+      if(step === -1){
+        const pocket = document.getElementById(`pocket-${col}-${idx}`);
+        if(pocket) pocket.appendChild(pawn);
+      } else {
+        const cell = getCellForPawn(col, step);
+        if(cell) cell.appendChild(pawn);
+      }
+    });
+  });
+}
+renderAllPawns();
+
+/* ===== ASSIGN RANDOM NAMES ===== */
+function assignRandomNames(){
+  const shuffled = [...BOT_NAMES].sort(()=>0.5-Math.random());
+  playerNames.red    = shuffled[0];
+  playerNames.yellow = shuffled[1];
+  playerNames.blue   = shuffled[2];
+  document.getElementById('tag-red').textContent    = '🔥 '+playerNames.red;
+  document.getElementById('tag-yellow').textContent = '⚡ '+playerNames.yellow;
+  document.getElementById('tag-blue').textContent   = '💎 '+playerNames.blue;
+}
+
+/* ===== POOL SELECT ===== */
+function selectPool(id){
+  if(gameActive) return;
+  currentPoolId = id;
+  document.querySelectorAll('.pool-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelector(`.pool-card[data-pool="${id}"]`).classList.add('selected');
+  const p = POOLS[id];
+  document.getElementById('join-battle-btn').textContent = `Join Battle (₹${p.entry.toLocaleString('en-IN')})`;
+}
+
+/* ===== START GAME ===== */
+function startLudoGame(){ if(!requireAuth()) return;
+  const pool = POOLS[currentPoolId];
+  if(pool.entry > getBalance()){ showToast('Insufficient balance'); return; }
+
+  setBalance(getBalance() - pool.entry);
+  if(typeof playGameSound==='function') playGameSound('bet');
+
+  gameActive   = true;
+  currentTurn  = 'player';
+  canRoll      = true;
+  isAnimating  = false;
+  playerFavored= Math.random() < 0.65; // 65% chance player wins
+
+  assignRandomNames();
+  for(let col in pawns) pawns[col] = [-1,-1,-1,-1];
+  renderAllPawns();
+
+  document.getElementById('join-battle-btn').disabled = true;
+  setStatus('Your Turn (Green) – Click the Dice to Roll! 🎲', '#10b981');
+
+  showToast(`Joined Pool ${currentPoolId}! Entry ₹${pool.entry} | Prize ₹${pool.prize}`);
+}
+
+/* ===== STATUS HELPER ===== */
+function setStatus(msg, color='#94a3b8'){
+  const el = document.getElementById('turn-status-text');
+  el.textContent = msg;
+  el.style.color = color;
+}
+
+/* ===== DICE ROLL ===== */
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+function rollLudoDice(){ if(!requireAuth()) return;
+  if(!gameActive || currentTurn!=='player' || !canRoll || isAnimating) return;
+  canRoll = false;
+
+  const diceEl = document.getElementById('ludo-dice');
+  diceEl.classList.add('rolling');
+  if(typeof playGameSound==='function') playGameSound('tick');
+
+  // Flash random faces
+  let flashCount = 0;
+  const flashTimer = setInterval(()=>{
+    diceEl.textContent = DICE_FACES[Math.floor(Math.random()*6)];
+    flashCount++;
+    if(flashCount >= 8){
+      clearInterval(flashTimer);
+      diceEl.classList.remove('rolling');
+
+      // Biased roll: if playerFavored, higher chance of 6
+      if(playerFavored){
+        diceVal = Math.random()<0.38 ? 6 : (Math.floor(Math.random()*6)+1);
+      } else {
+        diceVal = Math.floor(Math.random()*6)+1;
+      }
+      diceEl.textContent = DICE_FACES[diceVal-1];
+
+      highlightPlayerMovables();
+    }
+  }, 55);
+}
+
+/* ===== HIGHLIGHT MOVABLE PAWNS ===== */
+function highlightPlayerMovables(){
+  let movable = [];
+  pawns.green.forEach((step,idx)=>{
+    if(step===-1 && diceVal===6) movable.push(idx);
+    else if(step>=0 && step+diceVal<=56) movable.push(idx);
+  });
+
+  if(!movable.length){
+    setStatus(`Rolled ${diceVal} – No valid moves. Passing…`, '#f59e0b');
+    setTimeout(nextTurn, 900);
+  } else {
+    setStatus(`Rolled ${diceVal} – Tap a glowing pawn to move!`, '#00e676');
+    movable.forEach(idx=>{
+      const el = document.getElementById(`pawn-green-${idx}`);
+      if(el) el.classList.add('pawn-movable');
+    });
+  }
+}
+
+/* ===== PLAYER PAWN CLICK ===== */
+function onPlayerPawnClick(idx){
+  if(!gameActive||currentTurn!=='player'||isAnimating) return;
+  const el = document.getElementById(`pawn-green-${idx}`);
+  if(!el||!el.classList.contains('pawn-movable')) return;
+
+  // Remove highlights
+  document.querySelectorAll('.pawn-movable').forEach(p=>p.classList.remove('pawn-movable'));
+
+  const fromStep = pawns.green[idx];
+  const toStep   = fromStep===-1 ? 0 : Math.min(fromStep+diceVal, 56);
+
+  movePawnStepByStep('green', idx, fromStep, toStep, ()=>{
+    checkCapture('green', idx);
+    if(pawns.green.every(s=>s>=56)){ endLudo(true); return; }
+    if(diceVal===6){
+      canRoll = true;
+      setStatus('🎉 Rolled 6 – Bonus Roll!', '#ffd700');
+    } else {
+      nextTurn();
+    }
+  });
+}
+
+/* ===== STEP-BY-STEP ANIMATION ENGINE ===== */
+function movePawnStepByStep(color, idx, fromStep, toStep, onComplete){
+  isAnimating = true;
+  const steps = toStep - fromStep;
+  let currentStep = fromStep;
+  let moved = 0;
+
+  function doNextStep(){
+    if(moved >= steps){
+      isAnimating = false;
+      if(typeof playGameSound==='function') playGameSound('gem');
+      if(onComplete) onComplete();
+      return;
+    }
+
+    // Advance one step
+    if(currentStep === -1){
+      currentStep = 0;
+    } else {
+      currentStep += 1;
+    }
+    moved++;
+    pawns[color][idx] = currentStep;
+
+    // Re-render (snap)
+    renderAllPawns();
+
+    // Play hop animation on the pawn
+    const pawnEl = document.getElementById(`pawn-${color}-${idx}`);
+    if(pawnEl){
+      pawnEl.classList.remove('pawn-jumping');
+      void pawnEl.offsetWidth; // reflow
+      pawnEl.classList.add('pawn-jumping');
+      if(typeof playGameSound==='function') playGameSound('tick');
+    }
+
+    setTimeout(doNextStep, 190);
+  }
+
+  doNextStep();
+}
+
+/* ===== CAPTURE CHECK ===== */
+function checkCapture(activeColor, idx){
+  const step = pawns[activeColor][idx];
+  if(step<0||step>=51) return;
+
+  const activeAbs = (START_OFFSET[activeColor]+step)%52;
+  if(SAFE_ABS.has(activeAbs)) return; // safe star
+
+  ['green','red','yellow','blue'].forEach(col=>{
+    if(col===activeColor) return;
+    pawns[col].forEach((oppStep, oppIdx)=>{
+      if(oppStep>=0 && oppStep<51){
+        const oppAbs = (START_OFFSET[col]+oppStep)%52;
+        if(oppAbs===activeAbs){
+          pawns[col][oppIdx] = -1;
+          renderAllPawns();
+          if(typeof playGameSound==='function') playGameSound('bomb');
+          showToast(`💥 ${activeColor.toUpperCase()} knocked out ${col.toUpperCase()}!`);
+        }
+      }
+    });
+  });
+}
+
+/* ===== NEXT TURN ===== */
+function nextTurn(){
+  document.querySelectorAll('.pawn-movable').forEach(p=>p.classList.remove('pawn-movable'));
+  const order = ['player','bot1','bot2','bot3'];
+  currentTurn = order[(order.indexOf(currentTurn)+1)%4];
+
+  if(currentTurn==='player'){
+    canRoll = true;
+    setStatus('Your Turn (Green) – Roll Dice! 🎲','#10b981');
+  } else {
+    const name = currentTurn==='bot1'?playerNames.red:currentTurn==='bot2'?playerNames.yellow:playerNames.blue;
+    const col  = currentTurn==='bot1'?'#ef4444':currentTurn==='bot2'?'#f59e0b':'#3b82f6';
+    setStatus(`${name} is rolling...`, col);
+    setTimeout(playBotTurn, 700);
+  }
+}
+
+/* ===== BOT TURN ===== */
+function playBotTurn(){
+  if(!gameActive||isAnimating) return;
+  const diceEl = document.getElementById('ludo-dice');
+  diceEl.classList.add('rolling');
+
+  let flashCount=0;
+  const ft = setInterval(()=>{
+    diceEl.textContent = DICE_FACES[Math.floor(Math.random()*6)];
+    flashCount++;
+    if(flashCount>=6){
+      clearInterval(ft);
+      diceEl.classList.remove('rolling');
+
+      // Bots roll: unfavored bots don't get bias
+      let botRoll = Math.floor(Math.random()*6)+1;
+      if(!playerFavored && Math.random()<0.35) botRoll=6;
+      diceEl.textContent = DICE_FACES[botRoll-1];
+
+      const bCol = currentTurn==='bot1'?'red':currentTurn==='bot2'?'yellow':'blue';
+
+      // Pick best pawn to move
+      let bestIdx = -1;
+      let bestStep = -99;
+      for(let i=0;i<4;i++){
+        const s = pawns[bCol][i];
+        if(s===-1 && botRoll===6){ bestIdx=i; break; }
+        if(s>=0 && s+botRoll<=56 && s>bestStep){ bestStep=s; bestIdx=i; }
+      }
+
+      if(bestIdx===-1){
+        // No move
+        setTimeout(nextTurn, 700);
+        return;
+      }
+
+      const fromStep = pawns[bCol][bestIdx];
+      const toStep   = fromStep===-1 ? 0 : Math.min(fromStep+botRoll, 56);
+
+      movePawnStepByStep(bCol, bestIdx, fromStep, toStep, ()=>{
+        checkCapture(bCol, bestIdx);
+
+        // Check bot win
+        if(!playerFavored && (pawns[bCol].every(s=>s>=56)||(pawns[bCol][0]>=46&&Math.random()<0.18))){
+          endLudo(false); return;
+        }
+        if(botRoll===6){
+          setTimeout(playBotTurn, 600);
+        } else {
+          nextTurn();
+        }
+      });
+    }
+  }, 55);
+}
+
+/* ===== END GAME ===== */
+function endLudo(playerWon){
+  gameActive = false;
+  document.getElementById('join-battle-btn').disabled = false;
+  const pool = POOLS[currentPoolId];
+  const res  = document.getElementById('result-container');
+
+  if(playerWon){
+    setBalance(getBalance()+pool.prize);
+    totalProfit += pool.prize-pool.entry;
+    wins++;
+    flashBal('flash-win');
+    launchConfetti();
+    if(typeof playGameSound==='function') playGameSound('win');
+    if(typeof trackGameWager==='function') trackGameWager('GG Ludo',pool.entry,pool.prize,true);
+    res.innerHTML = `<div class="result-box win"><div class="result-box-title">👑 LUDO CHAMPION!</div><div class="result-box-val">+₹${pool.prize.toLocaleString('en-IN')}</div></div>`;
+  } else {
+    totalProfit -= pool.entry;
+    losses++;
+    flashBal('flash-lose');
+    if(typeof playGameSound==='function') playGameSound('lose');
+    if(typeof trackGameWager==='function') trackGameWager('GG Ludo',pool.entry,0,false);
+    const wName = currentTurn==='bot1'?playerNames.red:currentTurn==='bot2'?playerNames.yellow:playerNames.blue;
+    res.innerHTML = `<div class="result-box lose"><div class="result-box-title">💀 ${wName} Won!</div><div class="result-box-val">-₹${pool.entry.toLocaleString('en-IN')}</div></div>`;
+  }
+  updateStats();
+  setTimeout(()=>res.innerHTML='', 4500);
+}
+
+/* ===== CONFETTI ===== */
+function launchConfetti(){
+  const canvas = document.getElementById('ludo-confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width  = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+  const particles = [];
+  const colors = ['#ffd700','#10b981','#ef4444','#f59e0b','#3b82f6'];
+  for(let i=0;i<75;i++){
+    particles.push({
+      x:canvas.width/2, y:canvas.height/2,
+      vx:(Math.random()-0.5)*14, vy:(Math.random()-0.8)*16,
+      size:Math.random()*8+4, color:colors[Math.floor(Math.random()*colors.length)],
+      alpha:1
+    });
+  }
+  function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.4; p.alpha-=0.015;
+      if(p.alpha>0){
+        alive=true;
+        ctx.fillStyle=p.color;
+        ctx.globalAlpha=Math.max(0,p.alpha);
+        ctx.fillRect(p.x,p.y,p.size,p.size);
+      }
+    });
+    if(alive) requestAnimationFrame(render);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  render();
+}
+
+/* ===== STATS ===== */
+function updateStats(){
+  const p = document.getElementById('stat-profit');
+  p.textContent = (totalProfit>=0?'+':'')+' ₹'+totalProfit.toFixed(2);
+  p.className = 'stat-box-val '+(totalProfit>=0?'green':'red');
+  document.getElementById('stat-wins').textContent   = wins;
+  document.getElementById('stat-losses').textContent = losses;
+}
+</script>
+</body>
+</html>
+
+
+
+

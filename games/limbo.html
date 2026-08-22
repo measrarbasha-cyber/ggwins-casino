@@ -1,0 +1,443 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Limbo – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+.limbo-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 24px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(circle at 50% 50%, #0c1829 0%, #040810 100%);
+}
+.limbo-result {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 130px;
+  font-weight: 900;
+  color: var(--text2);
+  line-height: 1;
+  text-align: center;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+}
+.limbo-result.win {
+  color: #00e676;
+  transform: scale(1.1);
+  text-shadow: 0 0 80px rgba(0,230,118,0.7), 0 0 160px rgba(0,230,118,0.3);
+}
+.limbo-result.lose {
+  color: #ef4444;
+  transform: scale(0.95);
+  text-shadow: 0 0 80px rgba(239,68,68,0.6);
+}
+.limbo-result.rolling {
+  animation: limboHyperdrive 0.05s infinite;
+  color: #00bcd4;
+  text-shadow: 0 0 50px rgba(0,188,212,0.7);
+}
+@keyframes limboHyperdrive {
+  0%{transform:scale(0.96) translate3d(0, -2px, 0); opacity: 0.8;}
+  50%{transform:scale(1.04) translate3d(0, 2px, 0); opacity: 1;}
+  100%{transform:scale(0.96) translate3d(0, -2px, 0); opacity: 0.8;}
+}
+.limbo-x { font-size: 52px; color: inherit; opacity: 0.7; }
+
+.limbo-target-display {
+  text-align: center;
+  padding: 14px 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.ltd-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+.ltd-val { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; color: var(--green); }
+
+.limbo-history-bar {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  max-width: 520px;
+  justify-content: center;
+}
+.lh-chip {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 5px;
+  animation: fadeIn 0.3s ease;
+}
+.lh-chip.low { background: rgba(239,83,80,0.15); color: var(--red); }
+.lh-chip.mid { background: rgba(255,107,53,0.15); color: var(--orange); }
+.lh-chip.high { background: rgba(0,230,118,0.15); color: var(--green); }
+.lh-chip.mega { background: rgba(255,215,0,0.15); color: var(--gold); }
+
+/* Particle burst */
+.particles {
+  position: absolute;
+  pointer-events: none;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+}
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: particleOut 0.8s ease-out forwards;
+}
+@keyframes particleOut {
+  0% { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx),var(--ty)) scale(0); opacity: 0; }
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">📈 GG Limbo</div>
+  </div>
+  <div class="gnav-game-name">Limbo</div>
+  <span class="gnav-game-badge">ORIGINAL</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)" title="Switch Active Account / Currency">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area">
+    <div class="limbo-area">
+      <div class="limbo-history-bar" id="game-history"></div>
+      <div class="limbo-result" id="limbo-result">—<span class="limbo-x">×</span>
+        <div class="particles" id="particles"></div>
+      </div>
+      <div class="limbo-target-display">
+        <div class="ltd-label">Target Multiplier</div>
+        <div class="ltd-val" id="target-disp">2.00×</div>
+      </div>
+    </div>
+  
+<div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected. Unauthorized Copying Prohibited.</div>
+</div>
+
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="seg-ctrl" id="mode-tabs">
+        <div class="seg-btn active" data-mode="manual">Manual</div>
+        <div class="seg-btn" data-mode="auto">Auto</div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div class="bet-label">Bet Amount</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="1">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div class="bet-label">Target Multiplier</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">×</div>
+        <input class="bet-input" id="target-mult" type="number" value="2.00" min="1.01" step="0.01">
+      </div>
+      <div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">
+        <button class="qbtn" onclick="setTarget(1.5)">1.5×</button>
+        <button class="qbtn" onclick="setTarget(2)">2×</button>
+        <button class="qbtn" onclick="setTarget(3)">3×</button>
+        <button class="qbtn" onclick="setTarget(5)">5×</button>
+        <button class="qbtn" onclick="setTarget(10)">10×</button>
+        <button class="qbtn" onclick="setTarget(100)">100×</button>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div class="stats-row" style="padding:0;gap:6px">
+        <div class="stat-box">
+          <div class="stat-box-label">Win Chance</div>
+          <div class="stat-box-val" id="win-chance">49.50%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Profit on Win</div>
+          <div class="stat-box-val green" id="profit-on-win">$1.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section" id="auto-section" style="display:none">
+      <div class="bet-label">Number of Bets</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">🔁</div>
+        <input class="bet-input" id="auto-count" type="number" value="10" min="1">
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div id="result-container"></div>
+      <button class="btn-bet" id="bet-btn" onclick="play()">Bet</button>
+      
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Net Profit</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+
+    <div class="history-section">
+      <div class="history-title">My Bets</div>
+      <div class="history-chips" id="my-history"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script>
+function updateBal(){ updateAllWalletDisplays(); }
+updateBal();
+
+let totalProfit=0, wins=0, losses=0;
+let isPlaying=false, autoMode=false, autoTimer=null;
+
+function genResult(targetMult = 2.00){
+  // 80% forced loss below target, 20% fair
+  if(Math.random() < 0.80){
+    const maxVal = Math.max(1.01, targetMult - 0.02);
+    return parseFloat((1.00 + Math.random() * (maxVal - 1.00)).toFixed(2));
+  }
+  const r = Math.random();
+  if(r < 0.1) return 1.00;
+  return Math.floor(100 / (1 - r * 0.95)) / 100;
+}
+
+function setTarget(v){
+  document.getElementById('target-mult').value = v.toFixed(2);
+  updateOdds();
+}
+
+function updateOdds(){
+  const target = parseFloat(document.getElementById('target-mult').value) || 2;
+  const chance = Math.min(99, 0.82 / target * 100);
+  const betAmt = parseFloat(document.getElementById('bet-amount').value) || 1;
+  document.getElementById('win-chance').textContent = chance.toFixed(2) + '%';
+  document.getElementById('profit-on-win').textContent = '$' + (betAmt * (target - 1)).toFixed(2);
+  document.getElementById('target-disp').textContent = target.toFixed(2) + '×';
+}
+
+document.getElementById('target-mult').addEventListener('input', updateOdds);
+document.getElementById('bet-amount').addEventListener('input', updateOdds);
+updateOdds();
+
+function play(){ if(!requireAuth()) return;
+  if(isPlaying) return;
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if(isNaN(amt)||amt<=0){ showToast('Enter valid amount'); return; }
+  if(amt > getBalance()){ showToast('Insufficient balance'); return; }
+
+  const target = parseFloat(document.getElementById('target-mult').value) || 2;
+  setBalance(getBalance() - amt);
+  if(typeof playGameSound === 'function') playGameSound('bet');
+  isPlaying = true;
+  document.getElementById('bet-btn').disabled = true;
+
+  const resEl = document.getElementById('limbo-result');
+  resEl.className = 'limbo-result rolling';
+
+  let ticks = 0;
+  const rollInterval = setInterval(() => {
+    const fake = (Math.random() * 50 + 1).toFixed(2);
+    resEl.innerHTML = fake + '<span class="limbo-x">×</span><div class="particles" id="particles"></div>';
+    if(typeof playGameSound === 'function' && ticks % 3 === 0) playGameSound('tick');
+    ticks++;
+    if(ticks >= 15){
+      clearInterval(rollInterval);
+      finishPlay(amt, target, resEl);
+    }
+  }, 50);
+}
+
+function finishPlay(amt, target, resEl){
+  const result = genResult(target);
+  const won = result >= target;
+
+  resEl.innerHTML = result.toFixed(2) + '<span class="limbo-x">×</span><div class="particles" id="particles"></div>';
+  resEl.className = 'limbo-result ' + (won ? 'win' : 'lose');
+
+  if(won){
+    const payout = amt * target;
+    setBalance(getBalance() + payout);
+    totalProfit += payout - amt;
+    wins++;
+    spawnParticles(true);
+    showResult(true, payout - amt);
+    flashBal('flash-win');
+    if(typeof playGameSound === 'function') playGameSound('win');
+    if(typeof trackGameWager === 'function') trackGameWager('GG Limbo', amt, payout, true);
+  } else {
+    totalProfit -= amt;
+    losses++;
+    showResult(false, amt);
+    flashBal('flash-lose');
+    if(typeof playGameSound === 'function') playGameSound('lose');
+    if(typeof trackGameWager === 'function') trackGameWager('GG Limbo', amt, 0, false);
+  }
+
+  addGameHistory(result);
+  addMyHistory(result, won);
+  updateStats();
+  isPlaying = false;
+  document.getElementById('bet-btn').disabled = false;
+}
+
+function spawnParticles(win){
+  const container = document.getElementById('particles');
+  container.innerHTML = '';
+  const colors = win ? ['#00e676','#4caf50','#66bb6a','#a5d6a7'] : ['#ef5350','#e53935'];
+  for(let i=0;i<20;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const angle = (Math.PI*2/20)*i;
+    const dist = 40+Math.random()*60;
+    p.style.cssText = `background:${colors[i%colors.length]};--tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px`;
+    container.appendChild(p);
+  }
+}
+
+function addGameHistory(result){
+  const c = document.getElementById('game-history');
+  const chip = document.createElement('div');
+  chip.className = 'lh-chip ' + (result < 1.5 ? 'low' : result < 3 ? 'mid' : result < 10 ? 'high' : 'mega');
+  chip.textContent = result.toFixed(2) + '×';
+  c.insertBefore(chip, c.firstChild);
+  if(c.children.length > 20) c.removeChild(c.lastChild);
+}
+
+function addMyHistory(result, won){
+  const c = document.getElementById('my-history');
+  const chip = document.createElement('div');
+  chip.className = 'hchip '+(won?'win':'lose');
+  chip.textContent = result.toFixed(2)+'×';
+  c.insertBefore(chip, c.firstChild);
+  if(c.children.length > 15) c.removeChild(c.lastChild);
+}
+
+function showResult(won, amount){
+  const c = document.getElementById('result-container');
+  c.innerHTML=`<div class="result-box ${won?'win':'lose'}">
+    <div class="result-box-title">${won?'🎉 You Won!':'💸 You Lost'}</div>
+    <div class="result-box-val">${won?'+$'+amount.toFixed(2):'-$'+amount.toFixed(2)}</div>
+  </div>`;
+  setTimeout(()=>c.innerHTML='',3000);
+}
+
+function updateStats(){
+  const p=document.getElementById('stat-profit');
+  p.textContent=(totalProfit>=0?'+':'')+' $'+totalProfit.toFixed(2);
+  p.className='stat-box-val '+(totalProfit>=0?'green':'red');
+  document.getElementById('stat-wins').textContent=wins;
+  document.getElementById('stat-losses').textContent=losses;
+}
+
+function flashBal(cls){
+  const el=document.getElementById('bal-display');
+  el.classList.remove('flash-win','flash-lose'); void el.offsetWidth; el.classList.add(cls);
+}
+
+function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(0.01,parseFloat(i.value||1)/2).toFixed(2); updateOdds(); }
+function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); updateOdds(); }
+function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); updateOdds(); }
+
+// Mode tabs
+document.querySelectorAll('#mode-tabs .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#mode-tabs .seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    autoMode = btn.dataset.mode === 'auto';
+    document.getElementById('auto-section').style.display = autoMode ? 'block' : 'none';
+    if(autoMode) startAuto(); else stopAuto();
+  });
+});
+
+function startAuto(){
+  let count = parseInt(document.getElementById('auto-count').value) || 10;
+  document.getElementById('bet-btn').textContent = 'Stop Auto';
+  document.getElementById('bet-btn').onclick = stopAuto;
+  function tick(){
+    if(!autoMode || count <= 0){ stopAuto(); return; }
+    count--;
+    play();
+    autoTimer = setTimeout(tick, 1200);
+  }
+  tick();
+}
+
+function stopAuto(){
+  autoMode = false;
+  clearTimeout(autoTimer);
+  document.querySelectorAll('#mode-tabs .seg-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('#mode-tabs .seg-btn[data-mode="manual"]').classList.add('active');
+  document.getElementById('auto-section').style.display = 'none';
+  document.getElementById('bet-btn').textContent = 'Bet';
+  document.getElementById('bet-btn').onclick = play;
+}
+
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:#1e2d3d;border:1px solid rgba(255,255,255,0.1);color:#e8edf5;padding:10px 16px;border-radius:8px;font-size:13px;z-index:999';
+  t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+</script>
+</body>
+</html>
+
+
+

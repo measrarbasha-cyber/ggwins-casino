@@ -1,0 +1,535 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hilo – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+.hilo-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 20px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 50%, #0d1e34 0%, #050b14 100%);
+}
+.hilo-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  perspective: 1000px;
+}
+.card-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.card-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.hilo-card {
+  width: 120px;
+  height: 170px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #ffffff, #e2e8f0);
+  border: 2px solid rgba(255,255,255,0.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 10px rgba(255,255,255,0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  user-select: none;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+}
+.hilo-card.red { color: #dc2626; }
+.hilo-card.black { color: #0f172a; }
+.hilo-card.flipping {
+  animation: cardFlip3D 0.45s ease forwards;
+}
+@keyframes cardFlip3D {
+  0% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(90deg) scale(1.15); }
+  100% { transform: rotateY(0deg) scale(1); }
+}
+.card-top, .card-bottom {
+  font-size: 20px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+.card-bottom {
+  transform: rotate(180deg);
+}
+.card-center {
+  font-size: 44px;
+  line-height: 1;
+}
+.hilo-actions-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+}
+.hilo-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.hilo-btn.higher {
+  background: linear-gradient(135deg, rgba(0,230,118,0.15), rgba(0,230,118,0.05));
+  border-color: rgba(0,230,118,0.4);
+  color: #00e676;
+}
+.hilo-btn.higher:hover:not(:disabled) {
+  background: #00e676;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,230,118,0.4);
+}
+.hilo-btn.lower {
+  background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+  border-color: rgba(239,68,68,0.4);
+  color: #ef4444;
+}
+.hilo-btn.lower:hover:not(:disabled) {
+  background: #ef4444;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239,68,68,0.4);
+}
+.hilo-btn.skip {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.15);
+  color: #94a3b8;
+}
+.hilo-btn.skip:hover:not(:disabled) {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.hilo-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+.hilo-history-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  max-width: 500px;
+  padding: 6px 4px;
+}
+.history-mini-card {
+  width: 38px;
+  height: 52px;
+  border-radius: 6px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  flex-shrink: 0;
+  animation: popIn 0.3s ease;
+}
+.history-mini-card.red { color: #dc2626; }
+.history-mini-card.black { color: #0f172a; }
+.multiplier-banner {
+  text-align: center;
+}
+.mult-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 42px;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 0 25px rgba(255,215,0,0.6);
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🃏 GG Hilo</div>
+  </div>
+  <div class="gnav-game-name">Hilo</div>
+  <span class="gnav-game-badge" style="background:#7c4dff">ORIGINAL</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area hilo-area">
+    <div class="multiplier-banner">
+      <div style="font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Current Multiplier</div>
+      <div class="mult-val" id="active-mult">1.00×</div>
+    </div>
+
+    <div class="hilo-stage">
+      <div class="card-slot">
+        <div class="card-label">Current Card</div>
+        <div class="hilo-card red" id="current-card">
+          <div class="card-top"><span class="cr">K</span><span class="cs">♦</span></div>
+          <div class="card-center">♦</div>
+          <div class="card-bottom"><span class="cr">K</span><span class="cs">♦</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hilo-actions-box">
+      <button class="hilo-btn higher" id="btn-higher" onclick="guess('higher')" disabled>
+        <span>▲ Higher or Equal</span>
+        <span id="higher-mult">1.25×</span>
+      </button>
+      <button class="hilo-btn lower" id="btn-lower" onclick="guess('lower')" disabled>
+        <span>▼ Lower or Equal</span>
+        <span id="lower-mult">1.75×</span>
+      </button>
+      <button class="hilo-btn skip" id="btn-skip" onclick="skipCard()" disabled>
+        <span>↻ Skip Card</span>
+        <span>(Keep Mult)</span>
+      </button>
+    </div>
+
+    <div class="hilo-history-strip" id="history-strip"></div>
+  
+<div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected. Unauthorized Copying Prohibited.</div>
+</div>
+
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="bet-label">Bet Amount</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="1">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <button class="btn-bet" id="start-btn" onclick="startGame()">Start Game</button>
+      
+      <button class="btn-cashout" id="cashout-btn" onclick="cashOut()" style="display:none;margin-top:8px">Cash Out ₹0.00</button>
+    </div>
+
+    <div class="bet-section">
+      <div id="result-container"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script>
+function updateBal(){ updateAllWalletDisplays(); }
+updateBal();
+
+const RANKS = [
+  { rank: 'A', val: 1 },
+  { rank: '2', val: 2 },
+  { rank: '3', val: 3 },
+  { rank: '4', val: 4 },
+  { rank: '5', val: 5 },
+  { rank: '6', val: 6 },
+  { rank: '7', val: 7 },
+  { rank: '8', val: 8 },
+  { rank: '9', val: 9 },
+  { rank: '10', val: 10 },
+  { rank: 'J', val: 11 },
+  { rank: 'Q', val: 12 },
+  { rank: 'K', val: 13 }
+];
+const SUITS = [
+  { suit: '♠', color: 'black' },
+  { suit: '♥', color: 'red' },
+  { suit: '♦', color: 'red' },
+  { suit: '♣', color: 'black' }
+];
+
+let currentCard = { rank: 'K', val: 13, suit: '♦', color: 'red' };
+let gameActive = false;
+let betAmt = 100;
+let currentMult = 1.00;
+let totalProfit = 0, wins = 0, losses = 0;
+
+function getRandomCard(){
+  const r = RANKS[Math.floor(Math.random() * RANKS.length)];
+  const s = SUITS[Math.floor(Math.random() * SUITS.length)];
+  return { rank: r.rank, val: r.val, suit: s.suit, color: s.color };
+}
+
+function renderCard(card, anim = true){
+  const el = document.getElementById('current-card');
+  el.className = 'hilo-card ' + card.color + (anim ? ' flipping' : '');
+  el.querySelectorAll('.cr').forEach(e => e.textContent = card.rank);
+  el.querySelectorAll('.cs').forEach(e => e.textContent = card.suit);
+  el.querySelector('.card-center').textContent = card.suit;
+  setTimeout(() => el.classList.remove('flipping'), 500);
+}
+
+function updateOdds(){
+  const val = currentCard.val;
+  const higherCount = 13 - val + 1;
+  const lowerCount = val;
+  const higherChance = higherCount / 13;
+  const lowerChance = lowerCount / 13;
+
+  const multHigher = Math.max(1.05, (0.80 / higherChance));
+  const multLower = Math.max(1.05, (0.80 / lowerChance));
+
+  document.getElementById('higher-mult').textContent = multHigher.toFixed(2) + '×';
+  document.getElementById('lower-mult').textContent = multLower.toFixed(2) + '×';
+}
+
+function addHistory(card){
+  const strip = document.getElementById('history-strip');
+  const mini = document.createElement('div');
+  mini.className = 'history-mini-card ' + card.color;
+  mini.innerHTML = `<span>${card.rank}</span><span>${card.suit}</span>`;
+  strip.insertBefore(mini, strip.firstChild);
+  if(strip.children.length > 12) strip.removeChild(strip.lastChild);
+}
+
+function startGame(){ if(!requireAuth()) return;
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if(isNaN(amt) || amt <= 0){ showToast('Enter valid amount'); return; }
+  if(amt > getBalance()){ showToast('Insufficient balance'); return; }
+
+  betAmt = amt;
+  setBalance(getBalance() - amt);
+  if(typeof playGameSound === 'function') playGameSound('bet');
+
+  gameActive = true;
+  currentMult = 1.00;
+  currentCard = getRandomCard();
+  renderCard(currentCard);
+  addHistory(currentCard);
+  updateOdds();
+
+  document.getElementById('active-mult').textContent = '1.00×';
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('cashout-btn').style.display = 'block';
+  document.getElementById('cashout-btn').textContent = `Cash Out ₹${betAmt.toFixed(2)}`;
+  
+  document.getElementById('btn-higher').disabled = false;
+  document.getElementById('btn-lower').disabled = false;
+  document.getElementById('btn-skip').disabled = false;
+}
+
+function guess(choice){
+  if(!gameActive) return;
+
+  if(typeof playGameSound === 'function') playGameSound('card');
+
+  // House edge bias: 75% forced opposite / loss on next card
+  let nextCard;
+  const forceLoss = Math.random() < 0.75;
+  if(forceLoss){
+    if(choice === 'higher' && currentCard.val > 1){
+      const lowerRanks = RANKS.filter(r => r.val < currentCard.val);
+      const r = lowerRanks.length > 0 ? lowerRanks[Math.floor(Math.random()*lowerRanks.length)] : RANKS[0];
+      const s = SUITS[Math.floor(Math.random()*SUITS.length)];
+      nextCard = { rank: r.rank, val: r.val, suit: s.suit, color: s.color };
+    } else if(choice === 'lower' && currentCard.val < 13){
+      const higherRanks = RANKS.filter(r => r.val > currentCard.val);
+      const r = higherRanks.length > 0 ? higherRanks[Math.floor(Math.random()*higherRanks.length)] : RANKS[12];
+      const s = SUITS[Math.floor(Math.random()*SUITS.length)];
+      nextCard = { rank: r.rank, val: r.val, suit: s.suit, color: s.color };
+    } else {
+      nextCard = getRandomCard();
+    }
+  } else {
+    nextCard = getRandomCard();
+  }
+
+  const isHigherWin = choice === 'higher' && nextCard.val >= currentCard.val;
+  const isLowerWin = choice === 'lower' && nextCard.val <= currentCard.val;
+  const won = isHigherWin || isLowerWin;
+
+  renderCard(nextCard);
+  addHistory(nextCard);
+
+  if(won){
+    const stepMult = choice === 'higher' 
+      ? parseFloat(document.getElementById('higher-mult').textContent)
+      : parseFloat(document.getElementById('lower-mult').textContent);
+    currentMult = currentMult * (stepMult * 0.85);
+    currentCard = nextCard;
+    updateOdds();
+
+    document.getElementById('active-mult').textContent = currentMult.toFixed(2) + '×';
+    document.getElementById('cashout-btn').textContent = `Cash Out ₹${(betAmt * currentMult).toFixed(2)}`;
+    if(typeof playGameSound === 'function') playGameSound('win');
+  } else {
+    endGame(false);
+  }
+}
+
+function skipCard(){
+  if(!gameActive) return;
+  if(typeof playGameSound === 'function') playGameSound('card');
+  currentCard = getRandomCard();
+  renderCard(currentCard);
+  addHistory(currentCard);
+  updateOdds();
+}
+
+function launchHiloConfetti(){
+  let canvas = document.getElementById('hilo-confetti');
+  if(!canvas){
+    canvas = document.createElement('canvas');
+    canvas.id = 'hilo-confetti';
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;';
+    document.querySelector('.hilo-area').appendChild(canvas);
+  }
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#ffd700', '#00e676', '#7c4dff', '#ff6b35', '#ffffff'];
+  for(let i=0; i<60; i++){
+    particles.push({
+      x: canvas.width/2, y: canvas.height/2,
+      vx: (Math.random()-0.5)*12, vy: (Math.random()-0.8)*14,
+      size: Math.random()*7+3, color: colors[Math.floor(Math.random()*colors.length)],
+      alpha: 1
+    });
+  }
+
+  function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.35; p.alpha -= 0.015;
+      if(p.alpha > 0){
+        alive = true;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    });
+    if(alive) requestAnimationFrame(render);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  render();
+}
+
+function cashOut(){
+  if(!gameActive) return;
+  const payout = betAmt * currentMult;
+  setBalance(getBalance() + payout);
+  totalProfit += payout - betAmt;
+  wins++;
+  flashBal('flash-win');
+  launchHiloConfetti();
+  if(typeof playGameSound === 'function') playGameSound('win');
+  if(typeof trackGameWager === 'function') trackGameWager('GG Hilo', betAmt, payout, true);
+  endGame(true, payout);
+}
+
+function endGame(won, payout = 0){
+  gameActive = false;
+  document.getElementById('btn-higher').disabled = true;
+  document.getElementById('btn-lower').disabled = true;
+  document.getElementById('btn-skip').disabled = true;
+  document.getElementById('start-btn').style.display = 'block';
+  document.getElementById('cashout-btn').style.display = 'none';
+
+  const resContainer = document.getElementById('result-container');
+  if(won){
+    resContainer.innerHTML = `<div class="result-box win"><div class="result-box-title">🎉 Cashed Out!</div><div class="result-box-val">+₹${payout.toFixed(2)} (${currentMult.toFixed(2)}×)</div></div>`;
+  } else {
+    totalProfit -= betAmt;
+    losses++;
+    flashBal('flash-lose');
+    if(typeof playGameSound === 'function') playGameSound('lose');
+    if(typeof trackGameWager === 'function') trackGameWager('GG Hilo', betAmt, 0, false);
+    resContainer.innerHTML = `<div class="result-box lose"><div class="result-box-title">💸 Busted!</div><div class="result-box-val">-₹${betAmt.toFixed(2)}</div></div>`;
+  }
+  setTimeout(() => resContainer.innerHTML = '', 3500);
+  updateStats();
+}
+
+function updateStats(){
+  const p = document.getElementById('stat-profit');
+  p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
+  p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
+  document.getElementById('stat-wins').textContent = wins;
+  document.getElementById('stat-losses').textContent = losses;
+}
+
+function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
+function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
+function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); }
+</script>
+</body>
+</html>
+
+
+

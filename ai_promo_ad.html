@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GG WINS – AI Ad Studio with 3D Hostess & Melodious Voiceover</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+<!-- Three.js 3D WebGL Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: radial-gradient(circle at 50% 15%, #180933 0%, #080314 55%, #020005 100%);
+  color: #fff;
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 16px;
+  overflow-x: hidden;
+}
+
+.studio-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.studio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: rgba(217, 70, 239, 0.15);
+  border: 1px solid rgba(217, 70, 239, 0.4);
+  color: #f472b6;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.studio-title {
+  font-size: 34px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #f472b6 0%, #06b6d4 50%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 25px rgba(217, 70, 239, 0.5));
+}
+.studio-sub {
+  font-size: 14px;
+  color: #a5b4fc;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* Master 16:9 Viewport */
+.cinema-container {
+  position: relative;
+  width: 100%;
+  max-width: 1040px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 0 90px rgba(217, 70, 239, 0.35), 0 0 40px rgba(6, 182, 212, 0.35), 0 35px 80px rgba(0,0,0,0.95);
+  border: 2px solid rgba(217, 70, 239, 0.5);
+}
+
+#showcaseCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#threeCanvas {
+  display: none;
+}
+
+/* Audio & Settings Bar */
+.settings-bar {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1040px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 18px;
+  border-radius: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.voice-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #a5b4fc;
+}
+select {
+  background: #1e1035;
+  color: #fff;
+  border: 1px solid #7c3aed;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Controls */
+.control-bar {
+  margin-top: 16px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-action {
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.btn-play {
+  background: linear-gradient(135deg, #d946ef, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 4px 25px rgba(217, 70, 239, 0.5);
+}
+.btn-record {
+  background: linear-gradient(135deg, #06b6d4, #10b981);
+  color: #000;
+  box-shadow: 0 4px 25px rgba(6, 182, 212, 0.5);
+}
+.btn-action:hover {
+  transform: translateY(-3px) scale(1.03);
+  filter: brightness(1.2);
+}
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Progress Tracker */
+.progress-container {
+  width: 100%;
+  max-width: 1040px;
+  margin-top: 14px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #d946ef, #06b6d4, #10b981, #ffd700);
+  transition: width 0.1s linear;
+}
+
+.timer-label {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #06b6d4;
+  letter-spacing: 0.5px;
+}
+
+.chapter-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1040px;
+}
+.chapter-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.chapter-btn.active {
+  background: rgba(217, 70, 239, 0.25);
+  color: #fff;
+  border-color: #d946ef;
+  box-shadow: 0 0 14px rgba(217, 70, 239, 0.45);
+}
+</style>
+</head>
+<body>
+
+<div class="studio-header">
+  <div class="studio-badge">✨ AI Commercial Studio • 1080p 60FPS</div>
+  <div class="studio-title">GG WINS – PROFESSIONAL AI HOST COMMERCIAL</div>
+  <div class="studio-sub">Animated 3D Virtual Hostess 'Aria' • Continuous Melodious Female Voiceover • Full Platform Feature Ad</div>
+</div>
+
+<div class="cinema-container">
+  <canvas id="showcaseCanvas" width="1920" height="1080"></canvas>
+  <canvas id="threeCanvas" width="1920" height="1080"></canvas>
+</div>
+
+<div class="progress-container">
+  <div class="progress-fill" id="progFill"></div>
+</div>
+<div class="timer-label" id="timerDisplay">00:00 / 01:45 • AI Host Ready</div>
+
+<div class="settings-bar">
+  <div class="voice-select-wrap">
+    <span>🎙️ Melodious Host Voice:</span>
+    <select id="voiceSelect" onchange="updateSelectedVoice()">
+      <option value="auto">🌟 Melodious AI Female Voice (Auto-Select)</option>
+    </select>
+  </div>
+  <div style="font-size: 12.5px; color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+    <span>●</span> Unbroken Audio Stream Engine Active
+  </div>
+</div>
+
+<div class="chapter-bar">
+  <div class="chapter-btn active" id="ch-0" onclick="seekChapter(0)">1. Welcome to GG Wins</div>
+  <div class="chapter-btn" id="ch-1" onclick="seekChapter(18000)">2. 25+ Popular Games</div>
+  <div class="chapter-btn" id="ch-2" onclick="seekChapter(40000)">3. VIP High Roller Club</div>
+  <div class="chapter-btn" id="ch-3" onclick="seekChapter(62000)">4. 30-Sec UPI Cashouts</div>
+  <div class="chapter-btn" id="ch-4" onclick="seekChapter(82000)">5. 24/7 AI VIP Host</div>
+  <div class="chapter-btn" id="ch-5" onclick="seekChapter(98000)">6. Claim ₹10,000 Bonus</div>
+</div>
+
+<div class="control-bar">
+  <button class="btn-action btn-play" id="btnPlay" onclick="startCommercial(false)">
+    ▶ Play Full AI Commercial
+  </button>
+  <button class="btn-action btn-record" id="btnRecord" onclick="startCommercial(true)">
+    🎥 Record & Download Full HD Ad (.webm)
+  </button>
+  <button class="btn-action" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 4px 20px rgba(99,102,241,0.5)" onclick="window.location.href='/vip_promo_video.html'">
+    ⚡ Switch to 3D Hype Video
+  </button>
+  <button class="btn-action" style="background:linear-gradient(135deg,#10b981,#06b6d4);color:#000;box-shadow:0 4px 20px rgba(16,185,129,0.5)" onclick="window.location.href='/ggwins_official_ad.html'">
+    🎬 Official Storyboard Ad (Boy & Girl)
+  </button>
+  <button class="btn-action" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2)" onclick="window.open('https://ggwins.site','_blank')">
+    🌐 Visit ggwins.site
+  </button>
+</div>
+
+<script>
+const masterCanvas = document.getElementById('showcaseCanvas');
+const masterCtx = masterCanvas.getContext('2d');
+const W = 1920;
+const H = 1080;
+
+const threeCanvas = document.getElementById('threeCanvas');
+
+let isPlaying = false;
+let isRecording = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let animFrame = null;
+let commercialStartTime = 0;
+const TOTAL_DURATION = 105000; // 1 Minute 45 Seconds comprehensive ad
+
+// ════════════════════════════════════════════════════════════════
+// 🌟 THREE.JS 3D CHARACTER & SCENERY ENGINE
+// ════════════════════════════════════════════════════════════════
+const renderer = new THREE.WebGLRenderer({
+  canvas: threeCanvas,
+  antialias: true,
+  alpha: true,
+  powerPreference: 'high-performance'
+});
+renderer.setSize(W, H);
+renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.35;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x060212, 0.0018);
+
+const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 1000);
+camera.position.set(0, 0, 48);
+
+// Lights
+const ambLight = new THREE.AmbientLight(0x8b5cf6, 0.9);
+scene.add(ambLight);
+
+const mainKeyLight = new THREE.DirectionalLight(0xfff7ed, 2.2);
+mainKeyLight.position.set(15, 35, 35);
+scene.add(mainKeyLight);
+
+const pinkFillLight = new THREE.PointLight(0xd946ef, 3.2, 100);
+pinkFillLight.position.set(-22, 12, 20);
+scene.add(pinkFillLight);
+
+const cyanRimLight = new THREE.PointLight(0x06b6d4, 3.5, 100);
+cyanRimLight.position.set(22, -10, 20);
+scene.add(cyanRimLight);
+
+const goldLight = new THREE.PointLight(0xffd700, 3.8, 90);
+goldLight.position.set(0, 25, 20);
+scene.add(goldLight);
+
+// ── 3D Starfield & Floating Sparkles ──
+const pCount = 800;
+const pGeom = new THREE.BufferGeometry();
+const pCoords = new Float32Array(pCount * 3);
+const pColors = new Float32Array(pCount * 3);
+const colArr = [new THREE.Color(0xd946ef), new THREE.Color(0x06b6d4), new THREE.Color(0xffd700), new THREE.Color(0x10b981), new THREE.Color(0xffffff)];
+
+for (let i = 0; i < pCount; i++) {
+  pCoords[i*3] = (Math.random() - 0.5) * 180;
+  pCoords[i*3+1] = (Math.random() - 0.5) * 110;
+  pCoords[i*3+2] = (Math.random() - 0.5) * 120;
+  const c = colArr[Math.floor(Math.random() * colArr.length)];
+  pColors[i*3] = c.r; pColors[i*3+1] = c.g; pColors[i*3+2] = c.b;
+}
+pGeom.setAttribute('position', new THREE.BufferAttribute(pCoords, 3));
+pGeom.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+const pMat = new THREE.PointsMaterial({ size: 1.4, vertexColors: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending });
+const starField = new THREE.Points(pGeom, pMat);
+scene.add(starField);
+
+// ── 3D Neon Horizon Grid ──
+const floorGrid = new THREE.GridHelper(180, 45, 0xd946ef, 0x1e1035);
+floorGrid.position.y = -22;
+scene.add(floorGrid);
+
+// ════════════════════════════════════════════════════════════════
+// 🤖 3D ANIMATED AI HOSTESS CHARACTER ('ARIA')
+// ════════════════════════════════════════════════════════════════
+const hostGrp = new THREE.Group();
+
+// Hologram Stage Pedestal beneath Aria
+const pedGeom = new THREE.CylinderGeometry(8, 9, 1.2, 32);
+const pedMat = new THREE.MeshStandardMaterial({ color: 0x1e1035, emissive: 0xd946ef, emissiveIntensity: 0.6, metalness: 0.9, roughness: 0.1 });
+const pedestal = new THREE.Mesh(pedGeom, pedMat);
+pedestal.position.y = -19;
+hostGrp.add(pedestal);
+
+const stageRing = new THREE.Mesh(new THREE.TorusGeometry(8.5, 0.25, 16, 64), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
+stageRing.rotation.x = Math.PI / 2;
+stageRing.position.y = -18.4;
+hostGrp.add(stageRing);
+
+// Aria's Torso & Cyber Outfit
+const torsoGeom = new THREE.CylinderGeometry(2.2, 2.6, 7.5, 16);
+const torsoMat = new THREE.MeshStandardMaterial({
+  color: 0x180933,
+  emissive: 0x7c3aed,
+  emissiveIntensity: 0.4,
+  metalness: 0.8,
+  roughness: 0.2
+});
+const torso = new THREE.Mesh(torsoGeom, torsoMat);
+torso.position.y = -7;
+hostGrp.add(torso);
+
+// Glowing Cyber Vest / Accents
+const vestGeom = new THREE.TorusGeometry(2.6, 0.35, 12, 32);
+const vestMat = new THREE.MeshStandardMaterial({ color: 0xd946ef, emissive: 0xd946ef, emissiveIntensity: 0.9, metalness: 0.9 });
+const vestRing = new THREE.Mesh(vestGeom, vestMat);
+vestRing.rotation.x = Math.PI / 2;
+vestRing.position.y = -5;
+hostGrp.add(vestRing);
+
+// Neck & Head Assembly
+const headGrp = new THREE.Group();
+headGrp.position.y = -1.5;
+
+const neckGeom = new THREE.CylinderGeometry(0.9, 1.1, 2.2, 12);
+const skinMat = new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.2, roughness: 0.5 }); // warm skin
+const neck = new THREE.Mesh(neckGeom, skinMat);
+neck.position.y = -1.2;
+headGrp.add(neck);
+
+// Head / Face
+const headGeom = new THREE.SphereGeometry(2.8, 24, 24);
+headGeom.scale(1, 1.25, 1.05);
+const head = new THREE.Mesh(headGeom, skinMat);
+headGrp.add(head);
+
+// Cyber Anime Hair
+const hairGeom = new THREE.SphereGeometry(3.1, 24, 24);
+hairGeom.scale(1.05, 1.3, 1.15);
+const hairMat = new THREE.MeshStandardMaterial({
+  color: 0xd946ef,
+  emissive: 0x9333ea,
+  emissiveIntensity: 0.3,
+  metalness: 0.7,
+  roughness: 0.3
+});
+const hair = new THREE.Mesh(hairGeom, hairMat);
+hair.position.set(0, 0.4, -0.3);
+headGrp.add(hair);
+
+// Holographic Cyber Visor / Eyes
+const visorGeom = new THREE.CylinderGeometry(2.5, 2.5, 1.1, 24, 1, false, 0, Math.PI);
+const visorMat = new THREE.MeshStandardMaterial({
+  color: 0x06b6d4,
+  emissive: 0x06b6d4,
+  emissiveIntensity: 0.95,
+  metalness: 0.95,
+  roughness: 0.05,
+  transparent: true,
+  opacity: 0.9
+});
+const visor = new THREE.Mesh(visorGeom, visorMat);
+visor.position.set(0, 0.4, 0.8);
+visor.rotation.y = Math.PI / 2;
+headGrp.add(visor);
+
+// Animated Lip-Sync Mouth
+const mouthGeom = new THREE.CylinderGeometry(0.6, 0.6, 0.2, 16);
+mouthGeom.scale(1.4, 0.6, 0.4);
+const mouthMat = new THREE.MeshBasicMaterial({ color: 0xe11d48 });
+const mouth = new THREE.Mesh(mouthGeom, mouthMat);
+mouth.position.set(0, -1.5, 2.7);
+mouth.rotation.x = Math.PI / 2;
+headGrp.add(mouth);
+
+// Hostess Cyber Headset Mic
+const headsetGeom = new THREE.TorusGeometry(3.1, 0.2, 12, 32);
+const headset = new THREE.Mesh(headsetGeom, new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9 }));
+headset.rotation.z = Math.PI / 4;
+headGrp.add(headset);
+
+const micBoom = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.4), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
+micBoom.position.set(1.5, -1.2, 1.8);
+micBoom.rotation.set(0.6, 0.4, -0.5);
+headGrp.add(micBoom);
+
+const micTip = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 8), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+micTip.position.set(0.8, -1.8, 2.5);
+headGrp.add(micTip);
+
+hostGrp.add(headGrp);
+
+// Articulated Arms
+// Left Arm (Gesturing towards right side games HUD)
+const leftArmGrp = new THREE.Group();
+leftArmGrp.position.set(-2.8, -4.5, 0);
+const armMat = new THREE.MeshStandardMaterial({ color: 0x312e81, metalness: 0.7, roughness: 0.3 });
+const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.55, 6, 12), armMat);
+leftArm.position.y = -3;
+leftArmGrp.add(leftArm);
+const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.8, 12, 12), skinMat);
+leftHand.position.y = -6.2;
+leftArmGrp.add(leftHand);
+hostGrp.add(leftArmGrp);
+
+// Right Arm (Graceful presenter pose / pointing)
+const rightArmGrp = new THREE.Group();
+rightArmGrp.position.set(2.8, -4.5, 0);
+const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.55, 6, 12), armMat);
+rightArm.position.y = -3;
+rightArmGrp.add(rightArm);
+const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.8, 12, 12), skinMat);
+rightHand.position.y = -6.2;
+rightArmGrp.add(rightHand);
+hostGrp.add(rightArmGrp);
+
+hostGrp.position.set(-18, 0, 0);
+scene.add(hostGrp);
+
+// ── 3D FLOATING PROPS BESIDE ARIA ──
+const propGrp = new THREE.Group();
+propGrp.position.set(16, 2, 0);
+
+// Prop 1: 3D Aviator Jet (Supersonic Multiplier)
+const pJetGrp = new THREE.Group();
+const pFuselage = new THREE.Mesh(new THREE.ConeGeometry(1.6, 8, 8), new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.9, roughness: 0.1 }));
+pFuselage.rotation.x = Math.PI / 2;
+pJetGrp.add(pFuselage);
+const pWings = new THREE.Mesh(new THREE.BoxGeometry(9, 0.25, 2.8), new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8 }));
+pWings.position.z = 0.5;
+pJetGrp.add(pWings);
+const pFlame = new THREE.Mesh(new THREE.ConeGeometry(0.8, 4, 8), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+pFlame.rotation.x = -Math.PI / 2;
+pFlame.position.z = -5;
+pJetGrp.add(pFlame);
+propGrp.add(pJetGrp);
+
+// Prop 2: 3D Emerald Diamonds & Dice
+const pGem = new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x059669, emissiveIntensity: 0.7, metalness: 0.9 }));
+pGem.position.set(-12, 8, 0);
+propGrp.add(pGem);
+
+// Prop 3: 3D Royal VIP Crown
+const pCrown = new THREE.Group();
+const pCrownBase = new THREE.Mesh(new THREE.CylinderGeometry(5, 4.5, 2, 16), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xd97706, emissiveIntensity: 0.7, metalness: 0.95 }));
+pCrown.add(pCrownBase);
+for (let s = 0; s < 6; s++) {
+  const pSpike = new THREE.Mesh(new THREE.ConeGeometry(0.9, 3.5, 4), new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.95 }));
+  const a = (s / 6) * Math.PI * 2;
+  pSpike.position.set(Math.cos(a)*4.8, 2.2, Math.sin(a)*4.8);
+  pCrown.add(pSpike);
+}
+pCrown.position.set(0, -10, 0);
+propGrp.add(pCrown);
+
+scene.add(propGrp);
+
+// ════════════════════════════════════════════════════════════════
+// 🎵 CONTINUOUS UNBROKEN VOICE & AUDIO SYNTHESIS ENGINE
+// ════════════════════════════════════════════════════════════════
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// Melodious Casino Lounge Background Harmony Chords (Web Audio API)
+const harmonyChords = [
+  [349.23, 440.00, 523.25, 659.25], // Fmaj7
+  [392.00, 493.88, 587.33, 698.46], // G9
+  [329.63, 392.00, 493.88, 587.33], // Em7
+  [440.00, 523.25, 659.25, 783.99], // Am7
+  [293.66, 349.23, 440.00, 523.25], // Dm7
+  [261.63, 329.63, 392.00, 493.88]  // Cmaj7
+];
+
+let chordTimer = null;
+let currentChordIdx = 0;
+function playAmbientMusic() {
+  if (!isPlaying || !audioCtx) return;
+  try {
+    const notes = harmonyChords[currentChordIdx % harmonyChords.length];
+    currentChordIdx++;
+
+    notes.forEach((freq, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = idx === 0 ? 'triangle' : 'sine';
+      osc.frequency.setValueAtTime(freq * 0.5, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 1.5);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 5.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 5.5);
+    });
+  } catch(e){}
+
+  chordTimer = setTimeout(playAmbientMusic, 4500);
+}
+
+// 🎙️ Voice Setup & Unbroken Stream Queue
+let availableVoices = [];
+let chosenVoice = null;
+let activeUtterance = null;
+let voiceKeepAliveTimer = null;
+let isSpeakingNow = false;
+
+function populateVoiceList() {
+  if (!('speechSynthesis' in window)) return;
+  availableVoices = window.speechSynthesis.getVoices();
+  const select = document.getElementById('voiceSelect');
+  select.innerHTML = '<option value="auto">🌟 Melodious AI Female Voice (Auto-Select)</option>';
+
+  const femaleKeywords = ['female', 'samantha', 'zira', 'victoria', 'karen', 'jenny', 'aria', 'natural', 'google uk english female', 'google us english female'];
+  
+  availableVoices.forEach((v, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    const isFe = femaleKeywords.some(k => v.name.toLowerCase().includes(k));
+    opt.textContent = `${v.name} (${v.lang}) ${isFe ? '✨ [Melodious Female]' : ''}`;
+    select.appendChild(opt);
+  });
+
+  pickBestFemaleVoice();
+}
+
+function pickBestFemaleVoice() {
+  if (!availableVoices.length) return;
+  chosenVoice = availableVoices.find(v => (
+    v.name.includes('Google UK English Female') ||
+    v.name.includes('Google US English Female') ||
+    v.name.includes('Jenny') ||
+    v.name.includes('Aria') ||
+    v.name.includes('Samantha') ||
+    v.name.includes('Victoria') ||
+    v.name.includes('Zira') ||
+    v.name.toLowerCase().includes('female')
+  )) || availableVoices[0];
+}
+
+function updateSelectedVoice() {
+  const val = document.getElementById('voiceSelect').value;
+  if (val === 'auto') pickBestFemaleVoice();
+  else chosenVoice = availableVoices[parseInt(val)];
+}
+
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = populateVoiceList;
+  populateVoiceList();
+}
+
+// 📜 SCRIPT WITH TIMINGS & REAL-TIME KARAOKE SUBTITLES
+const SCRIPT_SEGMENTS = [
+  {
+    startMs: 200,
+    text: "Hello gamers and winners! Welcome to GG Wins, India's most exhilarating real cash casino and esports arena, crafted for pure entertainment, fair play, and instant wins!",
+    subtitle: "⚡ Welcome to GG Wins – India's #1 Real Cash Arena"
+  },
+  {
+    startMs: 18000,
+    text: "Explore over twenty-five blockbuster games! Multiply your cash in GG Mines with 500x multipliers, take flight with Aviator Pro supersonic jets, clash in Carrom 3D 60FPS battles, or play live Roulette and Teen Patti!",
+    subtitle: "🔥 25+ Blockbuster Games • GG Mines, Aviator Pro, Carrom 3D & Live Casino"
+  },
+  {
+    startMs: 40000,
+    text: "Elevate your status in our exclusive VIP High Roller Club! Ascend through Silver, Gold, Platinum, and Diamond Royal tiers to unlock up to 25% weekly rakeback, luxurious perks, and your own dedicated VIP concierge host!",
+    subtitle: "👑 VIP High Roller Club • Up to 25% Rakeback & Dedicated VIP Host"
+  },
+  {
+    startMs: 62000,
+    text: "Enjoy instant 30-second automated cashouts! Directly withdraw your earnings to your bank account with Google Pay, PhonePe, and Paytm, backed by 256-bit bank grade security with zero commission fees!",
+    subtitle: "⚡ Instant 30-Sec UPI Cashouts • GPay, PhonePe, Paytm & 256-Bit Security"
+  },
+  {
+    startMs: 82000,
+    text: "Need assistance? Our 24/7 AI VIP Host is always here to help. Engage with players in live chat, compete in daily tournament leaderboards, and grab exclusive coupon codes right on site!",
+    subtitle: "🤖 24/7 AI VIP Host Assistant • Live Global Chat & Daily Tournaments"
+  },
+  {
+    startMs: 98000,
+    text: "Don't wait! Visit ggwins.site right now, claim your ten thousand rupee free demo bonus, and start your winning streak today!",
+    subtitle: "🎉 Visit ggwins.site • Claim ₹10,000 Free Bonus Now!"
+  }
+];
+
+let currentSubtitle = "⚡ GG WINS – Real Cash Casino & 3D Games";
+
+function speakContinuousSegment(index) {
+  if (!isPlaying || index >= SCRIPT_SEGMENTS.length) return;
+  const seg = SCRIPT_SEGMENTS[index];
+  currentSubtitle = seg.subtitle;
+
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(seg.text);
+    if (chosenVoice) utter.voice = chosenVoice;
+    utter.rate = 1.02;  // Melodious, natural cadence
+    utter.pitch = 1.22; // Sweet, bright, melodious female tone
+    utter.volume = 1.0;
+
+    utter.onstart = () => { isSpeakingNow = true; };
+    utter.onend = () => { isSpeakingNow = false; };
+    utter.onerror = () => { isSpeakingNow = false; };
+
+    window.speechSynthesis.speak(utter);
+    activeUtterance = utter;
+
+    // Chrome keepalive safety pulse
+    if (voiceKeepAliveTimer) clearInterval(voiceKeepAliveTimer);
+    voiceKeepAliveTimer = setInterval(() => {
+      if (window.speechSynthesis.speaking && isPlaying) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }
+    }, 10000);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎬 3D & 2D REAL-TIME COMPOSITING PIPELINE
+// ════════════════════════════════════════════════════════════════
+function update3D(t) {
+  const sec = t / 1000;
+
+  // Starfield gentle rotation
+  starField.rotation.y = sec * 0.05;
+  starField.rotation.x = Math.sin(sec * 0.08) * 0.05;
+  floorGrid.position.z = (sec * 8) % 4;
+
+  // 🤖 Aria's Kinematic Body & Face Animation
+  // Idle Breathing & Hovering
+  hostGrp.position.y = Math.sin(sec * 2) * 0.8;
+  hostGrp.rotation.y = Math.sin(sec * 0.8) * 0.15;
+
+  // Head Nodding & Eye Gazing towards camera & UI
+  headGrp.rotation.y = Math.sin(sec * 1.5) * 0.25;
+  headGrp.rotation.x = Math.cos(sec * 2.2) * 0.08;
+
+  // Lip-sync reactive to speech
+  if (isSpeakingNow) {
+    const mouthPulse = 0.5 + Math.abs(Math.sin(sec * 22)) * 1.2;
+    mouth.scale.set(1.4, mouthPulse, 0.4);
+  } else {
+    mouth.scale.set(1.4, 0.2, 0.4);
+  }
+
+  // Arms Gesturing
+  rightArmGrp.rotation.z = 0.5 + Math.sin(sec * 2.5) * 0.35;
+  rightArmGrp.rotation.x = -0.4 + Math.cos(sec * 2) * 0.3;
+  leftArmGrp.rotation.z = -0.3 + Math.sin(sec * 1.8) * 0.2;
+
+  // Floating Props Animation
+  pJetGrp.rotation.y = sec * 1.5;
+  pJetGrp.position.y = Math.sin(sec * 2.5) * 2;
+  pFlame.scale.y = 1.0 + Math.random() * 0.6;
+
+  pGem.rotation.x = sec * 2;
+  pGem.rotation.y = sec * 2.5;
+
+  pCrown.rotation.y = sec * 0.8;
+  pCrown.position.y = -10 + Math.sin(sec * 1.5) * 1.5;
+
+  // Camera Slow Cinematic Dolly
+  camera.position.x = Math.sin(sec * 0.4) * 6;
+  camera.position.y = Math.cos(sec * 0.3) * 3;
+  camera.lookAt(0, 0, 0);
+
+  renderer.render(scene, camera);
+}
+
+function render2DOverlays(t) {
+  masterCtx.clearRect(0, 0, W, H);
+  masterCtx.drawImage(threeCanvas, 0, 0, W, H);
+
+  // Cinematic Vignette
+  const vig = masterCtx.createRadialGradient(W/2, H/2, W*0.35, W/2, H/2, W*0.75);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(2,0,7,0.78)');
+  masterCtx.fillStyle = vig;
+  masterCtx.fillRect(0, 0, W, H);
+
+  const sec = t / 1000;
+  const currentChapterIdx = getChapterIndex(t);
+  updateChapterBadges(currentChapterIdx);
+
+  // ── Brand Watermark & Live Balance Bar (Top) ──
+  masterCtx.save();
+  masterCtx.fillStyle = 'rgba(15, 7, 30, 0.8)';
+  masterCtx.strokeStyle = '#d946ef';
+  masterCtx.lineWidth = 2;
+  masterCtx.fillRect(60, 45, 420, 68);
+  masterCtx.strokeRect(60, 45, 420, 68);
+
+  masterCtx.fillStyle = '#ffffff';
+  masterCtx.font = '900 32px "Outfit"';
+  masterCtx.fillText('⚡ GG WINS', 85, 92);
+
+  masterCtx.fillStyle = '#06b6d4';
+  masterCtx.font = '800 18px "Outfit"';
+  masterCtx.fillText('OFFICIAL PLATFORM', 275, 90);
+
+  // Live Wallet Counter
+  const bal = (50000 + Math.floor(Math.sin(sec * 3) * 1800)).toLocaleString('en-IN');
+  masterCtx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+  masterCtx.strokeStyle = '#10b981';
+  masterCtx.fillRect(W - 460, 45, 400, 68);
+  masterCtx.strokeRect(W - 460, 45, 400, 68);
+  masterCtx.fillStyle = '#ffd700';
+  masterCtx.font = '900 28px "Outfit"';
+  masterCtx.fillText(`💰 WALLET: ₹${bal}.00`, W - 435, 90);
+  masterCtx.restore();
+
+  // ── CHAPTER DYNAMIC PRESENTATION CARDS (Right 60% of Screen) ──
+  const rx = 680;
+  const ry = 160;
+  const rw = 1160;
+  const rh = 720;
+
+  masterCtx.save();
+  masterCtx.fillStyle = 'rgba(12, 6, 28, 0.82)';
+  masterCtx.strokeStyle = '#d946ef';
+  masterCtx.lineWidth = 3.5;
+  masterCtx.shadowColor = '#d946ef';
+  masterCtx.shadowBlur = 35;
+  masterCtx.fillRect(rx, ry, rw, rh);
+  masterCtx.strokeRect(rx, ry, rw, rh);
+
+  // Header Title of Card
+  masterCtx.fillStyle = 'rgba(25, 10, 52, 0.9)';
+  masterCtx.fillRect(rx, ry, rw, 90);
+
+  if (t < 18000) {
+    // ── CHAPTER 1: WELCOME TO GG WINS ──
+    masterCtx.fillStyle = '#10b981';
+    masterCtx.font = '900 38px "Outfit"';
+    masterCtx.fillText('🚀 INDIA\'S PREMIER REAL CASH GAMING ARENA', rx + 40, ry + 60);
+
+    masterCtx.fillStyle = '#ffffff';
+    masterCtx.font = '900 48px "Outfit"';
+    masterCtx.fillText('WELCOME TO GG WINS', rx + 40, ry + 180);
+
+    masterCtx.fillStyle = '#a5b4fc';
+    masterCtx.font = '600 24px "Outfit"';
+    masterCtx.fillText('Experience next-generation casino thrills, multiplayer esports & instant cashouts.', rx + 40, ry + 230);
+
+    // 3 Feature Highlight Boxes
+    const highlights = [
+      { t: '⚡ 100% Provably Fair', d: 'Cryptographically certified transparent RNG algorithms', c: '#10b981' },
+      { t: '💳 30-Second UPI Cashouts', d: 'Direct to Google Pay, PhonePe, Paytm & Bank Accounts', c: '#06b6d4' },
+      { t: '🎁 ₹10,000 Free Bonus', d: 'Instant demo credit + 100% deposit match bonus', c: '#ffd700' }
+    ];
+    highlights.forEach((h, i) => {
+      const hy = ry + 280 + i * 130;
+      masterCtx.fillStyle = 'rgba(255,255,255,0.04)';
+      masterCtx.strokeStyle = h.c;
+      masterCtx.lineWidth = 2;
+      masterCtx.fillRect(rx + 40, hy, rw - 80, 110);
+      masterCtx.strokeRect(rx + 40, hy, rw - 80, 110);
+
+      masterCtx.fillStyle = h.c;
+      masterCtx.font = '800 28px "Outfit"';
+      masterCtx.fillText(h.t, rx + 70, hy + 48);
+
+      masterCtx.fillStyle = '#cbd5e1';
+      masterCtx.font = '600 20px "Outfit"';
+      masterCtx.fillText(h.d, rx + 70, hy + 85);
+    });
+  }
+  else if (t < 40000) {
+    // ── CHAPTER 2: 25+ BLOCKBUSTER GAMES ──
+    masterCtx.fillStyle = '#06b6d4';
+    masterCtx.font = '900 38px "Outfit"';
+    masterCtx.fillText('🔥 25+ CRAZY POPULAR REAL CASH GAMES', rx + 40, ry + 60);
+
+    const gameList = [
+      { name: '💣 GG MINES', sub: 'Up to 500× Gems', col: '#10b981', ico: '💎' },
+      { name: '🚀 AVIATOR PRO', sub: 'Supersonic Dual Bet', col: '#ef4444', ico: '✈️' },
+      { name: '🎯 CARROM 3D', sub: 'Real-time PvP 60FPS', col: '#38bdf8', ico: '🔴' },
+      { name: '🐉 DRAGON TOWER', sub: 'Floor Cash Multipliers', col: '#f59e0b', ico: '🐲' },
+      { name: '⚪ PLINKO 3D', sub: 'High Drop Multipliers', col: '#a855f7', ico: '⚪' },
+      { name: '🎴 ROYALE BACCARAT', sub: 'Zero House Fee Tables', col: '#ec4899', ico: '👑' }
+    ];
+
+    gameList.forEach((g, idx) => {
+      const col = idx % 3;
+      const row = Math.floor(idx / 3);
+      const gx = rx + 40 + col * 360;
+      const gy = ry + 120 + row * 270;
+
+      masterCtx.fillStyle = 'rgba(255,255,255,0.04)';
+      masterCtx.strokeStyle = g.col;
+      masterCtx.lineWidth = 2.5;
+      masterCtx.shadowColor = g.col;
+      masterCtx.shadowBlur = 20;
+      masterCtx.fillRect(gx, gy, 340, 240);
+      masterCtx.strokeRect(gx, gy, 340, 240);
+
+      masterCtx.font = '54px sans-serif';
+      masterCtx.textAlign = 'center';
+      masterCtx.fillText(g.ico, gx + 170, gy + 75);
+
+      masterCtx.fillStyle = g.col;
+      masterCtx.font = '900 26px "Outfit"';
+      masterCtx.fillText(g.name, gx + 170, gy + 135);
+
+      masterCtx.fillStyle = '#ffd700';
+      masterCtx.font = '700 18px "Outfit"';
+      masterCtx.fillText(g.sub, gx + 170, gy + 175);
+
+      masterCtx.fillStyle = g.col;
+      masterCtx.fillRect(gx + 40, gy + 195, 260, 35);
+      masterCtx.fillStyle = '#000';
+      masterCtx.font = '900 16px "Outfit"';
+      masterCtx.fillText('PLAY NOW ⚡', gx + 170, gy + 219);
+      masterCtx.textAlign = 'left';
+    });
+  }
+  else if (t < 62000) {
+    // ── CHAPTER 3: VIP HIGH ROLLER CLUB ──
+    masterCtx.fillStyle = '#ffd700';
+    masterCtx.font = '900 38px "Outfit"';
+    masterCtx.fillText('👑 VIP HIGH ROLLER ELITE CLUB', rx + 40, ry + 60);
+
+    const vipTiers = [
+      { name: 'SILVER VIP', perks: '5% Weekly Cashback\nFast Cashouts', col: '#94a3b8', ico: '🥈' },
+      { name: 'GOLD VIP', perks: '10% Cashback\nVIP Dedicated Host', col: '#ffd700', ico: '🏆' },
+      { name: 'PLATINUM VIP', perks: '15% Rakeback Bonus\nExclusive Tourneys', col: '#38bdf8', ico: '💎' },
+      { name: 'DIAMOND ROYAL', perks: '25% Royalty Rake\nUnlimited Instant UPI', col: '#d946ef', ico: '👑' }
+    ];
+
+    vipTiers.forEach((v, idx) => {
+      const vx = rx + 40 + idx * 270;
+      masterCtx.fillStyle = 'rgba(255,255,255,0.04)';
+      masterCtx.strokeStyle = v.col;
+      masterCtx.lineWidth = 3;
+      masterCtx.shadowColor = v.col;
+      masterCtx.shadowBlur = 25;
+      masterCtx.fillRect(vx, ry + 130, 255, 530);
+      masterCtx.strokeRect(vx, ry + 130, 255, 530);
+
+      masterCtx.font = '60px sans-serif';
+      masterCtx.textAlign = 'center';
+      masterCtx.fillText(v.ico, vx + 127, ry + 215);
+
+      masterCtx.fillStyle = v.col;
+      masterCtx.font = '900 24px "Outfit"';
+      masterCtx.fillText(v.name, vx + 127, ry + 280);
+
+      masterCtx.fillStyle = '#e2e8f0';
+      masterCtx.font = '700 18px "Outfit"';
+      const lines = v.perks.split('\n');
+      lines.forEach((l, li) => {
+        masterCtx.fillText(l, vx + 127, ry + 360 + li * 45);
+      });
+
+      masterCtx.fillStyle = v.col;
+      masterCtx.fillRect(vx + 25, ry + 575, 205, 55);
+      masterCtx.fillStyle = '#000';
+      masterCtx.font = '900 18px "Outfit"';
+      masterCtx.fillText('JOIN TIER ⚡', vx + 127, ry + 610);
+      masterCtx.textAlign = 'left';
+    });
+  }
+  else if (t < 82000) {
+    // ── CHAPTER 4: 30-SEC UPI CASHOUTS ──
+    masterCtx.fillStyle = '#10b981';
+    masterCtx.font = '900 38px "Outfit"';
+    masterCtx.fillText('⚡ 30-SECOND AUTOMATED UPI WITHDRAWALS', rx + 40, ry + 60);
+
+    masterCtx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+    masterCtx.strokeStyle = '#10b981';
+    masterCtx.lineWidth = 3.5;
+    masterCtx.fillRect(rx + 60, ry + 130, rw - 120, 530);
+    masterCtx.strokeRect(rx + 60, ry + 130, rw - 120, 530);
+
+    masterCtx.textAlign = 'center';
+    masterCtx.fillStyle = '#ffd700';
+    masterCtx.font = '900 84px "Outfit"';
+    masterCtx.fillText('₹5,00,000.00', rx + rw/2, ry + 270);
+
+    masterCtx.fillStyle = '#10b981';
+    masterCtx.font = '900 36px "Outfit"';
+    masterCtx.fillText('✓ INSTANT UPI WITHDRAWAL COMPLETED', rx + rw/2, ry + 350);
+
+    masterCtx.fillStyle = '#a5b4fc';
+    masterCtx.font = '600 24px "Outfit"';
+    masterCtx.fillText('Zero Commission • 256-Bit Bank Grade Security • Direct Bank Credit', rx + rw/2, ry + 420);
+
+    masterCtx.fillStyle = '#ffffff';
+    masterCtx.font = '900 34px "Outfit"';
+    masterCtx.fillText('⚡ Google Pay  •  PhonePe  •  Paytm  •  IMPS  •  Crypto USDT', rx + rw/2, ry + 520);
+    masterCtx.textAlign = 'left';
+  }
+  else if (t < 98000) {
+    // ── CHAPTER 5: 24/7 AI VIP HOST ──
+    masterCtx.fillStyle = '#d946ef';
+    masterCtx.font = '900 38px "Outfit"';
+    masterCtx.fillText('🤖 24/7 AI VIP HOST ASSISTANT & LIVE LOBBY', rx + 40, ry + 60);
+
+    const feats = [
+      { t: '💬 24/7 Intelligent AI Support', d: 'Instant strategy tips, wallet help & personalized bonus recommendations', c: '#d946ef' },
+      { t: '🏆 Daily Esports Leaderboards', d: 'Climb top rankings daily and share massive cash prize pools', c: '#06b6d4' },
+      { t: '🎟️ Instant Bonus Coupons', d: 'Redeem code BONUS100 for instant free spins and balance multipliers', c: '#10b981' }
+    ];
+
+    feats.forEach((f, i) => {
+      const fy = ry + 140 + i * 170;
+      masterCtx.fillStyle = 'rgba(255,255,255,0.04)';
+      masterCtx.strokeStyle = f.c;
+      masterCtx.lineWidth = 2.5;
+      masterCtx.fillRect(rx + 40, fy, rw - 80, 140);
+      masterCtx.strokeRect(rx + 40, fy, rw - 80, 140);
+
+      masterCtx.fillStyle = f.c;
+      masterCtx.font = '900 30px "Outfit"';
+      masterCtx.fillText(f.t, rx + 70, fy + 55);
+
+      masterCtx.fillStyle = '#cbd5e1';
+      masterCtx.font = '600 22px "Outfit"';
+      masterCtx.fillText(f.d, rx + 70, fy + 100);
+    });
+  }
+  else {
+    // ── CHAPTER 6: GRAND FINALE & ₹10,000 BONUS ──
+    masterCtx.fillStyle = '#ffd700';
+    masterCtx.font = '900 38px "Outfit"';
+    masterCtx.fillText('🎉 START WINNING REAL CASH TODAY!', rx + 40, ry + 60);
+
+    masterCtx.textAlign = 'center';
+    masterCtx.fillStyle = '#ffffff';
+    masterCtx.font = '900 72px "Outfit"';
+    masterCtx.fillText('JOIN GG WINS NOW!', rx + rw/2, ry + 220);
+
+    masterCtx.fillStyle = '#d946ef';
+    masterCtx.font = '900 68px "Outfit"';
+    masterCtx.fillText('👉 ggwins.site 👈', rx + rw/2, ry + 320);
+
+    masterCtx.fillStyle = '#10b981';
+    masterCtx.font = '900 38px "Outfit"';
+    masterCtx.fillText('CLAIM ₹10,000 FREE DEMO BONUS IMMEDIATELY', rx + rw/2, ry + 420);
+
+    masterCtx.fillStyle = '#38bdf8';
+    masterCtx.font = '700 28px "Outfit"';
+    masterCtx.fillText('⚡ 25+ Games  •  👑 VIP Club  •  💳 30-Sec Payouts', rx + rw/2, ry + 510);
+    masterCtx.textAlign = 'left';
+  }
+
+  masterCtx.restore();
+
+  // ── KARAOKE SUBTITLE BAR (Bottom Center) ──
+  masterCtx.save();
+  masterCtx.fillStyle = 'rgba(7, 2, 18, 0.9)';
+  masterCtx.strokeStyle = '#d946ef';
+  masterCtx.lineWidth = 2;
+  masterCtx.fillRect(180, H - 120, W - 360, 75);
+  masterCtx.strokeRect(180, H - 120, W - 360, 75);
+
+  masterCtx.fillStyle = '#ffd700';
+  masterCtx.font = '800 28px "Outfit"';
+  masterCtx.textAlign = 'center';
+  masterCtx.fillText(currentSubtitle, W / 2, H - 72);
+  masterCtx.restore();
+}
+
+function getChapterIndex(t) {
+  if (t < 18000) return 0;
+  if (t < 40000) return 1;
+  if (t < 62000) return 2;
+  if (t < 82000) return 3;
+  if (t < 98000) return 4;
+  return 5;
+}
+
+function updateChapterBadges(idx) {
+  for (let i = 0; i < 6; i++) {
+    const b = document.getElementById(`ch-${i}`);
+    if (b) {
+      if (i === idx) b.classList.add('active');
+      else b.classList.remove('active');
+    }
+  }
+}
+
+function seekChapter(ms) {
+  if (isPlaying) {
+    commercialStartTime = performance.now() - ms;
+    const chIdx = getChapterIndex(ms);
+    speakContinuousSegment(chIdx);
+  } else {
+    update3D(ms);
+    render2DOverlays(ms);
+    const chIdx = getChapterIndex(ms);
+    updateChapterBadges(chIdx);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎬 COMMERCIAL CONTROLLER & RECORDER
+// ════════════════════════════════════════════════════════════════
+let activeTimeoutHandles = [];
+
+function clearScriptTimeouts() {
+  activeTimeoutHandles.forEach(h => clearTimeout(h));
+  activeTimeoutHandles = [];
+  if (chordTimer) clearTimeout(chordTimer);
+  if (voiceKeepAliveTimer) clearInterval(voiceKeepAliveTimer);
+}
+
+function startCommercial(record = false) {
+  initAudio();
+  isPlaying = true;
+  isRecording = record;
+  commercialStartTime = performance.now();
+  recordedChunks = [];
+  clearScriptTimeouts();
+
+  document.getElementById('btnPlay').disabled = true;
+  document.getElementById('btnRecord').disabled = true;
+
+  // Start background ambient music
+  playAmbientMusic();
+
+  // Schedule all unbroken speech segments
+  SCRIPT_SEGMENTS.forEach((seg, idx) => {
+    const h = setTimeout(() => {
+      if (isPlaying) speakContinuousSegment(idx);
+    }, seg.startMs);
+    activeTimeoutHandles.push(h);
+  });
+
+  if (record) {
+    document.getElementById('timerDisplay').textContent = '🔴 RECORDING FULL HD AI COMMERCIAL...';
+    const stream = masterCanvas.captureStream(30);
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm'
+    });
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+    mediaRecorder.onstop = exportVideoFile;
+    mediaRecorder.start();
+  }
+
+  function loop(now) {
+    const elapsed = now - commercialStartTime;
+    update3D(elapsed);
+    render2DOverlays(elapsed);
+
+    const pct = Math.min(100, (elapsed / TOTAL_DURATION) * 100);
+    document.getElementById('progFill').style.width = pct + '%';
+
+    const sec = Math.floor(elapsed / 1000);
+    const mStr = String(Math.floor(sec / 60)).padStart(2, '0');
+    const sStr = String(sec % 60).padStart(2, '0');
+    if (!isRecording) {
+      document.getElementById('timerDisplay').textContent = `${mStr}:${sStr} / 01:45 • AI Commercial Playing`;
+    }
+
+    if (elapsed < TOTAL_DURATION) {
+      animFrame = requestAnimationFrame(loop);
+    } else {
+      endCommercial();
+    }
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+function endCommercial() {
+  isPlaying = false;
+  clearScriptTimeouts();
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+  document.getElementById('btnPlay').disabled = false;
+  document.getElementById('btnRecord').disabled = false;
+
+  if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  } else {
+    document.getElementById('timerDisplay').textContent = '✅ AI Commercial Complete! Click "Record & Download" to save video file.';
+  }
+}
+
+function exportVideoFile() {
+  const blob = new Blob(recordedChunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'GG_WINS_Official_AI_Host_Commercial_1080p.webm';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  document.getElementById('timerDisplay').innerHTML = '🎉 <b>OFFICIAL 1080p AI COMMERCIAL DOWNLOADED!</b> Ready for YouTube, Instagram & Ads!';
+}
+
+// Initial draw static frame
+window.addEventListener('load', () => {
+  update3D(20000);
+  render2DOverlays(20000);
+});
+</script>
+</body>
+</html>

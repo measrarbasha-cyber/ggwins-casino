@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GG Snakes & Ladders 3D – Pool Battles – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+/* ── 3D SNAKES & LADDERS ARENA ── */
+.snakes-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 50%, #0d1b2a 0%, #050a10 100%);
+}
+
+.table-felt-3d {
+  padding: 10px;
+  background: linear-gradient(145deg, #1b263b, #0d1522);
+  border-radius: 20px;
+  border: 3.5px solid #ffd700;
+  box-shadow: 0 0 45px rgba(255,215,0,0.35), 0 16px 40px rgba(0,0,0,0.85);
+  position: relative;
+  perspective: 1200px;
+}
+
+.board-container-3d {
+  position: relative;
+  width: min(440px, 92vw);
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  transform: rotateX(15deg) scale(0.97);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-radius: 14px;
+  box-shadow: 0 20px 45px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.7);
+  background: #0b111e;
+  overflow: hidden;
+  border: 2px solid rgba(255,215,0,0.25);
+}
+.board-container-3d:hover {
+  transform: rotateX(6deg) scale(0.99);
+}
+
+.board-grid-100 {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #0f172a;
+}
+
+/* 🎨 HIGH-GRAPHICS CASINO TILES */
+.cell-100 {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2px 3px;
+  border: 0.5px solid rgba(255,255,255,0.06);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 8.5px;
+  position: relative;
+  user-select: none;
+  transition: background 0.2s;
+}
+.cell-100.c-even {
+  background: linear-gradient(145deg, #162235, #0f1927);
+  color: #94a3b8;
+}
+.cell-100.c-odd {
+  background: linear-gradient(145deg, #1e2d42, #141f30);
+  color: #cbd5e1;
+}
+
+/* Special Highlighted Tiles */
+.cell-100.c-start {
+  background: linear-gradient(135deg, rgba(0,230,118,0.25), rgba(5,150,105,0.4)) !important;
+  border: 1px solid #00e676 !important;
+  color: #00e676 !important;
+}
+.cell-100.c-goal {
+  background: linear-gradient(135deg, rgba(255,215,0,0.35), rgba(217,119,6,0.45)) !important;
+  border: 1.5px solid #ffd700 !important;
+  color: #ffd700 !important;
+  box-shadow: inset 0 0 15px rgba(255,215,0,0.5);
+  animation: pulseGoal 2s infinite ease-in-out;
+}
+@keyframes pulseGoal {
+  0%,100% { box-shadow: inset 0 0 10px rgba(255,215,0,0.4); }
+  50% { box-shadow: inset 0 0 25px rgba(255,215,0,0.8); }
+}
+
+.cell-100.snake-head {
+  background: linear-gradient(135deg, rgba(239,68,68,0.2), rgba(153,27,27,0.35)) !important;
+  border: 1px solid rgba(239,68,68,0.45);
+}
+.cell-100.ladder-base {
+  background: linear-gradient(135deg, rgba(0,230,118,0.2), rgba(4,120,87,0.35)) !important;
+  border: 1px solid rgba(0,230,118,0.45);
+}
+
+.cell-num {
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 900;
+  opacity: 0.85;
+}
+.cell-icon {
+  font-size: 13px;
+  text-align: right;
+  margin-top: -2px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+
+/* 👑 LUXURY 3D METALLIC COINS / PAWNS */
+.pawn-token {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 30;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.85), inset 0 2px 4px rgba(255,255,255,0.8), 0 0 10px rgba(255,215,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #fff;
+  border: 2px solid #ffd700;
+  transition: left 0.22s cubic-bezier(0.25, 1, 0.5, 1), top 0.22s cubic-bezier(0.25, 1, 0.5, 1), transform 0.22s ease;
+  user-select: none;
+  cursor: default;
+}
+
+/* Distinct metallic avatars */
+.pawn-token.green {
+  background: radial-gradient(circle at 35% 35%, #00e676 0%, #059669 60%, #022c22 100%);
+  border-color: #ffd700;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.85), 0 0 12px rgba(0,230,118,0.6);
+}
+.pawn-token.red {
+  background: radial-gradient(circle at 35% 35%, #ef4444 0%, #b91c1c 60%, #450a0a 100%);
+  border-color: #fca5a5;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.85), 0 0 10px rgba(239,68,68,0.5);
+}
+.pawn-token.blue {
+  background: radial-gradient(circle at 35% 35%, #38bdf8 0%, #0284c7 60%, #082f49 100%);
+  border-color: #bae6fd;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.85), 0 0 10px rgba(56,189,248,0.5);
+}
+.pawn-token.yellow {
+  background: radial-gradient(circle at 35% 35%, #ffd700 0%, #d97706 60%, #451a03 100%);
+  border-color: #fef08a;
+  color: #000;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.85), 0 0 10px rgba(255,215,0,0.5);
+}
+
+/* Satisfying 3D Coin Hop Animation */
+.pawn-token.hopping {
+  transform: translateY(-16px) scale(1.28) rotate(8deg);
+  box-shadow: 0 18px 24px rgba(0,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.9);
+}
+
+/* Ladder Climbing Sparkle Aura */
+.pawn-token.climbing {
+  animation: ladderClimbGlow 0.8s ease-in-out;
+}
+@keyframes ladderClimbGlow {
+  0%   { filter: drop-shadow(0 0 6px #00e676); transform: scale(1); }
+  50%  { filter: drop-shadow(0 0 25px #ffd700) brightness(1.4); transform: scale(1.4) translateY(-10px); }
+  100% { filter: drop-shadow(0 0 6px #00e676); transform: scale(1); }
+}
+
+/* Snake Venom Sliding Aura */
+.pawn-token.sliding {
+  animation: snakeSlideVenom 0.8s ease-in-out;
+}
+@keyframes snakeSlideVenom {
+  0%   { filter: drop-shadow(0 0 6px #ef4444); }
+  50%  { filter: drop-shadow(0 0 25px #dc2626) brightness(1.3); transform: rotate(180deg) scale(0.9); }
+  100% { filter: drop-shadow(0 0 6px #ef4444); }
+}
+
+/* SVG Overlay for graphical 3D Snakes & Ladders */
+.snakes-overlay-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* 3D Dice Station */
+.dice-station-3d {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.95);
+  padding: 6px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border-gold);
+  margin-top: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+}
+.dice-cube-3d {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(145deg, #ffffff, #e2e8f0);
+  border-radius: 10px;
+  border: 2px solid #ffd700;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #0f172a;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.dice-cube-3d:hover:not(.disabled) {
+  transform: scale(1.1) rotate(6deg);
+}
+.dice-cube-3d.rolling {
+  animation: diceRoll3D 0.42s ease-in-out infinite;
+}
+@keyframes diceRoll3D {
+  0%   { transform: rotateX(0) rotateY(0) scale(0.95); }
+  25%  { transform: rotateX(180deg) rotateY(90deg) scale(1.15); }
+  50%  { transform: rotateX(360deg) rotateY(180deg) scale(0.95); }
+  75%  { transform: rotateX(540deg) rotateY(270deg) scale(1.15); }
+  100% { transform: rotateX(720deg) rotateY(360deg) scale(1); }
+}
+
+/* Turn Tracker Pill */
+.turn-pill {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: rgba(0,230,118,0.15);
+  border: 1px solid var(--green);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Pool Cards (Identical to GG Ludo) */
+.pool-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  width: 100%;
+}
+.pool-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.pool-card:hover { border-color: #00e676; }
+.pool-card.selected {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, rgba(255,215,0,0.16), rgba(255,215,0,0.05));
+  box-shadow: 0 0 12px rgba(255,215,0,0.3);
+}
+.pool-name  { font-size: 9.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+.pool-entry { font-size: 12.5px; font-weight: 900; color: #fff; margin-top: 2px; }
+.pool-prize { font-size: 11.5px; font-weight: 900; color: #00e676; margin-top: 1px; }
+
+#snakes-confetti {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 60;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🐍 Snakes & Ladders 3D</div>
+  </div>
+  <div class="gnav-game-name">Snakes & Ladders</div>
+  <span class="gnav-game-badge" style="background:#00e676;color:#000">3D ORIGINAL</span>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area snakes-area">
+    <canvas id="snakes-confetti"></canvas>
+
+    <div class="table-felt-3d">
+      <div class="board-container-3d">
+        <!-- 100 Grid Cells -->
+        <div class="board-grid-100" id="snakes-grid"></div>
+
+        <!-- SVG Snakes & Ladders Graphical Overlay -->
+        <svg class="snakes-overlay-svg" id="snakes-svg"></svg>
+      </div>
+    </div>
+
+    <!-- 3D Dice Action Bar -->
+    <div class="dice-station-3d">
+      <div class="turn-pill" id="turn-indicator">
+        <span>👑</span> <span id="turn-text">Join Pool to Start</span>
+      </div>
+      <div class="dice-cube-3d" id="dice-3d" onclick="rollDicePlayer()">
+        🎲
+      </div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:800;color:#cbd5e1" id="dice-status">
+        Tap Dice to Roll
+      </div>
+    </div>
+  </div>
+
+  <!-- BETTING / POOL PANEL (BOTTOM QUARTER IN PORTRAIT, RIGHT SIDE IN LANDSCAPE) -->
+  <div class="bet-panel">
+    <div class="bet-section" style="flex:1 1 200px">
+      <div class="bet-label">Select Battle Pool</div>
+      <div class="pool-cards">
+        <div class="pool-card selected" onclick="selectPool('bronze')" id="pool-bronze">
+          <div class="pool-name">Bronze Pool</div>
+          <div class="pool-entry">Entry: ₹50</div>
+          <div class="pool-prize">Prize: ₹80</div>
+        </div>
+        <div class="pool-card" onclick="selectPool('silver')" id="pool-silver">
+          <div class="pool-name">Silver Pool</div>
+          <div class="pool-entry">Entry: ₹500</div>
+          <div class="pool-prize">Prize: ₹800</div>
+        </div>
+        <div class="pool-card" onclick="selectPool('gold')" id="pool-gold">
+          <div class="pool-name">Gold Pool</div>
+          <div class="pool-entry">Entry: ₹1,500</div>
+          <div class="pool-prize">Prize: ₹2,400</div>
+        </div>
+        <div class="pool-card" onclick="selectPool('diamond')" id="pool-diamond">
+          <div class="pool-name">Diamond VIP</div>
+          <div class="pool-entry">Entry: ₹13,000</div>
+          <div class="pool-prize">Prize: ₹20,800</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Match Start / Action Button -->
+    <div class="bet-section" style="flex:1 1 140px">
+      <button class="btn-bet" id="start-match-btn" onclick="startPoolMatch()">
+        ⚔️ Join Pool (₹50)
+      </button>
+      <div id="result-container" style="margin-top:2px"></div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+
+    <div class="copyright-footer">
+      © 2026 GG Wins. 3D Snakes & Ladders RNG Certified.
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script>
+/* ── SNAKES & LADDERS ENGINE ── */
+const POOLS = {
+  bronze:  { name: 'Bronze Pool', entry: 50, prize: 80 },
+  silver:  { name: 'Silver Pool', entry: 500, prize: 800 },
+  gold:    { name: 'Gold Pool', entry: 1500, prize: 2400 },
+  diamond: { name: 'Diamond VIP', entry: 13000, prize: 20800 }
+};
+
+let activePool = 'bronze';
+let matchActive = false;
+let currentTurn = 0; // 0: Player (Green), 1: Rahul (Red), 2: Priya (Blue), 3: Aryan (Yellow)
+let isRolling = false;
+let statsProfit = 0, statsWins = 0, statsLosses = 0;
+
+const PLAYERS = [
+  { id: 0, name: 'You (Green)', color: 'green', pos: 1, isBot: false, icon: '👑' },
+  { id: 1, name: 'Rahul_Pro',   color: 'red',   pos: 1, isBot: true,  icon: '⚔️' },
+  { id: 2, name: 'Priya_Win',   color: 'blue',  pos: 1, isBot: true,  icon: '💎' },
+  { id: 3, name: 'Aryan_King',  color: 'yellow',pos: 1, isBot: true,  icon: '🦁' }
+];
+
+// Classic Snakes and Ladders mappings
+const LADDERS = { 4: 14, 9: 31, 20: 38, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91 };
+const SNAKES  = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
+
+function buildBoard() {
+  const grid = document.getElementById('snakes-grid');
+  grid.innerHTML = '';
+  
+  // Rows 10 down to 1
+  for (let row = 9; row >= 0; row--) {
+    const isEvenRow = (row % 2 === 0);
+    for (let col = 0; col < 10; col++) {
+      const actualCol = isEvenRow ? (9 - col) : col;
+      const num = row * 10 + actualCol + 1;
+
+      const cell = document.createElement('div');
+      cell.className = 'cell-100 ' + ((actualCol + row) % 2 === 0 ? 'c-even' : 'c-odd');
+      cell.id = `cell-${num}`;
+
+      let icon = '';
+      if (num === 1) {
+        cell.classList.add('c-start');
+        icon = '🚀';
+      } else if (num === 100) {
+        cell.classList.add('c-goal');
+        icon = '🏆';
+      } else if (LADDERS[num]) {
+        icon = '🪜';
+        cell.classList.add('ladder-base');
+      } else if (SNAKES[num]) {
+        icon = '🐍';
+        cell.classList.add('snake-head');
+      }
+
+      cell.innerHTML = `
+        <span class="cell-num">${num}</span>
+        <span class="cell-icon">${icon}</span>
+      `;
+      grid.appendChild(cell);
+    }
+  }
+
+  // Create Pawns
+  PLAYERS.forEach(p => {
+    let token = document.getElementById(`pawn-${p.id}`);
+    if (!token) {
+      token = document.createElement('div');
+      token.id = `pawn-${p.id}`;
+      token.className = `pawn-token ${p.color}`;
+      token.textContent = p.icon;
+      document.querySelector('.board-container-3d').appendChild(token);
+    }
+    updatePawnPosition(p);
+  });
+
+  // Draw Visual Graphical Snakes and Ladders on SVG
+  setTimeout(drawSnakesAndLaddersGraphics, 100);
+}
+
+function drawSnakesAndLaddersGraphics() {
+  const svg = document.getElementById('snakes-svg');
+  if (!svg) return;
+  svg.innerHTML = '';
+
+  const boardRect = document.getElementById('snakes-grid').getBoundingClientRect();
+  if (boardRect.width === 0) return;
+
+  function getCellCenter(cellNum) {
+    const el = document.getElementById(`cell-${cellNum}`);
+    if (!el) return { x: 0, y: 0 };
+    const r = el.getBoundingClientRect();
+    return {
+      x: r.left - boardRect.left + r.width / 2,
+      y: r.top - boardRect.top + r.height / 2
+    };
+  }
+
+  // Draw 3D Golden Ladders
+  for (const [start, end] of Object.entries(LADDERS)) {
+    const p1 = getCellCenter(start);
+    const p2 = getCellCenter(end);
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', p1.x);
+    line.setAttribute('y1', p1.y);
+    line.setAttribute('x2', p2.x);
+    line.setAttribute('y2', p2.y);
+    line.setAttribute('stroke', '#ffd700');
+    line.setAttribute('stroke-width', '4');
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('stroke-dasharray', '8, 6');
+    line.setAttribute('filter', 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))');
+    svg.appendChild(line);
+  }
+
+  // Draw 3D Ruby Snakes
+  for (const [start, end] of Object.entries(SNAKES)) {
+    const p1 = getCellCenter(start);
+    const p2 = getCellCenter(end);
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midX = (p1.x + p2.x) / 2 + (p1.x > p2.x ? 25 : -25);
+    const midY = (p1.y + p2.y) / 2;
+    const d = `M ${p1.x} ${p1.y} Q ${midX} ${midY} ${p2.x} ${p2.y}`;
+
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', '#ef4444');
+    path.setAttribute('stroke-width', '4.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('filter', 'drop-shadow(0 3px 6px rgba(0,0,0,0.9))');
+    svg.appendChild(path);
+  }
+}
+
+function updatePawnPosition(p) {
+  const cell = document.getElementById(`cell-${p.pos}`);
+  const token = document.getElementById(`pawn-${p.id}`);
+  if (!cell || !token) return;
+
+  const rect = cell.getBoundingClientRect();
+  const boardRect = document.getElementById('snakes-grid').getBoundingClientRect();
+
+  const left = rect.left - boardRect.left + (rect.width / 2) - 11 + (p.id * 3 - 4);
+  const top  = rect.top - boardRect.top + (rect.height / 2) - 11 + (p.id * 2 - 2);
+
+  token.style.left = `${left}px`;
+  token.style.top = `${top}px`;
+}
+
+function selectPool(poolKey) {
+  if (matchActive) return;
+  activePool = poolKey;
+  document.querySelectorAll('.pool-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`pool-${poolKey}`).classList.add('selected');
+  const pool = POOLS[poolKey];
+  document.getElementById('start-match-btn').textContent = `⚔️ Join ${pool.name} (₹${pool.entry})`;
+}
+
+function startPoolMatch() {
+  if (matchActive) return;
+  const pool = POOLS[activePool];
+
+  // Get real and active wallet balances
+  const wallets = typeof getWallets === 'function' ? getWallets() : (JSON.parse(localStorage.getItem('ggwins_wallets_v2') || '{"demo":10000,"real":0,"usdt":0}'));
+  const activeKey = typeof getActiveWalletKey === 'function' ? getActiveWalletKey() : 'demo';
+  const currentBal = wallets[activeKey] !== undefined ? wallets[activeKey] : 0;
+
+  if (currentBal < pool.entry) {
+    if (typeof showToast === 'function') {
+      showToast(`Insufficient balance in ${activeKey.toUpperCase()} account (₹${currentBal.toFixed(2)}). Need ₹${pool.entry}.`, 'error');
+    }
+    if (typeof openWalletModal === 'function') {
+      openWalletModal('deposit');
+    } else {
+      alert(`Insufficient balance! Please deposit ₹${pool.entry} to join.`);
+    }
+    return;
+  }
+
+  // Deduct entry fee immediately from player's balance
+  wallets[activeKey] = Math.max(0, wallets[activeKey] - pool.entry);
+  if (typeof saveWallets === 'function') {
+    saveWallets(wallets);
+  } else {
+    localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
+  }
+
+  if (typeof showToast === 'function') {
+    showToast(`Deducted ₹${pool.entry} entry from ${activeKey.toUpperCase()} balance. Joined ${pool.name}!`, 'info');
+  }
+
+  matchActive = true;
+  document.getElementById('start-match-btn').disabled = true;
+  document.getElementById('start-match-btn').textContent = '⚔️ Battle in Progress...';
+  document.getElementById('result-container').innerHTML = '';
+
+  // Reset all pawns to 1
+  PLAYERS.forEach(p => { p.pos = 1; updatePawnPosition(p); });
+  currentTurn = 0;
+  setTurnPrompt();
+}
+
+function setTurnPrompt() {
+  const p = PLAYERS[currentTurn];
+  const ind = document.getElementById('turn-indicator');
+  const txt = document.getElementById('turn-text');
+  const dice = document.getElementById('dice-3d');
+  const diceStatus = document.getElementById('dice-status');
+
+  if (p.id === 0) {
+    ind.style.borderColor = '#00e676';
+    ind.style.color = '#00e676';
+    txt.textContent = 'Your Turn – Roll Dice!';
+    dice.classList.remove('disabled');
+    diceStatus.textContent = 'Tap to Roll';
+  } else {
+    ind.style.borderColor = '#f59e0b';
+    ind.style.color = '#f59e0b';
+    txt.textContent = `${p.name} Rolling...`;
+    dice.classList.add('disabled');
+    diceStatus.textContent = `${p.name}'s turn`;
+    setTimeout(botRoll, 900);
+  }
+}
+
+function rollDicePlayer() {
+  if (!matchActive || isRolling || currentTurn !== 0) return;
+  executeRoll();
+}
+
+function botRoll() {
+  if (!matchActive || isRolling || currentTurn === 0) return;
+  executeRoll();
+}
+
+function executeRoll() {
+  isRolling = true;
+  const dice = document.getElementById('dice-3d');
+  dice.classList.add('rolling');
+
+  const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+  const rollVal = Math.floor(Math.random() * 6) + 1;
+
+  setTimeout(() => {
+    dice.classList.remove('rolling');
+    dice.textContent = diceFaces[rollVal - 1];
+    movePlayerSlowlyBoxByBox(PLAYERS[currentTurn], rollVal);
+  }, 450);
+}
+
+/* 🐢 SLOW, SUSPENSEFUL TILE-BY-TILE 3D COIN HOPPING */
+function movePlayerSlowlyBoxByBox(p, steps) {
+  let target = p.pos + steps;
+  if (target > 100) target = 100 - (target - 100); // Bounce back if overshoots
+
+  const token = document.getElementById(`pawn-${p.id}`);
+  let currentStep = 0;
+  const totalSteps = Math.abs(target - p.pos);
+
+  const stepTimer = setInterval(() => {
+    if (currentStep < totalSteps) {
+      currentStep++;
+      if (p.pos < target) p.pos++;
+      else if (p.pos > target) p.pos--;
+
+      // 3D Coin Hop Animation per Box
+      token.classList.add('hopping');
+      updatePawnPosition(p);
+
+      setTimeout(() => token.classList.remove('hopping'), 150);
+    } else {
+      clearInterval(stepTimer);
+
+      // Check Ladders or Snakes after landing on final tile
+      setTimeout(() => {
+        if (LADDERS[p.pos]) {
+          // Climbing ladder
+          token.classList.add('climbing');
+          p.pos = LADDERS[p.pos];
+          updatePawnPosition(p);
+          setTimeout(() => token.classList.remove('climbing'), 800);
+        } else if (SNAKES[p.pos]) {
+          // Sliding down snake
+          token.classList.add('sliding');
+          p.pos = SNAKES[p.pos];
+          updatePawnPosition(p);
+          setTimeout(() => token.classList.remove('sliding'), 800);
+        }
+
+        // Check if Winner Reached 100
+        if (p.pos === 100) {
+          handleGameOver(p);
+          return;
+        }
+
+        // Advance turn (Bonus roll on 6)
+        if (steps !== 6) {
+          currentTurn = (currentTurn + 1) % PLAYERS.length;
+        }
+        isRolling = false;
+        setTurnPrompt();
+      }, 400);
+    }
+  }, 260); // 260ms per box for crystal-clear slow hopping motion
+}
+
+function handleGameOver(winner) {
+  matchActive = false;
+  isRolling = false;
+  document.getElementById('start-match-btn').disabled = false;
+  document.getElementById('start-match-btn').textContent = `⚔️ Play Again (₹${POOLS[activePool].entry})`;
+
+  const resContainer = document.getElementById('result-container');
+  const pool = POOLS[activePool];
+
+  if (winner.id === 0) {
+    // Player Won!
+    statsWins++;
+    const profit = pool.prize - pool.entry;
+    statsProfit += profit;
+
+    // Credit Prize directly to player's balance
+    const wallets = typeof getWallets === 'function' ? getWallets() : (JSON.parse(localStorage.getItem('ggwins_wallets_v2') || '{"demo":10000,"real":0,"usdt":0}'));
+    const activeKey = typeof getActiveWalletKey === 'function' ? getActiveWalletKey() : 'demo';
+    wallets[activeKey] = (wallets[activeKey] || 0) + pool.prize;
+    if (typeof saveWallets === 'function') saveWallets(wallets);
+
+    if (typeof showToast === 'function') {
+      showToast(`🏆 Credited 1st Prize +₹${pool.prize.toLocaleString()} to ${activeKey.toUpperCase()} balance!`, 'success');
+    }
+
+    if (typeof flashBal === 'function') flashBal('flash-win');
+    launchSnakesConfetti();
+
+    resContainer.innerHTML = `
+      <div class="result-box win">
+        <div class="result-box-title">👑 VICTORY! YOU WON 1ST PRIZE</div>
+        <div class="result-box-val">+₹${pool.prize.toLocaleString()}</div>
+      </div>
+    `;
+  } else {
+    // Bot Won
+    statsLosses++;
+    statsProfit -= pool.entry;
+    if (typeof flashBal === 'function') flashBal('flash-lose');
+    resContainer.innerHTML = `
+      <div class="result-box lose">
+        <div class="result-box-title">❌ ${winner.name} Reached 100 First</div>
+        <div class="result-box-val">-₹${pool.entry.toLocaleString()}</div>
+      </div>
+    `;
+  }
+
+  // Update Stats Box
+  document.getElementById('stat-wins').textContent = statsWins;
+  document.getElementById('stat-losses').textContent = statsLosses;
+  const pEl = document.getElementById('stat-profit');
+  pEl.textContent = (statsProfit >= 0 ? '+₹' : '-₹') + Math.abs(statsProfit).toFixed(2);
+  pEl.className = 'stat-box-val ' + (statsProfit >= 0 ? 'green' : 'red');
+}
+
+/* 🎊 CELEBRATORY GOLDEN CONFETTI */
+function launchSnakesConfetti() {
+  const canvas = document.getElementById('snakes-confetti');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#ffd700', '#00e676', '#38bdf8', '#ff6b35', '#ffffff'];
+  for (let i = 0; i < 90; i++) {
+    particles.push({
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 16,
+      vy: (Math.random() - 0.8) * 18,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1
+    });
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.45; p.alpha -= 0.015;
+      if (p.alpha > 0) {
+        alive = true;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    });
+    if (alive) requestAnimationFrame(render);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  render();
+}
+
+window.addEventListener('load', () => {
+  buildBoard();
+  window.addEventListener('resize', () => {
+    PLAYERS.forEach(p => updatePawnPosition(p));
+    drawSnakesAndLaddersGraphics();
+  });
+});
+</script>
+</body>
+</html>

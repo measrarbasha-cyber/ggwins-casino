@@ -1,0 +1,283 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crash – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+.crash-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: #081018;
+}
+.crash-canvas-wrap {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+}
+#crash-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.crash-center-info {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  z-index: 10;
+}
+.mult-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 72px;
+  font-weight: 900;
+  color: var(--green);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(0,230,118,0.5);
+  transition: color 0.2s;
+}
+.mult-value.crashed {
+  color: var(--red);
+  text-shadow: 0 0 40px rgba(239,83,80,0.6);
+}
+.mult-label {
+  font-size: 13px;
+  color: var(--text2);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+.crash-history-bar {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
+  z-index: 5;
+}
+.crash-chip {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  animation: fadeIn 0.3s ease;
+}
+.crash-chip.low { background: rgba(239,83,80,0.18); color: var(--red); border: 1px solid rgba(239,83,80,0.3); }
+.crash-chip.mid { background: rgba(255,107,53,0.18); color: var(--orange); border: 1px solid rgba(255,107,53,0.3); }
+.crash-chip.high { background: rgba(0,230,118,0.18); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+.crash-chip.mega { background: rgba(255,215,0,0.22); color: var(--gold); border: 1px solid rgba(255,215,0,0.4); text-shadow: 0 0 8px rgba(255,215,0,0.5); }
+
+/* Live bets list inside game canvas */
+.live-bets-overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 170px;
+  background: rgba(14,23,36,0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 11px;
+  z-index: 10;
+  pointer-events: none;
+}
+.live-bet-title {
+  font-weight: 800;
+  color: var(--text2);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  display: flex;
+  justify-content: space-between;
+}
+.live-bet-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.lb-name { color: var(--text); opacity: 0.85; font-weight: 600; }
+.lb-val { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--gold); }
+.lb-val.cashed { color: var(--green); }
+
+/* Floating Win Banner */
+.crash-win-banner {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(0,230,118,0.2), rgba(0,201,106,0.1));
+  border: 1px solid rgba(0,230,118,0.4);
+  padding: 10px 24px;
+  border-radius: 30px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--green);
+  backdrop-filter: blur(10px);
+  z-index: 20;
+  animation: modalSlideUp 0.3s ease;
+  display: none;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🚀 GG Crash</div>
+  </div>
+  <div class="gnav-game-name">Crash</div>
+  <span class="gnav-game-badge">ORIGINAL</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)" title="Switch Active Account / Currency">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹0.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <!-- CANVAS AREA -->
+  <div class="game-area">
+    <div class="crash-area">
+      <div class="crash-history-bar" id="crash-history"></div>
+
+      <div class="crash-canvas-wrap">
+        <canvas id="crash-canvas"></canvas>
+
+        <div class="crash-center-info">
+          <div class="mult-value" id="mult-value">1.00×</div>
+          <div class="mult-label" id="mult-label">Current Payout</div>
+        </div>
+
+        <div class="live-bets-overlay">
+          <div class="live-bet-title">
+            <span>Live Bets</span>
+            <span style="color:#00e676">● Active</span>
+          </div>
+          <div id="live-bet-list"></div>
+        </div>
+
+        <div class="crash-win-banner" id="win-banner">🎉 Cashed Out at 2.45× (+₹1,225.00)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BET PANEL -->
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="seg-ctrl" id="mode-tabs">
+        <div class="seg-btn active" data-mode="manual">Manual</div>
+        <div class="seg-btn" data-mode="auto">Auto</div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div class="bet-label">Bet Amount</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="1">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto Cashout Target -->
+    <div class="bet-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="bet-label" style="margin-bottom:0">Auto Cashout</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="auto-cashout-toggle" checked style="accent-color:var(--green)">
+          Enabled
+        </label>
+      </div>
+      <div class="bet-input-row">
+        <div class="bet-currency">×</div>
+        <input class="bet-input" id="auto-cashout-val" type="number" value="2.00" min="1.01" step="0.05">
+      </div>
+    </div>
+
+    <!-- Auto section -->
+    <div class="bet-section" id="auto-section" style="display:none">
+      <div class="bet-label">Number of Auto Bets</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">🔁</div>
+        <input class="bet-input" id="auto-bets-count" type="number" value="10" min="1">
+      </div>
+    </div>
+
+    <!-- Bet / Cashout Buttons -->
+    <div class="bet-section">
+      <div id="result-container"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-bet" id="bet-btn" onclick="if(typeof requireAuth==='function' && !requireAuth()) return; placeBet()" style="flex:1">Place Bet</button>
+      
+        <button class="btn-bet danger" id="cashout-btn" onclick="cashOut()" disabled style="flex:1;background:linear-gradient(135deg,#ff9800,#f57c00)">Cash Out</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Net Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+
+    <div class="history-section">
+      <div class="history-title">My Bets</div>
+      <div class="history-chips" id="my-history"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script src="crash.js"></script>
+</body>
+</html>
+
+
+

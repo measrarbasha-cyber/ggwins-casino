@@ -1,0 +1,2825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#070a13" />
+  <title>GG Wins – Casino &amp; Games Lobby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="security-guard.js"></script>
+  <style>
+    :root {
+      --bg: #070a13;
+      --bg-card: #0f1527;
+      --gold: #ffd700;
+      --gold-glow: rgba(255, 215, 0, 0.3);
+      --green: #00e676;
+      --green-glow: rgba(0, 230, 118, 0.35);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-gold: rgba(255, 215, 0, 0.25);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      background: radial-gradient(circle at 50% 0%, #15102a 0%, #080914 50%, #030408 100%);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    /* ── COLLAPSIBLE SIDEBAR (SIDERS) ── */
+    .sidebar {
+      width: 250px;
+      background: #090d1a;
+      border-right: 1px solid var(--border-gold);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      z-index: 1002;
+    }
+    .sidebar.collapsed { width: 68px; }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: -280px;
+        width: 270px;
+      }
+      .sidebar.open-mobile {
+        left: 0;
+        box-shadow: 10px 0 50px rgba(0,0,0,0.9);
+      }
+      .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        z-index: 1001;
+      }
+      .sidebar-backdrop.active { display: block; }
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .sidebar.collapsed .logo-text, .sidebar.collapsed .nav-label, .sidebar.collapsed .nav-badge, .sidebar.collapsed .nav-section-title {
+      display: none;
+    }
+    .sidebar.collapsed .nav-item {
+      justify-content: center;
+      padding: 12px 0;
+    }
+
+    .sidebar-toggle-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sidebar-toggle-btn:hover { color: #fff; border-color: var(--gold); }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-section-title {
+      font-size: 10px;
+      font-weight: 900;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      padding: 10px 8px 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.18s;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: rgba(255, 215, 0, 0.1);
+      border-color: var(--gold);
+      color: #fff;
+    }
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 230, 118, 0.15));
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    .nav-icon { font-size: 17px; width: 22px; text-align: center; }
+    .nav-badge {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    /* ── MAIN WRAPPER ── */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+
+    /* ── TOPBAR HEADER ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(11, 15, 25, 0.96);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-gold);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      overflow: visible !important;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .menu-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .menu-btn:hover { border-color: var(--gold); }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(0,230,118,0.2), rgba(255,215,0,0.2));
+      border: 1.5px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: 0 0 10px var(--gold-glow);
+    }
+    .brand-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+    .brand-text span { color: var(--green); }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      overflow: visible !important;
+    }
+
+    /* ── MULTI-ACCOUNT WALLET DROPDOWN ── */
+    .wallet-dropdown-wrapper { position: relative; flex-shrink: 0; }
+    .wallet-chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid var(--border-gold);
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--gold);
+      white-space: nowrap;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .wallet-chip:hover {
+      border-color: var(--gold);
+      background: rgba(255, 215, 0, 0.15);
+      box-shadow: 0 0 10px var(--gold-glow);
+    }
+    .wallet-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: #0f1527;
+      border: 1.5px solid var(--gold);
+      border-radius: 14px;
+      width: 270px;
+      padding: 10px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.95);
+      display: none;
+      z-index: 99999;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .wallet-menu.open { display: flex !important; }
+    .wallet-menu-header {
+      font-size: 10.5px;
+      font-weight: 900;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      padding: 2px 4px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .wallet-option {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px solid transparent;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .wallet-option:hover { background: rgba(255, 215, 0, 0.12); border-color: var(--gold); transform: translateY(-1px); }
+    .wallet-option.active-wallet { background: rgba(0, 230, 118, 0.15); border-color: var(--green); }
+    .w-opt-left { display: flex; align-items: center; gap: 8px; }
+    .w-opt-name { font-size: 12px; font-weight: 800; color: #fff; }
+    .w-opt-badge { font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 4px; }
+    .w-opt-bal { font-family: 'Space Grotesk', sans-serif; font-size: 12.5px; font-weight: 900; color: var(--gold); }
+
+    .btn-deposit {
+      background: linear-gradient(135deg, var(--green), #00b0ff);
+      color: #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11.5px;
+      font-weight: 900;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--green-glow);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* ── AUTH BUTTONS & LIVE CHAT TOGGLE ── */
+    .auth-buttons { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .btn-signin {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 5px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-register {
+      background: linear-gradient(135deg, var(--gold), #ff8c00);
+      color: #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11.5px;
+      font-weight: 900;
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .user-pill {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #f8fafc;
+      cursor: pointer;
+      flex-shrink: 0;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .user-pill:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .user-pill.is-vip-user {
+      background: rgba(255, 215, 0, 0.12);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    .user-vip-awarded-badge {
+      display: none;
+      align-items: center;
+      gap: 2px;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      font-size: 8.5px;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 999px;
+      box-shadow: 0 0 8px var(--gold-glow);
+    }
+
+    .vip-new-user-icon {
+      background: rgba(255, 215, 0, 0.15);
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+      padding: 5px 9px;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11.5px;
+      font-weight: 900;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      animation: glowVIP 2.5s infinite alternate;
+    }
+    @keyframes glowVIP {
+      0% { box-shadow: 0 0 4px rgba(255, 215, 0, 0.2); }
+      100% { box-shadow: 0 0 14px rgba(255, 215, 0, 0.6); }
+    }
+    .vip-new-user-icon:hover { background: var(--gold); color: #000; }
+
+    .btn-chat-toggle {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1.5px solid #38bdf8;
+      color: #38bdf8;
+      padding: 5px 9px;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .btn-chat-toggle:hover { background: #38bdf8; color: #000; }
+    .chat-live-badge {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #00e676;
+      display: inline-block;
+      animation: pulseLive 1.5s infinite;
+    }
+    @keyframes pulseLive {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 8px #00e676; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+
+    /* ── LOBBY CONTAINER ── */
+    .lobby-wrapper {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 12px 12px 80px 12px;
+    }
+
+    /* ── COMPACT HERO PROMO STRIP ── */
+    .hero-strip {
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(15, 21, 39, 0.95));
+      border: 1.5px solid var(--border-gold);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      width: 100%;
+    }
+    .hero-strip-left h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .hero-strip-left h1 span {
+      background: linear-gradient(135deg, var(--gold), #ff8c00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-strip-left p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── CATEGORY FILTER TABS ── */
+    .filter-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 14px;
+      scrollbar-width: none;
+      width: 100%;
+    }
+    .filter-tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: var(--gold); }
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--gold), #ff8c00);
+      color: #000;
+      border-color: var(--gold);
+    }
+
+    /* ── LOBBY GAME SEARCH BAR ── */
+    .lobby-controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+      width: 100%;
+    }
+    .game-search-box {
+      display: flex;
+      align-items: center;
+      background: #060a12;
+      border: 1.5px solid rgba(255, 215, 0, 0.3);
+      border-radius: 10px;
+      padding: 4px 10px;
+      gap: 8px;
+      flex: 1 1 240px;
+      max-width: 380px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      transition: all 0.2s;
+    }
+    .game-search-box:focus-within {
+      border-color: var(--green);
+      box-shadow: 0 0 15px rgba(0, 230, 118, 0.35);
+      background: #09101d;
+    }
+    .game-search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12.5px;
+      font-weight: 700;
+      outline: none;
+    }
+    .game-search-input::placeholder {
+      color: #64748b;
+      font-size: 11.5px;
+    }
+    .search-icon {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    .search-clear-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 10px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .search-clear-btn:hover {
+      background: rgba(239,68,68,0.3);
+      color: #fff;
+    }
+
+    /* ── ALL 25 GAMES GRID ── */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
+    @media (max-width: 640px) {
+      .games-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+      .game-card {
+        padding: 10px !important;
+        gap: 8px !important;
+      }
+      .game-icon-box {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 20px !important;
+        border-radius: 8px !important;
+      }
+      .game-name {
+        font-size: 12.5px !important;
+      }
+      .game-tag {
+        font-size: 9.5px !important;
+      }
+      .game-card-stats {
+        padding: 4px 6px !important;
+        font-size: 9.5px !important;
+      }
+      .btn-play {
+        padding: 6px !important;
+        font-size: 11.5px !important;
+      }
+    }
+
+    .game-card {
+      background: linear-gradient(145deg, #111827, #0d121f);
+      border: 1.5px solid var(--border-gold);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .game-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      box-shadow: 0 6px 20px var(--gold-glow);
+    }
+    .game-card-top { display: flex; align-items: center; gap: 8px; }
+    .game-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: radial-gradient(circle, rgba(255,215,0,0.25) 0%, rgba(15,21,39,0.95) 100%);
+      border: 1.5px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .game-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13.5px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .game-tag { font-size: 10.5px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .badge-pill { font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; }
+    .badge-hot { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid #ef4444; }
+    .badge-orig { background: rgba(0,230,118,0.2); color: #00e676; border: 1px solid #00e676; }
+    .game-card-stats {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 5px 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10.5px;
+    }
+    .btn-play {
+      width: 100%;
+      background: linear-gradient(135deg, var(--green), #00b0ff);
+      color: #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 7px;
+      border-radius: 7px;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    /* ── MOBILE BOTTOM NAVIGATION BAR ── */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: rgba(11, 15, 25, 0.98);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-gold);
+      z-index: 9990;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 4px;
+    }
+    @media (max-width: 900px) {
+      .mobile-bottom-nav { display: flex; }
+      .lobby-wrapper { padding-bottom: 74px !important; }
+    }
+    .mob-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      flex: 1;
+    }
+    .mob-nav-item.active { color: var(--gold); }
+    .mob-nav-icon { font-size: 18px; }
+
+    /* ── TOURNAMENT ARENA MODAL ── */
+    .tourn-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 600px) {
+      .tourn-grid { grid-template-columns: 1fr; }
+    }
+    .tourn-card {
+      background: linear-gradient(145deg, #111827, #0a0e1a);
+      border: 1.5px solid var(--gold);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    .tourn-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tourn-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .tourn-pool {
+      background: rgba(255,215,0,0.15);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 10.5px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .tourn-fee {
+      font-size: 11.5px;
+      color: var(--green);
+      font-weight: 800;
+    }
+    .tourn-leaderboard {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 10.5px;
+    }
+    .tourn-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tourn-rank { font-weight: 900; width: 18px; }
+    .rank-1 { color: #ffd700; }
+    .rank-2 { color: #e2e8f0; }
+    .rank-3 { color: #cd7f32; }
+    .tourn-user {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bot-tag {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid #38bdf8;
+      font-size: 7.5px;
+      font-weight: 900;
+      padding: 0 3px;
+      border-radius: 3px;
+    }
+    .tourn-score { font-weight: 800; color: var(--gold); }
+    .btn-join-tourn {
+      width: 100%;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 12px var(--gold-glow);
+      transition: all 0.2s;
+    }
+    .btn-join-tourn:hover { transform: scale(1.02); box-shadow: 0 0 18px var(--gold-glow); }
+    .btn-joined {
+      background: rgba(0, 230, 118, 0.2) !important;
+      border: 1.5px solid var(--green) !important;
+      color: var(--green) !important;
+      box-shadow: none !important;
+      cursor: default;
+    }
+
+    /* ── AUTOMATED AI LIVE CHAT DRAWER ── */
+    .chat-drawer {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 100%;
+      max-width: 360px;
+      height: 100vh;
+      background: #0b0f19;
+      border-left: 1.5px solid var(--border-gold);
+      box-shadow: -10px 0 40px rgba(0,0,0,0.85);
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .chat-drawer.open { right: 0; }
+    .chat-header {
+      padding: 12px 14px;
+      background: #0f1527;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chat-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ai-badge {
+      background: linear-gradient(135deg, #00e676, #00b0ff);
+      color: #000;
+      font-size: 8.5px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+    .chat-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .chat-bubble {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 11.5px;
+      line-height: 1.4;
+      max-width: 92%;
+    }
+    .chat-bubble.user {
+      background: rgba(0, 230, 118, 0.2);
+      border: 1px solid var(--green);
+      align-self: flex-end;
+      color: #fff;
+    }
+    .chat-bubble.ai {
+      background: rgba(255, 215, 0, 0.12);
+      border: 1px solid var(--border-gold);
+      align-self: flex-start;
+      color: #f1f5f9;
+    }
+    .chat-bubble.system {
+      background: rgba(255, 255, 255, 0.05);
+      align-self: center;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .chat-bubble.win-alert {
+      background: linear-gradient(135deg, rgba(0, 230, 118, 0.15), rgba(255, 215, 0, 0.15));
+      border: 1px solid var(--green);
+      align-self: stretch;
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
+    }
+    .chat-bubble.player-chat {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      align-self: flex-start;
+      color: #cbd5e1;
+    }
+
+    .chat-quick-prompts {
+      padding: 6px 10px;
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .quick-chip {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 7px;
+      font-size: 10px;
+      color: var(--gold);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chat-input-area {
+      padding: 10px;
+      background: #0f1527;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 6px;
+    }
+    .chat-input {
+      flex: 1;
+      background: #111827;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      color: #fff;
+      font-size: 12px;
+      outline: none;
+    }
+    .chat-send-btn {
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-weight: 900;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* ── MODALS ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: #0f1527;
+      border: 1.5px solid var(--gold);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 20px;
+      position: relative;
+    }
+    .modal-box.wide-modal { max-width: 960px; }
+    .modal-box.vip-room-modal-box {
+      max-width: 700px;
+      height: 80vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      background: radial-gradient(circle at 50% 0%, #1c1533 0%, #0c0f1c 100%);
+      border: 2px solid var(--gold);
+    }
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .modal-tabs { display: flex; gap: 6px; margin-bottom: 16px; background: rgba(255, 255, 255, 0.05); padding: 4px; border-radius: 10px; }
+    .modal-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12.5px;
+      font-weight: 800;
+      padding: 7px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .modal-tab.active { background: var(--gold); color: #000; }
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 11.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+    .form-input {
+      width: 100%;
+      background: #111827;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #fff;
+      font-size: 12.5px;
+      outline: none;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 10px 0;
+      font-size: 11px;
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+    .checkbox-container input[type="checkbox"] {
+      margin-top: 2px;
+      accent-color: var(--gold);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, var(--green), #00b0ff);
+      color: #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 900;
+      padding: 9px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 70px;
+      right: 16px;
+      background: #111827;
+      border: 1px solid var(--gold);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      display: none;
+      z-index: 999999;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .toast.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar mobile backdrop -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebarMobile()"></div>
+
+    <!-- ── COLLAPSIBLE SIDEBAR (SIDERS) ── -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="sidebar-logo">
+          <div class="logo-icon">🎮</div>
+          <div class="brand-text logo-text">GG <span>Wins</span></div>
+        </a>
+        <button class="sidebar-toggle-btn" onclick="toggleSidebarDesktop()" title="Toggle Sidebar">‹</button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">MAIN NAVIGATION</div>
+        <a href="index.html" class="nav-item active">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Lobby</span>
+        </a>
+
+        <!-- 🏆 TOURNAMENTS TAB WITH ₹50 ENTRY -->
+        <a class="nav-item" onclick="openTournamentsModal(); toggleSidebarMobile(false);" style="background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3)">
+          <span class="nav-icon" style="color:#ffd700">🏆</span>
+          <span class="nav-label" style="color:#ffd700;font-weight:800">Tournaments</span>
+          <span class="nav-badge" style="background:#ffd700;color:#000;font-weight:900">₹50 ENTRY</span>
+        </a>
+
+        <a href="vip.html" class="nav-item">
+          <span class="nav-icon">👑</span>
+          <span class="nav-label">VIP Club</span>
+          <span class="nav-badge" style="background:#ffd700;color:#000">VIP</span>
+        </a>
+
+        <!-- 💎 EXCLUSIVE VIP ROOM (VIP MEMBERS ONLY) -->
+        <a class="nav-item" onclick="openVipRoomModal(); toggleSidebarMobile(false);" style="background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(147,51,234,0.15));border:1.5px solid var(--gold);color:var(--gold)">
+          <span class="nav-icon" style="color:#ffd700">💎</span>
+          <span class="nav-label" style="color:#ffd700;font-weight:900">VIP Room</span>
+          <span class="nav-badge" style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-weight:900">VIP ONLY</span>
+        </a>
+
+        <a href="vip-lounge.html" class="nav-item">
+          <span class="nav-icon">💬</span>
+          <span class="nav-label">VIP Lounge</span>
+        </a>
+
+        <!-- 🎁 REFER & EARN (EARN ₹250 PER FRIEND) -->
+        <a class="nav-item" onclick="openReferModal(); toggleSidebarMobile(false);" style="background:linear-gradient(135deg,rgba(0,230,118,0.14),rgba(255,215,0,0.14));border:1.5px solid #00e676;cursor:pointer">
+          <span class="nav-icon" style="color:#00e676">🎁</span>
+          <span class="nav-label" style="color:#00e676;font-weight:900">Refer &amp; Earn</span>
+          <span class="nav-badge" style="background:#00e676;color:#000;font-weight:900">₹250 CASH</span>
+        </a>
+
+        <div class="nav-section-title">TOP GAMES</div>
+        <a href="games/crash.html" class="nav-item"><span class="nav-icon">🚀</span><span class="nav-label">GG Crash</span></a>
+        <a href="games/mines.html" class="nav-item"><span class="nav-icon">💣</span><span class="nav-label">GG Mines</span></a>
+        <a href="games/rummy.html" class="nav-item"><span class="nav-icon">🃏</span><span class="nav-label">Indian Rummy</span></a>
+        <a href="games/blackjack.html" class="nav-item"><span class="nav-icon">♣️</span><span class="nav-label">Blackjack 21</span></a>
+        <a href="games/wheel.html" class="nav-item"><span class="nav-icon">🎡</span><span class="nav-label">Wheel of Fortune</span></a>
+
+        <div class="nav-section-title">HELP &amp; POLICIES</div>
+        <a class="nav-item" onclick="openInfoModal('help'); toggleSidebarMobile(false);">
+          <span class="nav-icon">❓</span>
+          <span class="nav-label">Help Centre</span>
+        </a>
+        <a class="nav-item" onclick="openInfoModal('terms'); toggleSidebarMobile(false);">
+          <span class="nav-icon">📜</span>
+          <span class="nav-label">Terms &amp; Conditions</span>
+        </a>
+        <a class="nav-item" onclick="openInfoModal('privacy'); toggleSidebarMobile(false);">
+          <span class="nav-icon">🔒</span>
+          <span class="nav-label">Privacy Policy</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- ── MAIN WRAPPER ── -->
+    <div class="main-wrapper">
+      <!-- ── TOPBAR HEADER ── -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-btn" onclick="toggleSidebarMobile()">
+            <span>☰</span>
+          </button>
+          <a href="index.html" class="brand-logo">
+            <div class="logo-icon">🎮</div>
+            <div class="brand-text">GG <span>Wins</span></div>
+          </a>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Multi-Account Wallet Chip & Dropdown Menu -->
+          <div class="wallet-dropdown-wrapper" id="wallet-dropdown-wrapper">
+            <div class="wallet-chip" id="wallet-chip-btn" onclick="toggleWalletMenu(event)">
+              <span id="active-acc-icon">🎮</span>
+              <span id="top-bal-display" style="color:#00e676">₹10,000.00</span>
+              <span style="font-size:9px;color:#94a3b8">▼</span>
+            </div>
+
+            <div class="wallet-menu" id="wallet-menu">
+              <div class="wallet-menu-header">
+                <span>SWITCH ACCOUNT</span>
+                <span style="font-size:10px;color:var(--gold);cursor:pointer" onclick="openAccountSwitchModal()">⚡ Modal View</span>
+              </div>
+              <div class="wallet-option active-wallet" id="w-opt-demo" onclick="selectActiveAccount('demo', event)">
+                <div class="w-opt-left">
+                  <span style="font-size:18px">🎮</span>
+                  <div>
+                    <div class="w-opt-name">Demo Practice</div>
+                    <span class="w-opt-badge" style="background:#7c4dff;color:#fff">RISK FREE</span>
+                  </div>
+                </div>
+                <span class="w-opt-bal" id="bal-txt-demo">₹10,000.00</span>
+              </div>
+              <div class="wallet-option" id="w-opt-real" onclick="selectActiveAccount('real', event)">
+                <div class="w-opt-left">
+                  <span style="font-size:18px">🇮🇳</span>
+                  <div>
+                    <div class="w-opt-name">Real (Deposited)</div>
+                    <span class="w-opt-badge" style="background:#00e676;color:#000">INSTANT UPI</span>
+                  </div>
+                </div>
+                <span class="w-opt-bal" id="bal-txt-real">₹0.00</span>
+              </div>
+              <div class="wallet-option" id="w-opt-usdt" onclick="selectActiveAccount('usdt', event)">
+                <div class="w-opt-left">
+                  <span style="font-size:18px">₮</span>
+                  <div>
+                    <div class="w-opt-name">USDT Crypto</div>
+                    <span class="w-opt-badge" style="background:#26a17b;color:#fff">TRC20 / ERC20</span>
+                  </div>
+                </div>
+                <span class="w-opt-bal" id="bal-txt-usdt">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-deposit" onclick="if(typeof openWalletModal==='function') openWalletModal('deposit');">
+            <span>💳</span> Deposit
+          </button>
+
+          <!-- Sign In & Register Buttons -->
+          <div class="auth-buttons" id="auth-buttons">
+            <button class="btn-signin" onclick="openAuthModal('login')">Sign In</button>
+            <button class="btn-register" onclick="openAuthModal('register')">Register</button>
+          </div>
+
+          <!-- Logged-in user pill with Awarded VIP Badge -->
+          <div class="user-pill" id="user-pill" onclick="logoutUser()">
+            <span id="user-avatar-lbl">👑</span>
+            <span id="username-lbl">Player</span>
+            <span class="user-vip-awarded-badge" id="user-vip-awarded-badge">👑 VIP</span>
+            <span style="font-size:9px;color:#ef4444;margin-left:2px">✕</span>
+          </div>
+
+          <!-- VIP Promo Icon for Unapproved / New Users (Next to Chat Box) -->
+          <a href="vip.html" class="vip-new-user-icon" id="vip-new-user-icon" title="Join VIP Club">
+            <span>👑</span>
+            <span>VIP</span>
+          </a>
+
+          <!-- Live AI Chat Toggle Button with Pulse -->
+          <button class="btn-chat-toggle" onclick="toggleChatDrawer()">
+            <span class="chat-live-badge"></span>
+            <span>💬</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ── LOBBY CONTENT ── -->
+      <div class="lobby-wrapper">
+        <div class="hero-strip">
+          <div class="hero-strip-left">
+            <h1>Welcome to GG Wins <span>Lobby</span></h1>
+            <p>Select any game below to play instantly with Demo, Real INR, or USDT accounts!</p>
+          </div>
+          <div class="hero-strip-right" style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="tab-btn" onclick="openAccountSwitchModal()" style="background:rgba(0,230,118,0.15);border:1px solid var(--green);color:var(--green)">
+              <span>🔄</span> Switch Account
+            </button>
+            <button class="tab-btn" onclick="openTournamentsModal()" style="background:rgba(255,215,0,0.15);border:1px solid var(--gold);color:var(--gold)">
+              <span>🏆</span> Tournaments (₹50)
+            </button>
+            <button class="tab-btn" onclick="openVipRoomModal()" style="background:rgba(147,51,234,0.2);border:1px solid #c084fc;color:#c084fc">
+              <span>💎</span> VIP Room
+            </button>
+            <button class="tab-btn" onclick="toggleChatDrawer()" style="background:rgba(56,189,248,0.15);border:1px solid #38bdf8;color:#38bdf8">
+              🤖 AI Host
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter tabs & Live Game Search Bar -->
+        <div class="lobby-controls-bar">
+          <div class="filter-tabs" id="filter-tabs" style="margin:0">
+            <button class="tab-btn active" onclick="filterGames('all', this)">🎮 All (25)</button>
+            <button class="tab-btn" onclick="filterGames('originals', this)">🔥 Originals (8)</button>
+            <button class="tab-btn" onclick="filterGames('table', this)">🃏 Cards (8)</button>
+            <button class="tab-btn" onclick="filterGames('arcade', this)">🎯 Arcade (9)</button>
+          </div>
+
+          <!-- Live Game Search Bar -->
+          <div class="game-search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="game-search-input" class="game-search-input" placeholder="Search 25+ games..." oninput="handleGameSearch(this.value)">
+            <button class="search-clear-btn" id="search-clear-btn" onclick="clearGameSearch()" style="display:none">✕</button>
+          </div>
+        </div>
+
+        <!-- ── ALL 25 GAMES GRID ── -->
+        <div class="games-grid" id="games-grid">
+          <!-- 1. GG Crash -->
+          <div class="game-card" data-category="originals" onclick="launchGame('games/crash.html')">
+            <div class="game-card-top"><div class="game-icon-box">🚀</div><div><div class="game-name">GG Crash</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • Derby</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">5.8k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/crash.html')">▶ Play</button>
+          </div>
+          <!-- 2. GG Mines -->
+          <div class="game-card" data-category="originals" onclick="launchGame('games/mines.html')">
+            <div class="game-card-top"><div class="game-icon-box">💣</div><div><div class="game-name">GG Mines</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • Grid</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">6.4k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/mines.html')">▶ Play</button>
+          </div>
+          <!-- 3. GG Limbo Rocket -->
+          <div class="game-card" data-category="originals" onclick="launchGame('games/limbo.html')">
+            <div class="game-card-top"><div class="game-icon-box">📈</div><div><div class="game-name">GG Limbo</div><div class="game-tag"><span class="badge-pill badge-orig">LIVE</span> • Rocket</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">3.9k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/limbo.html')">▶ Play</button>
+          </div>
+          <!-- 4. Dragon Tower -->
+          <div class="game-card" data-category="originals" onclick="launchGame('games/dragontower.html')">
+            <div class="game-card-top"><div class="game-icon-box">🐉</div><div><div class="game-name">Dragon Tower</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • Tower</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">5.1k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/dragontower.html')">▶ Play</button>
+          </div>
+          <!-- 5. Diamond Rush -->
+          <div class="game-card" data-category="originals" onclick="launchGame('games/diamonds.html')">
+            <div class="game-card-top"><div class="game-icon-box">💎</div><div><div class="game-name">Diamond Rush</div><div class="game-tag"><span class="badge-pill badge-orig">LIVE</span> • Match</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">4.9k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/diamonds.html')">▶ Play</button>
+          </div>
+          <!-- 6. Fortune Slots -->
+          <div class="game-card" data-category="originals" onclick="launchGame('games/slots.html')">
+            <div class="game-card-top"><div class="game-icon-box">🎰</div><div><div class="game-name">Fortune Slots</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • 777</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">5.2k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/slots.html')">▶ Play</button>
+          </div>
+          <!-- 7. Plinko Drop -->
+          <div class="game-card" data-category="originals" onclick="launchGame('games/plinko.html')">
+            <div class="game-card-top"><div class="game-icon-box">⚽</div><div><div class="game-name">Plinko Drop</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • Pegs</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">4.8k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/plinko.html')">▶ Play</button>
+          </div>
+          <!-- 8. Indian Rummy 3D -->
+          <div class="game-card" data-category="table" onclick="launchGame('games/rummy.html')">
+            <div class="game-card-top"><div class="game-icon-box">🃏</div><div><div class="game-name">Indian Rummy</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • 13 Cards</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">7.4k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/rummy.html')">▶ Play</button>
+          </div>
+          <!-- 9. Royale Baccarat -->
+          <div class="game-card" data-category="table" onclick="launchGame('games/baccarat.html')">
+            <div class="game-card-top"><div class="game-icon-box">👑</div><div><div class="game-name">Baccarat</div><div class="game-tag"><span class="badge-pill badge-orig">LIVE</span> • Stakes</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">3.8k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/baccarat.html')">▶ Play</button>
+          </div>
+          <!-- 10. Blackjack 21 -->
+          <div class="game-card" data-category="table" onclick="launchGame('games/blackjack.html')">
+            <div class="game-card-top"><div class="game-icon-box">♣️</div><div><div class="game-name">Blackjack 21</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • League</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">3.9k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/blackjack.html')">▶ Play</button>
+          </div>
+          <!-- 11. Roulette Royale -->
+          <div class="game-card" data-category="table" onclick="launchGame('games/roulette.html')">
+            <div class="game-card-top"><div class="game-icon-box">🔴</div><div><div class="game-name">Roulette</div><div class="game-tag"><span class="badge-pill badge-orig">LIVE</span> • Wheel</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">4.2k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/roulette.html')">▶ Play</button>
+          </div>
+          <!-- 12. Sic Bo 3-Dice -->
+          <div class="game-card" data-category="table" onclick="launchGame('games/sicbo.html')">
+            <div class="game-card-top"><div class="game-icon-box">🎲</div><div><div class="game-name">Sic Bo Dice</div><div class="game-tag"><span class="badge-pill badge-orig">LIVE</span> • Dice</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">3.2k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/sicbo.html')">▶ Play</button>
+          </div>
+          <!-- 13. Hilo Master -->
+          <div class="game-card" data-category="table" onclick="launchGame('games/hilo.html')">
+            <div class="game-card-top"><div class="game-icon-box">🃏</div><div><div class="game-name">Hilo Master</div><div class="game-tag"><span class="badge-pill badge-orig">LIVE</span> • Predict</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">3.4k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/hilo.html')">▶ Play</button>
+          </div>
+          <!-- 14. Coin Flip 3D -->
+          <div class="game-card" data-category="arcade" onclick="launchGame('games/coinflip.html')">
+            <div class="game-card-top"><div class="game-icon-box">🪙</div><div><div class="game-name">Coin Flip 3D</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • Streak</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">4.8k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/coinflip.html')">▶ Play</button>
+          </div>
+          <!-- 15. Penalty Shootout -->
+          <div class="game-card" data-category="arcade" onclick="launchGame('games/penalty.html')">
+            <div class="game-card-top"><div class="game-icon-box">⚽</div><div><div class="game-name">Penalty Shot</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • Golden</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">5.6k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/penalty.html')">▶ Play</button>
+          </div>
+          <!-- 16. Magic Shells 3D -->
+          <div class="game-card" data-category="arcade" onclick="launchGame('games/cups.html')">
+            <div class="game-card-top"><div class="game-icon-box">🪄</div><div><div class="game-name">Magic Shells</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • Wizard</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">6.1k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/cups.html')">▶ Play</button>
+          </div>
+          <!-- 17. Ludo Champions -->
+          <div class="game-card" data-category="arcade" onclick="launchGame('games/ludo.html')">
+            <div class="game-card-top"><div class="game-icon-box">🎲</div><div><div class="game-name">Ludo Champ</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • 4-Player</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">6.4k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/ludo.html')">▶ Play</button>
+          </div>
+          <!-- 17b. Snakes & Ladders 3D -->
+          <div class="game-card" data-category="arcade originals" onclick="launchGame('games/snakes.html')">
+            <div class="game-card-top"><div class="game-icon-box">🐍</div><div><div class="game-name">Snakes & Ladders 3D</div><div class="game-tag"><span class="badge-pill badge-orig">3D POOL</span> • Battles</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#00e676;font-weight:800">7.2k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/snakes.html')">▶ Play</button>
+          </div>
+          <!-- 18. Classic Dice 3D -->
+          <div class="game-card" data-category="arcade" onclick="launchGame('games/dice.html')">
+            <div class="game-card-top"><div class="game-icon-box">🎲</div><div><div class="game-name">Classic Dice</div><div class="game-tag"><span class="badge-pill badge-orig">LIVE</span> • Under</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">3.1k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/dice.html')">▶ Play</button>
+          </div>
+          <!-- 19. Wheel of Fortune -->
+          <div class="game-card" data-category="arcade" onclick="launchGame('games/wheel.html')">
+            <div class="game-card-top"><div class="game-icon-box">🎡</div><div><div class="game-name">Fortune Wheel</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • Spin</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">4.1k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/wheel.html')">▶ Play</button>
+          </div>
+          <!-- 20. Keno Classic -->
+          <div class="game-card" data-category="arcade" onclick="launchGame('games/keno.html')">
+            <div class="game-card-top"><div class="game-icon-box">🎱</div><div><div class="game-name">Keno Classic</div><div class="game-tag"><span class="badge-pill badge-orig">LIVE</span> • Numbers</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">2.8k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/keno.html')">▶ Play</button>
+          </div>
+          <!-- 21. Andar Bahar 3D -->
+          <div class="game-card" data-category="table originals" onclick="launchGame('games/andarbahar.html')">
+            <div class="game-card-top"><div class="game-icon-box">🃏</div><div><div class="game-name">Andar Bahar 3D</div><div class="game-tag"><span class="badge-pill badge-hot">HOT</span> • Indian Classic</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#00e676;font-weight:800">9.8k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/andarbahar.html')">▶ Play</button>
+          </div>
+          <!-- 22. Teen Patti 3D -->
+          <div class="game-card" data-category="table originals" onclick="launchGame('games/teenpatti.html')">
+            <div class="game-card-top"><div class="game-icon-box">👑</div><div><div class="game-name">Teen Patti 3D</div><div class="game-tag"><span class="badge-pill badge-orig">3-CARD</span> • Poker</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">11.4k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/teenpatti.html')">▶ Play</button>
+          </div>
+          <!-- 23. Aviator Jet 3D -->
+          <div class="game-card" data-category="originals arcade" onclick="launchGame('games/aviator.html')">
+            <div class="game-card-top"><div class="game-icon-box">🚀</div><div><div class="game-name">Aviator Jet 3D</div><div class="game-tag"><span class="badge-pill badge-hot">DUAL BET</span> • Crash</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#00e676;font-weight:800">14.6k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/aviator.html')">▶ Play</button>
+          </div>
+          <!-- 24. Carrom 3D Battle -->
+          <div class="game-card" data-category="arcade originals" onclick="launchGame('games/carrom.html')">
+            <div class="game-card-top"><div class="game-icon-box">🎯</div><div><div class="game-name">Carrom 3D Battle</div><div class="game-tag"><span class="badge-pill badge-orig">3D POOL</span> • Physics</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">8.3k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/carrom.html')">▶ Play</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MOBILE BOTTOM NAVIGATION BAR ── -->
+      <nav class="mobile-bottom-nav">
+        <a href="index.html" class="mob-nav-item active">
+          <span class="mob-nav-icon">🏠</span>
+          <span>Lobby</span>
+        </a>
+        <a onclick="openAccountSwitchModal()" class="mob-nav-item">
+          <span class="mob-nav-icon" style="color:#00e676">🔄</span>
+          <span style="color:#00e676">Accounts</span>
+        </a>
+        <a onclick="openTournamentsModal()" class="mob-nav-item">
+          <span class="mob-nav-icon">🏆</span>
+          <span>Tourn</span>
+        </a>
+        <a onclick="openVipRoomModal()" class="mob-nav-item">
+          <span class="mob-nav-icon" style="color:var(--gold)">💎</span>
+          <span style="color:var(--gold)">VIP Room</span>
+        </a>
+        <a onclick="if(typeof openWalletModal==='function') openWalletModal('deposit');" class="mob-nav-item">
+          <span class="mob-nav-icon">💳</span>
+          <span>Deposit</span>
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ── 🔄 INTERACTIVE ACCOUNT SWITCHER MODAL ── -->
+  <div id="account-switch-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:440px">
+      <button class="modal-close" onclick="closeAccountSwitchModal()">✕</button>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;border-bottom:1.5px solid var(--gold);padding-bottom:10px">
+        <div style="font-size:24px">🔄</div>
+        <div>
+          <h2 style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:900;color:var(--gold)">
+            Switch Active Account
+          </h2>
+          <p style="font-size:11.5px;color:var(--text-muted)">
+            Select which balance you want to wager and play with:
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <!-- 1. Demo Account -->
+        <div class="wallet-option" id="m-opt-demo" onclick="selectActiveAccount('demo', event)" style="padding:14px;border:1.5px solid rgba(255,255,255,0.1)">
+          <div class="w-opt-left">
+            <span style="font-size:26px">🎮</span>
+            <div>
+              <div style="font-size:14px;font-weight:900;color:#fff">Demo Practice Account</div>
+              <span class="w-opt-badge" style="background:#7c4dff;color:#fff">100% RISK FREE</span>
+            </div>
+          </div>
+          <span class="w-opt-bal" id="m-bal-txt-demo" style="font-size:15px">₹10,000.00</span>
+        </div>
+
+        <!-- 2. Real INR Account -->
+        <div class="wallet-option" id="m-opt-real" onclick="selectActiveAccount('real', event)" style="padding:14px;border:1.5px solid rgba(0,230,118,0.3)">
+          <div class="w-opt-left">
+            <span style="font-size:26px">🇮🇳</span>
+            <div>
+              <div style="font-size:14px;font-weight:900;color:#00e676">Real Deposited INR</div>
+              <span class="w-opt-badge" style="background:#00e676;color:#000">INSTANT UPI CASH</span>
+            </div>
+          </div>
+          <span class="w-opt-bal" id="m-bal-txt-real" style="font-size:15px;color:var(--gold)">₹25,000.00</span>
+        </div>
+
+        <!-- 3. USDT Crypto Account -->
+        <div class="wallet-option" id="m-opt-usdt" onclick="selectActiveAccount('usdt', event)" style="padding:14px;border:1.5px solid rgba(38,161,123,0.3)">
+          <div class="w-opt-left">
+            <span style="font-size:26px">₮</span>
+            <div>
+              <div style="font-size:14px;font-weight:900;color:#26a17b">USDT Crypto Account</div>
+              <span class="w-opt-badge" style="background:#26a17b;color:#fff">TRC20 / ERC20</span>
+            </div>
+          </div>
+          <span class="w-opt-bal" id="m-bal-txt-usdt" style="font-size:15px;color:#26a17b">$500.00</span>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:8px">
+        <button class="btn-submit" style="background:linear-gradient(135deg,var(--green),#00b0ff)" onclick="closeAccountSwitchModal(); if(typeof openWalletModal==='function') openWalletModal('deposit');">
+          💳 Deposit Money
+        </button>
+        <button class="btn-submit" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2)" onclick="closeAccountSwitchModal()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 🏆 TOURNAMENTS ARENA MODAL ── -->
+  <div id="tourn-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box wide-modal">
+      <button class="modal-close" onclick="closeTournamentsModal()">✕</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid rgba(255,215,0,0.25);padding-bottom:10px;margin-bottom:12px">
+        <div>
+          <h2 style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:900;color:var(--gold);display:flex;align-items:center;gap:6px">
+            <span>🏆</span> GG Wins Tournaments
+          </h2>
+          <p style="font-size:11.5px;color:var(--text-muted);margin-top:2px">
+            Entry Fee: <strong style="color:var(--green)">₹50 per game</strong> • <strong>Top #1 Wins Grand Prize!</strong>
+          </p>
+        </div>
+        <div style="background:rgba(0,230,118,0.15);border:1px solid var(--green);padding:4px 8px;border-radius:6px;font-size:11px;font-weight:800;color:var(--green)">
+          ⏳ Season 1 Ends: 04h 18m
+        </div>
+      </div>
+
+      <div class="tourn-grid" id="tourn-grid-container"></div>
+    </div>
+  </div>
+
+  <!-- ── 💎 EXCLUSIVE VIP ROOM MODAL (VIP MEMBERS ONLY) ── -->
+  <div id="vip-room-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box vip-room-modal-box">
+      <button class="modal-close" onclick="closeVipRoomModal()">✕</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid var(--gold);padding-bottom:10px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:22px">💎</div>
+          <div>
+            <h2 style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:900;color:var(--gold)">
+              VIP High-Rollers Room
+            </h2>
+            <div style="font-size:10.5px;color:var(--green);font-weight:800">
+              🟢 EXCLUSIVE VIP MEMBERS ENCLAVE • LIVE
+            </div>
+          </div>
+        </div>
+        <div style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-size:9px;font-weight:900;padding:3px 8px;border-radius:999px">
+          👑 VERIFIED VIP
+        </div>
+      </div>
+
+      <!-- VIP Chat Stream Area -->
+      <div class="chat-messages" id="vip-room-messages" style="background:rgba(0,0,0,0.4);border-radius:10px;border:1px solid rgba(255,215,0,0.15);margin-bottom:10px;padding:10px">
+        <div class="chat-bubble" style="background:rgba(255,215,0,0.15);border:1px solid var(--gold);align-self:stretch;color:#ffd700;font-weight:800;text-align:center;font-size:11px">
+          ✨ Welcome to the Private VIP Room. Only approved VIP members can participate in this chat!
+        </div>
+        <div class="chat-bubble player-chat" style="border:1px solid #ffd700">
+          <div style="font-weight:900;color:#ffd700;display:flex;align-items:center;gap:4px;font-size:11px">
+            <span>👑</span> @Kabir_Gold <span style="background:#ffd700;color:#000;font-size:7.5px;padding:1px 3px;border-radius:3px">${'GOLD VIP'}</span>
+          </div>
+          <div style="margin-top:2px;font-size:11px">Just received the ₹150 daily cash drop from vault! Ready for high stakes Baccarat 🥂</div>
+        </div>
+        <div class="chat-bubble player-chat" style="border:1px solid #c084fc">
+          <div style="font-weight:900;color:#c084fc;display:flex;align-items:center;gap:4px;font-size:11px">
+            <span>👑</span> @Vikram_Diamond <span style="background:#c084fc;color:#000;font-size:7.5px;padding:1px 3px;border-radius:3px">${'DIAMOND VIP'}</span>
+          </div>
+          <div style="margin-top:2px;font-size:11px">Instant ₹1,00,000 withdrawal processed in 60 seconds with 0% fee. VIP tier benefits are incredible.</div>
+        </div>
+      </div>
+
+      <!-- VIP Input Box -->
+      <div class="chat-input-area" style="border-radius:8px">
+        <input type="text" class="chat-input" id="vip-room-input" placeholder="Type VIP message..." onkeydown="if(event.key==='Enter') sendVipChatMessage()" />
+        <button class="chat-send-btn" style="background:linear-gradient(135deg,#ffd700,#ff8c00)" onclick="sendVipChatMessage()">
+          👑 Post
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 🔒 VIP LOCKED ACCESS GATE MODAL ── -->
+  <div id="vip-locked-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box" style="text-align:center;max-width:440px;border:2px solid #ef4444">
+      <button class="modal-close" onclick="closeVipLockedModal()">✕</button>
+      <div style="font-size:42px;margin-bottom:6px">🔒</div>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:900;color:#ef4444;margin-bottom:6px">
+        VIP Room Locked
+      </h2>
+      <p style="font-size:12px;color:#cbd5e1;line-height:1.5;margin-bottom:14px">
+        This high-rollers room is strictly reserved for <strong>Approved VIP Members</strong>. Only approved VIPs can chat here.
+      </p>
+      <div style="background:rgba(255,215,0,0.1);border:1px solid var(--gold);padding:10px;border-radius:8px;margin-bottom:14px;text-align:left;font-size:11.5px;color:#f8fafc">
+        <strong style="color:var(--gold)">VIP Member Privileges:</strong>
+        <ul style="margin:4px 0 0 14px">
+          <li>Daily Vault Cash Drops (Up to ₹150/day)</li>
+          <li>Exclusive Access to the VIP Live Chat Room</li>
+          <li>Zero-fee Instant Priority Withdrawals</li>
+        </ul>
+      </div>
+      <button class="btn-submit" style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000" onclick="window.location.href='vip.html'">
+        👑 Apply / Join VIP Club Now
+      </button>
+    </div>
+  </div>
+
+  <!-- ── AUTOMATED AI LIVE CHAT DRAWER ── -->
+  <div class="chat-drawer" id="chat-drawer">
+    <div class="chat-header">
+      <div class="chat-title">
+        <span>🤖</span> GG AI Casino Host
+        <span class="ai-badge">LIVE STREAM</span>
+      </div>
+      <button class="chat-close-btn" onclick="toggleChatDrawer()">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-bubble ai">
+        👋 Welcome! I am your <strong>GG Wins AI Casino Host</strong>. Live wins are streaming below!
+      </div>
+      <div class="chat-bubble system">🔥 Live Room Stream • 247 Active Players Online</div>
+    </div>
+    <div class="chat-quick-prompts">
+      <span class="quick-chip" onclick="sendQuickPrompt('How do tournament fees and leaderboards work?')">🏆 Tournaments (₹50)?</span>
+      <span class="quick-chip" onclick="sendQuickPrompt('How do I join the VIP Room?')">💎 VIP Room Access?</span>
+      <span class="quick-chip" onclick="sendQuickPrompt('How do I claim the 100% deposit bonus?')">🎁 Deposit Bonus?</span>
+      <span class="quick-chip" onclick="sendQuickPrompt('How to withdraw real money to UPI?')">⚡ Withdraw UPI?</span>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" id="chat-input" placeholder="Ask AI Host..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
+      <button class="chat-send-btn" onclick="sendChatMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- ── AUTH MODAL ── -->
+  <div id="auth-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+      <div class="modal-tabs">
+        <button class="modal-tab active" id="modal-tab-login" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="modal-tab" id="modal-tab-reg" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="auth-login-form">
+        <div class="form-group"><label class="form-label">Username or Email</label><input type="text" class="form-input" id="auth-login-user" placeholder="Enter username or email" /></div>
+        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="auth-login-pass" placeholder="Enter password" /></div>
+        <button class="btn-submit" onclick="submitLogin()">⚡ Sign In</button>
+      </div>
+
+      <!-- Register Form -->
+      <div id="auth-reg-form" style="display:none">
+        <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input" id="auth-reg-user" placeholder="Choose a username" /></div>
+        <div class="form-group"><label class="form-label">Email (Real Google / Gmail Account)</label><input type="email" class="form-input" id="auth-reg-email" placeholder="e.g. yourname@gmail.com" /></div>
+        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="auth-reg-pass" placeholder="Choose a password" /></div>
+        
+        <!-- Referral Code Input -->
+        <div class="form-group">
+          <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Referral Code (Optional)</span>
+            <span style="color:#00e676;font-size:10px;font-weight:800">🎁 Referrer Gets ₹250</span>
+          </label>
+          <input type="text" class="form-input" id="auth-reg-ref" placeholder="Enter friend's referral code (e.g. ASRAR)" style="text-transform:uppercase;letter-spacing:1px" />
+        </div>
+
+        <!-- Mandatory Agreement Checkbox -->
+        <label class="checkbox-container">
+          <input type="checkbox" id="terms-agree-check" checked />
+          <span>
+            I am 18+ and expressly agree to the <a href="#" onclick="openInfoModal('terms'); return false;" style="color:var(--gold);text-decoration:underline">Terms &amp; Conditions</a> and <a href="#" onclick="openInfoModal('privacy'); return false;" style="color:var(--gold);text-decoration:underline">Privacy Policy</a> of <strong>GG WINS</strong>, confirming that all deposits and charges are paid solely for entertainment and digital service access, and GG WINS bears zero liability for any player losses.
+          </span>
+        </label>
+
+        <button class="btn-submit" style="background:linear-gradient(135deg,#ffd700,#ff8c00)" onclick="submitRegister()">🎉 Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 🎁 REFER & EARN MODAL (₹250 PER FRIEND) ── -->
+  <div id="refer-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box" style="max-width:480px">
+      <button class="modal-close" onclick="closeReferModal()">✕</button>
+      
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:44px;margin-bottom:6px">🎁</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:900;background:linear-gradient(135deg,#00e676,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-transform:uppercase;letter-spacing:1px">
+          Refer &amp; Earn ₹250 Cash!
+        </h2>
+        <p style="font-size:12.5px;color:#94a3b8;margin-top:4px">
+          Invite your friends to GG WINS and get <strong style="color:#00e676">₹250.00 Real Cash</strong> directly into your Real INR balance for every friend who registers with your code!
+        </p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:rgba(0,230,118,0.1);border:1px solid #00e676;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:10.5px;color:#94a3b8;font-weight:700">TOTAL EARNINGS</div>
+          <div id="ref-stat-earnings" style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:900;color:#00e676;margin-top:2px">₹0.00</div>
+        </div>
+        <div style="background:rgba(255,215,0,0.1);border:1px solid #ffd700;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:10.5px;color:#94a3b8;font-weight:700">FRIENDS JOINED</div>
+          <div id="ref-stat-count" style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:900;color:#ffd700;margin-top:2px">0 Players</div>
+        </div>
+      </div>
+
+      <!-- Referral Code Box -->
+      <div style="background:rgba(255,255,255,0.04);border:1.5px dashed rgba(255,215,0,0.5);border-radius:12px;padding:12px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:#ffd700;margin-bottom:6px;text-transform:uppercase">Your Unique Referral Code:</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="my-ref-code-input" readonly value="GG-PLAYER" style="flex:1;background:#0b0f19;border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:900;padding:8px 12px;text-align:center;letter-spacing:1.5px" />
+          <button onclick="copyReferralCode()" style="background:#ffd700;color:#000;border:none;border-radius:8px;padding:9px 14px;font-weight:900;font-size:12px;cursor:pointer">
+            📋 Copy Code
+          </button>
+        </div>
+      </div>
+
+      <!-- Share Action Buttons -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="copyReferralLink()" style="background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;border:none;border-radius:10px;padding:10px;font-weight:900;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          🔗 Copy Link
+        </button>
+        <button onclick="shareReferralWhatsApp()" style="background:#25d366;color:#fff;border:none;border-radius:10px;padding:10px;font-weight:900;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+          💬 Share WhatsApp
+        </button>
+      </div>
+
+      <div style="margin-top:12px;font-size:10.5px;color:#64748b;text-align:center;line-height:1.4">
+        ⚡ Reward is instantly credited to your Real INR balance as soon as your friend completes registration!
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INFO MODAL ── -->
+  <div id="info-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box wide-modal">
+      <button class="modal-close" onclick="closeInfoModal()">✕</button>
+      <h2 id="info-modal-title" style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:900;color:var(--gold);margin-bottom:12px">Info</h2>
+      <div id="info-modal-content" style="font-size:12.5px;line-height:1.6;color:#cbd5e1"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <script src="wallet.js?v=11.0.0"></script>
+  <script>
+    // ── ACCOUNT SWITCHER MODAL & DROPDOWN ENGINE ──
+    function openAccountSwitchModal() {
+      const m = document.getElementById('account-switch-modal');
+      const menu = document.getElementById('wallet-menu');
+      if (menu) menu.classList.remove('open');
+      if (m) m.classList.add('active');
+      updateAccountModalDisplay();
+    }
+
+    function closeAccountSwitchModal() {
+      const m = document.getElementById('account-switch-modal');
+      if (m) m.classList.remove('active');
+    }
+
+    function updateAccountModalDisplay() {
+      const wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 25000, usdt: 500 };
+      const active = localStorage.getItem('ggwins_active_wallet') || 'demo';
+
+      ['demo', 'real', 'usdt'].forEach(k => {
+        const el = document.getElementById('m-opt-' + k);
+        if (el) {
+          if (k === active) {
+            el.style.background = 'rgba(0,230,118,0.18)';
+            el.style.borderColor = 'var(--green)';
+          } else {
+            el.style.background = 'rgba(255,255,255,0.04)';
+            el.style.borderColor = 'rgba(255,255,255,0.1)';
+          }
+        }
+      });
+
+      const dEl = document.getElementById('m-bal-txt-demo');
+      const rEl = document.getElementById('m-bal-txt-real');
+      const uEl = document.getElementById('m-bal-txt-usdt');
+      if (dEl) dEl.textContent = '₹' + (parseFloat(wallets.demo)||10000).toLocaleString('en-IN', {minimumFractionDigits: 2});
+      if (rEl) rEl.textContent = '₹' + (parseFloat(wallets.real)||25000).toLocaleString('en-IN', {minimumFractionDigits: 2});
+      if (uEl) uEl.textContent = '$' + (parseFloat(wallets.usdt)||500).toLocaleString('en-US', {minimumFractionDigits: 2});
+    }
+
+    function toggleWalletMenu(e) {
+      if (e) e.stopPropagation();
+      const m = document.getElementById('wallet-menu');
+      if (m) m.classList.toggle('open');
+    }
+
+    document.addEventListener('click', (e) => {
+      const w = document.getElementById('wallet-dropdown-wrapper');
+      const m = document.getElementById('wallet-menu');
+      if (w && m && !w.contains(e.target)) m.classList.remove('open');
+    });
+
+    function selectActiveAccount(key, e) {
+      if (e) e.stopPropagation();
+      
+      // Update persistent storage
+      localStorage.setItem('ggwins_active_wallet', key);
+      
+      // Call engine if present
+      if (typeof window.setActiveWalletKey === 'function') {
+        window.setActiveWalletKey(key);
+      } else if (typeof window.switchWallet === 'function') {
+        window.switchWallet(key);
+      }
+
+      const menu = document.getElementById('wallet-menu');
+      if (menu) menu.classList.remove('open');
+      closeAccountSwitchModal();
+
+      updateWalletUI();
+      showToastMsg(`✅ Switched to ${key === 'demo' ? '🎮 Demo Practice' : key === 'real' ? '🇮🇳 Real Deposited INR' : '₮ USDT Crypto'}!`);
+    }
+
+    function updateWalletUI() {
+      const wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 25000, usdt: 500 };
+      const active = localStorage.getItem('ggwins_active_wallet') || 'demo';
+
+      // Update dropdown option styles
+      ['demo', 'real', 'usdt'].forEach(k => {
+        const opt = document.getElementById('w-opt-' + k);
+        if (opt) {
+          if (k === active) opt.classList.add('active-wallet');
+          else opt.classList.remove('active-wallet');
+        }
+      });
+
+      const dEl = document.getElementById('bal-txt-demo');
+      const rEl = document.getElementById('bal-txt-real');
+      const uEl = document.getElementById('bal-txt-usdt');
+      if (dEl) dEl.textContent = '₹' + (parseFloat(wallets.demo)||10000).toLocaleString('en-IN', {minimumFractionDigits: 2});
+      if (rEl) rEl.textContent = '₹' + (parseFloat(wallets.real)||25000).toLocaleString('en-IN', {minimumFractionDigits: 2});
+      if (uEl) uEl.textContent = '$' + (parseFloat(wallets.usdt)||500).toLocaleString('en-US', {minimumFractionDigits: 2});
+
+      // Update header top balance display
+      const topBal = document.getElementById('top-bal-display');
+      const topIcon = document.getElementById('active-acc-icon');
+
+      if (active === 'demo') {
+        if (topIcon) topIcon.textContent = '🎮';
+        if (topBal) {
+          topBal.textContent = '₹' + (parseFloat(wallets.demo)||10000).toLocaleString('en-IN', {minimumFractionDigits: 0});
+          topBal.style.color = '#00e676';
+        }
+      } else if (active === 'real') {
+        if (topIcon) topIcon.textContent = '🇮🇳';
+        if (topBal) {
+          topBal.textContent = '₹' + (parseFloat(wallets.real)||25000).toLocaleString('en-IN', {minimumFractionDigits: 0});
+          topBal.style.color = '#ffd700';
+        }
+      } else {
+        if (topIcon) topIcon.textContent = '₮';
+        if (topBal) {
+          topBal.textContent = '$' + (parseFloat(wallets.usdt)||500).toLocaleString('en-US', {minimumFractionDigits: 0});
+          topBal.style.color = '#26a17b';
+        }
+      }
+
+      updateAccountModalDisplay();
+    }
+
+    // ── VIP ROOM MODAL LOGIC ──
+    function openVipRoomModal() {
+      const session = JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+      const isVipApproved = session && (session.isVIP || session.vipApproved || (session.vipLevel && session.vipLevel !== 'Standard' && session.vipLevel !== 'Bronze_Pending'));
+
+      if (isVipApproved) {
+        const m = document.getElementById('vip-room-modal');
+        if (m) m.classList.add('active');
+      } else {
+        const m = document.getElementById('vip-locked-modal');
+        if (m) m.classList.add('active');
+      }
+    }
+
+    function closeVipRoomModal() {
+      const m = document.getElementById('vip-room-modal');
+      if (m) m.classList.remove('active');
+    }
+
+    function closeVipLockedModal() {
+      const m = document.getElementById('vip-locked-modal');
+      if (m) m.classList.remove('active');
+    }
+
+    function sendVipChatMessage() {
+      const input = document.getElementById('vip-room-input');
+      const container = document.getElementById('vip-room-messages');
+      if (!input || !container) return;
+
+      const txt = input.value.trim();
+      if (!txt) return;
+
+      const session = JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+      const name = session && session.username ? session.username : 'VIP Member';
+      const tier = session && session.vipLevel ? session.vipLevel : 'VIP Gold';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble user';
+      bubble.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.2), rgba(147,51,234,0.2))';
+      bubble.style.border = '1.5px solid var(--gold)';
+      bubble.innerHTML = `
+        <div style="font-weight:900;color:var(--gold);display:flex;align-items:center;gap:4px;font-size:11px">
+          <span>👑</span> @${name} <span style="background:var(--gold);color:#000;font-size:7.5px;padding:1px 3px;border-radius:3px">${tier.toUpperCase()}</span>
+        </div>
+        <div style="margin-top:2px;color:#fff;font-size:11px">${txt}</div>
+      `;
+      container.appendChild(bubble);
+      input.value = '';
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // ── CONTINUOUS AUTOMATED FAKE WIN STREAM ──
+    const FAKE_WINS_DATA = [
+      { user: 'Rahul_King', game: '🚀 GG Crash', multi: '42.50x', amount: '₹84,500' },
+      { user: 'Priya_VIP', game: '🎰 Fortune Slots', multi: '120.00x', amount: '₹1,20,000' },
+      { user: 'Amit_Mines', game: '💣 GG Mines', multi: '18.40x', amount: '₹46,800' },
+      { user: 'Vikram_Rummy', game: '🃏 Indian Rummy', multi: 'Pure Seq', amount: '₹65,000' },
+      { user: 'Kabir_Gold', game: '👑 Royale Baccarat', multi: 'Banker 9', amount: '₹95,000' },
+      { user: 'Sameer_99', game: '⚽ Penalty Shot', multi: '5 Goals', amount: '₹38,000' },
+      { user: 'Ananya_Crypto', game: '🪙 Coin Flip 3D', multi: '10x Streak', amount: '$1,450' },
+      { user: 'Karan_Limbo', game: '📈 GG Limbo Rocket', multi: '55.00x', amount: '₹55,000' },
+      { user: 'Rohan_Tower', game: '🐉 Dragon Tower', multi: 'Apex Floor', amount: '₹72,400' },
+      { user: 'Sneha_Wheel', game: '🎡 Fortune Wheel', multi: '50x Wedge', amount: '₹50,000' },
+      { user: 'Deepak_Blackjack', game: '♣️ Blackjack 21', multi: 'Natural 21', amount: '₹42,000' },
+      { user: 'Manish_Plinko', game: '⚽ Plinko Drop', multi: '29.00x Edge', amount: '₹29,000' }
+    ];
+
+    const COMMUNITY_MESSAGES = [
+      { user: 'Rohan_99', text: 'Crash is flying crazy high today!! Cashed out on 15x 🚀' },
+      { user: 'Aman_Pro', text: 'Just withdrew ₹35,000 to my UPI account, received in 2 minutes! 💯' },
+      { user: 'Pooja_K', text: 'Used coupon code GG1675 and got 100% matched deposit bonus 💰' },
+      { user: 'Dev_Gamer', text: 'Who is registered in the ₹50 Rummy Tournament? 🏆' },
+      { user: 'Sanjay_V', text: 'Fortune slots dropped 3 wild multipliers in a row 🔥' },
+      { user: 'Kunal_VIP', text: 'VIP daily cash vault gave me ₹150 directly to my wallet 👑' }
+    ];
+
+    function startContinuousWinStream() {
+      setInterval(() => {
+        const container = document.getElementById('chat-messages');
+        if (!container) return;
+
+        if (container.children.length > 50) {
+          container.removeChild(container.children[2]);
+        }
+
+        const isWinAlert = Math.random() > 0.4;
+        const bubble = document.createElement('div');
+
+        if (isWinAlert) {
+          const w = FAKE_WINS_DATA[Math.floor(Math.random() * FAKE_WINS_DATA.length)];
+          bubble.className = 'chat-bubble win-alert';
+          bubble.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;font-weight:900;color:var(--green);font-size:10.5px">
+              <span>🎉 BIG WIN</span>
+              <span style="color:var(--gold)">${w.amount}</span>
+            </div>
+            <div style="margin-top:2px;color:#f8fafc;font-size:11px">
+              <strong>@${w.user}</strong> won on <strong>${w.game}</strong> (${w.multi})!
+            </div>
+          `;
+        } else {
+          const c = COMMUNITY_MESSAGES[Math.floor(Math.random() * COMMUNITY_MESSAGES.length)];
+          bubble.className = 'chat-bubble player-chat';
+          bubble.innerHTML = `
+            <div style="font-weight:800;color:#38bdf8;font-size:10.5px">@${c.user}</div>
+            <div style="margin-top:1px;font-size:11px">${c.text}</div>
+          `;
+        }
+
+        container.appendChild(bubble);
+        container.scrollTop = container.scrollHeight;
+      }, 3200);
+    }
+
+    // ── ALL 20 TOURNAMENTS WITH BOTS AT TOP ──
+    const TOURNAMENTS_DATA = [
+      { id: 't_crash', name: 'GG Crash Grand Prix', icon: '🚀', pool: '₹50,000', bots: [
+        { name: '🤖 AlphaRocket_AI', score: '99,420 pts', isBot: true },
+        { name: '🤖 QuantumDerby_Bot', score: '96,180 pts', isBot: true },
+        { name: '🤖 HyperCrash_AI', score: '91,750 pts', isBot: true }
+      ]},
+      { id: 't_mines', name: 'GG Mines Gold Hunt', icon: '💣', pool: '₹45,000', bots: [
+        { name: '🤖 DiamondSeeker_AI', score: '98,900 pts', isBot: true },
+        { name: '🤖 MineSweeper_Bot', score: '94,620 pts', isBot: true },
+        { name: '🤖 GridMaster_AI', score: '89,400 pts', isBot: true }
+      ]},
+      { id: 't_limbo', name: 'Limbo Rocket Challenge', icon: '📈', pool: '₹35,000', bots: [
+        { name: '🤖 TargetHunter_AI', score: '97,800 pts', isBot: true },
+        { name: '🤖 RocketStrike_Bot', score: '93,150 pts', isBot: true },
+        { name: '🤖 MoonLander_AI', score: '88,900 pts', isBot: true }
+      ]},
+      { id: 't_dragontower', name: 'Dragon Tower Apex', icon: '🐉', pool: '₹40,000', bots: [
+        { name: '🤖 DragonClimber_AI', score: '98,200 pts', isBot: true },
+        { name: '🤖 FireMaster_Bot', score: '92,400 pts', isBot: true },
+        { name: '🤖 SkyTower_AI', score: '87,600 pts', isBot: true }
+      ]},
+      { id: 't_diamonds', name: 'Diamond Rush Cup', icon: '💎', pool: '₹30,000', bots: [
+        { name: '🤖 JewelKing_AI', score: '96,500 pts', isBot: true },
+        { name: '🤖 GemBlitz_Bot', score: '91,200 pts', isBot: true },
+        { name: '🤖 Sparkle_AI', score: '86,750 pts', isBot: true }
+      ]},
+      { id: 't_slots', name: 'Fortune Slots Mega Jackpot', icon: '🎰', pool: '₹60,000', bots: [
+        { name: '🤖 TripleSeven_AI', score: '99,800 pts', isBot: true },
+        { name: '🤖 SpinMaster_Bot', score: '95,300 pts', isBot: true },
+        { name: '🤖 MegaReel_AI', score: '90,100 pts', isBot: true }
+      ]},
+      { id: 't_plinko', name: 'Plinko Drop Extravaganza', icon: '⚽', pool: '₹35,000', bots: [
+        { name: '🤖 PegboardAce_AI', score: '97,400 pts', isBot: true },
+        { name: '🤖 PinDropper_Bot', score: '92,800 pts', isBot: true },
+        { name: '🤖 BounceElite_AI', score: '87,200 pts', isBot: true }
+      ]},
+      { id: 't_rummy', name: 'Indian Rummy 3D Masters', icon: '🃏', pool: '₹75,000', bots: [
+        { name: '🤖 DesiRummyPro_AI', score: '104,200 pts', isBot: true },
+        { name: '🤖 PureSequence_Bot', score: '98,900 pts', isBot: true },
+        { name: '🤖 JokerSlam_AI', score: '93,400 pts', isBot: true }
+      ]},
+      { id: 't_baccarat', name: 'Royale Baccarat High Rollers', icon: '👑', pool: '₹55,000', bots: [
+        { name: '🤖 BankerKing_AI', score: '99,100 pts', isBot: true },
+        { name: '🤖 NaturalNine_Bot', score: '94,500 pts', isBot: true },
+        { name: '🤖 PuntoBanco_AI', score: '89,800 pts', isBot: true }
+      ]},
+      { id: 't_blackjack', name: 'Blackjack 21 Pro League', icon: '♣️', pool: '₹65,000', bots: [
+        { name: '🤖 CardCounter_AI', score: '101,400 pts', isBot: true },
+        { name: '🤖 DealerBust_Bot', score: '96,700 pts', isBot: true },
+        { name: '🤖 AceTenMaster_AI', score: '91,250 pts', isBot: true }
+      ]},
+      { id: 't_roulette', name: 'Roulette Royale Wheel Cup', icon: '🔴', pool: '₹50,000', bots: [
+        { name: '🤖 SpinViper_AI', score: '98,700 pts', isBot: true },
+        { name: '🤖 ZeroSector_Bot', score: '93,900 pts', isBot: true },
+        { name: '🤖 RedBlack_AI', score: '88,600 pts', isBot: true }
+      ]},
+      { id: 't_sicbo', name: 'Sic Bo 3-Dice Championship', icon: '🎲', pool: '₹35,000', bots: [
+        { name: '🤖 TripleDice_AI', score: '96,200 pts', isBot: true },
+        { name: '🤖 BigSmall_Bot', score: '91,800 pts', isBot: true },
+        { name: '🤖 DiceRoller_AI', score: '86,400 pts', isBot: true }
+      ]},
+      { id: 't_hilo', name: 'Hilo Master Predictor', icon: '🃏', pool: '₹30,000', bots: [
+        { name: '🤖 HighLowAce_AI', score: '95,800 pts', isBot: true },
+        { name: '🤖 NextCard_Bot', score: '90,400 pts', isBot: true },
+        { name: '🤖 KingQueen_AI', score: '85,900 pts', isBot: true }
+      ]},
+      { id: 't_coinflip', name: 'Coin Flip 3D Streak Arena', icon: '🪙', pool: '₹40,000', bots: [
+        { name: '🤖 HeadsTails_AI', score: '97,600 pts', isBot: true },
+        { name: '🤖 FlipStreak_Bot', score: '92,100 pts', isBot: true },
+        { name: '🤖 GoldenCoin_AI', score: '87,300 pts', isBot: true }
+      ]},
+      { id: 't_penalty', name: 'Penalty Shootout Golden Cup', icon: '⚽', pool: '₹45,000', bots: [
+        { name: '🤖 TopCorner_AI', score: '98,500 pts', isBot: true },
+        { name: '🤖 GoalKeeper_Bot', score: '93,700 pts', isBot: true },
+        { name: '🤖 StrikerAce_AI', score: '88,900 pts', isBot: true }
+      ]},
+      { id: 't_cups', name: 'Magic Shells Wizard Trophy', icon: '🪄', pool: '₹35,000', bots: [
+        { name: '🤖 ShellFinder_AI', score: '96,900 pts', isBot: true },
+        { name: '🤖 MagicEye_Bot', score: '91,600 pts', isBot: true },
+        { name: '🤖 CupTrick_AI', score: '86,800 pts', isBot: true }
+      ]},
+      { id: 't_ludo', name: 'Ludo Champions 4-Player Clash', icon: '🎲', pool: '₹50,000', bots: [
+        { name: '🤖 LudoKing_AI', score: '99,300 pts', isBot: true },
+        { name: '🤖 TokenRunner_Bot', score: '94,200 pts', isBot: true },
+        { name: '🤖 SixMaster_AI', score: '89,500 pts', isBot: true }
+      ]},
+      { id: 't_dice', name: 'Classic Dice 3D Duel', icon: '🎲', pool: '₹30,000', bots: [
+        { name: '🤖 OverUnder_AI', score: '95,400 pts', isBot: true },
+        { name: '🤖 RollAce_Bot', score: '90,800 pts', isBot: true },
+        { name: '🤖 LuckySeven_AI', score: '85,300 pts', isBot: true }
+      ]},
+      { id: 't_wheel', name: 'Wheel of Fortune Mega Spin', icon: '🎡', pool: '₹55,000', bots: [
+        { name: '🤖 FortuneWheel_AI', score: '98,800 pts', isBot: true },
+        { name: '🤖 BigMultiplier_Bot', score: '93,400 pts', isBot: true },
+        { name: '🤖 JackpotSpin_AI', score: '88,700 pts', isBot: true }
+      ]},
+      { id: 't_keno', name: 'Keno Classic Number Sprint', icon: '🎱', pool: '₹30,000', bots: [
+        { name: '🤖 LuckyNumber_AI', baseScore: 95100, isBot: true },
+        { name: '🤖 KenoDraw_Bot', baseScore: 90200, isBot: true },
+        { name: '🤖 BallSelect_AI', baseScore: 85600, isBot: true }
+      ]},
+      { id: 't_snakes', name: 'Snakes & Ladders 3D Clash', icon: '🐍', pool: '₹50,000', bots: [
+        { name: '🤖 SnakeMaster_AI', baseScore: 99600, isBot: true },
+        { name: '🤖 LadderClimber_Bot', baseScore: 94800, isBot: true },
+        { name: '🤖 DiceKing_AI', baseScore: 89900, isBot: true }
+      ]},
+      { id: 't_andarbahar', name: 'Andar Bahar 3D Championship', icon: '🃏', pool: '₹60,000', bots: [
+        { name: '🤖 JokerHunter_AI', baseScore: 102400, isBot: true },
+        { name: '🤖 AndarStreak_Bot', baseScore: 96800, isBot: true },
+        { name: '🤖 BaharKing_AI', baseScore: 91500, isBot: true }
+      ]},
+      { id: 't_teenpatti', name: 'Teen Patti 3D Royal Showdown', icon: '👑', pool: '₹80,000', bots: [
+        { name: '🤖 RoyalTrail_AI', baseScore: 105800, isBot: true },
+        { name: '🤖 PureSeq_Bot', baseScore: 98900, isBot: true },
+        { name: '🤖 ChaalMaster_AI', baseScore: 93200, isBot: true }
+      ]},
+      { id: 't_aviator', name: 'Aviator Jet 3D Supersonic Cup', icon: '🚀', pool: '₹1,00,000', bots: [
+        { name: '🤖 Supersonic_AI', baseScore: 108900, isBot: true },
+        { name: '🤖 HighAltitude_Bot', baseScore: 99800, isBot: true },
+        { name: '🤖 CashoutKing_AI', baseScore: 94500, isBot: true }
+      ]},
+      { id: 't_carrom', name: 'Carrom 3D Master League', icon: '🎯', pool: '₹50,000', bots: [
+        { name: '🤖 StrikerPro_AI', baseScore: 99800, isBot: true },
+        { name: '🤖 QueenCover_Bot', baseScore: 95400, isBot: true },
+        { name: '🤖 PocketMaster_AI', baseScore: 89900, isBot: true }
+      ]}
+    ];
+
+    // ── 🔄 WEEKLY TOURNAMENT RESET ENGINE ──
+    function getTournamentWeekKey() {
+      const d = new Date();
+      const startOfYear = new Date(d.getFullYear(), 0, 1);
+      const weekNum = Math.ceil((((d - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);
+      return `week_${d.getFullYear()}_${weekNum}`;
+    }
+
+    function checkAndPerformWeeklyTournamentReset() {
+      try {
+        const currentWeek = getTournamentWeekKey();
+        const savedWeek = localStorage.getItem('ggwins_tournament_current_week');
+
+        if (savedWeek && savedWeek !== currentWeek) {
+          // New weekly cycle: archive and reset points to 0 for fresh week
+          const registered = JSON.parse(localStorage.getItem('ggwins_registered_tournaments') || '{}');
+          for (const tId in registered) {
+            registered[tId].points = 0;
+            registered[tId].wins = 0;
+            registered[tId].losses = 0;
+            registered[tId].matches = 0;
+            registered[tId].resetAt = Date.now();
+          }
+          localStorage.setItem('ggwins_registered_tournaments', JSON.stringify(registered));
+          localStorage.setItem('ggwins_tournament_current_week', currentWeek);
+          if (typeof showToastMsg === 'function') {
+            showToastMsg('🔄 Weekly Tournament Leaderboard Reset! New weekly season is now active.');
+          }
+        } else if (!savedWeek) {
+          localStorage.setItem('ggwins_tournament_current_week', currentWeek);
+        }
+      } catch(e) {}
+    }
+
+    function openTournamentsModal() {
+      checkAndPerformWeeklyTournamentReset();
+      renderTournamentsGrid();
+      const m = document.getElementById('tourn-modal');
+      if (m) m.classList.add('active');
+    }
+
+    function closeTournamentsModal() {
+      const m = document.getElementById('tourn-modal');
+      if (m) m.classList.remove('active');
+    }
+
+    function renderTournamentsGrid() {
+      const container = document.getElementById('tourn-grid-container');
+      if (!container) return;
+
+      checkAndPerformWeeklyTournamentReset();
+
+      const registered = JSON.parse(localStorage.getItem('ggwins_registered_tournaments') || '{}');
+      const session = JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+      const playerName = session && session.username ? session.username : 'You (Player)';
+
+      container.innerHTML = TOURNAMENTS_DATA.map(t => {
+        const isJoined = !!registered[t.id];
+        const userEntry = registered[t.id] || { points: 0, wins: 0, losses: 0, matches: 0 };
+        const userPts = userEntry.points || 0;
+
+        // 🤖 Bots ALWAYS Stay at the Top of the Leaderboard
+        const bot3Score = Math.max(t.bots[2].baseScore || 85000, userPts + 5000);
+        const bot2Score = Math.max(t.bots[1].baseScore || 92000, userPts + 10000);
+        const bot1Score = Math.max(t.bots[0].baseScore || 98000, userPts + 15000);
+
+        return `
+          <div class="tourn-card">
+            <div class="tourn-card-header">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:20px">${t.icon}</span>
+                <span class="tourn-title">${t.name}</span>
+              </div>
+              <span class="tourn-pool">${t.pool}</span>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="tourn-fee">Entry: ₹50.00 / week</span>
+              <span style="font-size:9.5px;color:#00e676;font-weight:800">⚔️ +100 W / +50 L</span>
+            </div>
+
+            <div class="tourn-leaderboard">
+              <div style="font-size:9px;font-weight:900;color:#94a3b8;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:2px;display:flex;justify-content:space-between">
+                <span>WEEKLY LEADERBOARD</span>
+                <span style="color:#ffd700">🏆 Top 1 Wins Pool</span>
+              </div>
+              <div class="tourn-row">
+                <span class="tourn-rank rank-1">#1</span>
+                <span class="tourn-user"><span>👑</span> ${t.bots[0].name} <span class="bot-tag">BOT</span></span>
+                <span class="tourn-score">${bot1Score.toLocaleString()} pts</span>
+              </div>
+              <div class="tourn-row">
+                <span class="tourn-rank rank-2">#2</span>
+                <span class="tourn-user">${t.bots[1].name} <span class="bot-tag">BOT</span></span>
+                <span class="tourn-score">${bot2Score.toLocaleString()} pts</span>
+              </div>
+              <div class="tourn-row">
+                <span class="tourn-rank rank-3">#3</span>
+                <span class="tourn-user">${t.bots[2].name} <span class="bot-tag">BOT</span></span>
+                <span class="tourn-score">${bot3Score.toLocaleString()} pts</span>
+              </div>
+              ${isJoined ? `
+                <div class="tourn-row" style="background:rgba(0,230,118,0.14);border:1px solid rgba(0,230,118,0.4);padding:3px 6px;border-radius:6px;margin-top:3px">
+                  <span class="tourn-rank" style="color:var(--green)">#4</span>
+                  <span class="tourn-user" style="color:var(--green);font-weight:800"><span>👤</span> ${playerName}</span>
+                  <span class="tourn-score" style="color:var(--green);font-weight:900">${userPts} pts (${userEntry.wins || 0}W / ${userEntry.losses || 0}L)</span>
+                </div>
+              ` : `
+                <div style="font-size:9px;color:#94a3b8;text-align:center;padding:3px 0;opacity:0.8">
+                  🔒 Register (₹50) to earn tournament points per match
+                </div>
+              `}
+            </div>
+
+            ${isJoined ? `
+              <button class="btn-join-tourn btn-joined">✓ Registered • ${userPts} Pts This Week</button>
+            ` : `
+              <button class="btn-join-tourn" onclick="registerTournament('${t.id}', '${t.name}')">
+                ⚡ Register (₹50)
+              </button>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function registerTournament(tournId, tournName) {
+      const activeWallet = localStorage.getItem('ggwins_active_wallet') || 'demo';
+      const wallets = typeof getWallets === 'function' ? getWallets() : { demo: 10000, real: 25000, usdt: 500 };
+
+      const fee = 50.0;
+      let currKey = activeWallet === 'real' ? 'real' : 'demo';
+
+      if (wallets[currKey] < fee) {
+        showToastMsg(`⚠️ Insufficient balance in ${currKey === 'real' ? 'Real' : 'Demo'} account to pay ₹50 entry fee.`);
+        return;
+      }
+
+      wallets[currKey] -= fee;
+      if (typeof setWallets === 'function') setWallets(wallets);
+      else {
+        localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
+        localStorage.setItem('ggwins_wallets', JSON.stringify(wallets));
+      }
+
+      const registered = JSON.parse(localStorage.getItem('ggwins_registered_tournaments') || '{}');
+      registered[tournId] = {
+        id: tournId,
+        name: tournName,
+        gameId: tournId.replace('t_', ''),
+        joinedAt: Date.now(),
+        points: 0,
+        wins: 0,
+        losses: 0,
+        matches: 0
+      };
+      localStorage.setItem('ggwins_registered_tournaments', JSON.stringify(registered));
+
+      updateWalletUI();
+      renderTournamentsGrid();
+      showToastMsg(`🏆 Registered for ${tournName}! (0 Pts). Play matches to earn +100 Pts per Win / +50 Pts per Loss!`);
+    }
+
+    // ── SIDEBAR CONTROLS ──
+    function toggleSidebarDesktop() {
+      const s = document.getElementById('sidebar');
+      if (s) s.classList.toggle('collapsed');
+    }
+    function toggleSidebarMobile(forceState) {
+      const s = document.getElementById('sidebar');
+      const b = document.getElementById('sidebar-backdrop');
+      if (s) {
+        if (typeof forceState === 'boolean') {
+          if (forceState) s.classList.add('open-mobile');
+          else s.classList.remove('open-mobile');
+        } else {
+          s.classList.toggle('open-mobile');
+        }
+      }
+      if (b) {
+        if (s && s.classList.contains('open-mobile')) b.classList.add('active');
+        else b.classList.remove('active');
+      }
+    }
+
+    // ── LIVE AI AUTOMATED CHAT ──
+    function toggleChatDrawer() {
+      const d = document.getElementById('chat-drawer');
+      if (d) d.classList.toggle('open');
+    }
+
+    function sendQuickPrompt(promptText) {
+      const input = document.getElementById('chat-input');
+      if (input) {
+        input.value = promptText;
+        sendChatMessage();
+      }
+    }
+
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const container = document.getElementById('chat-messages');
+      if (!input || !container) return;
+
+      const txt = input.value.trim();
+      if (!txt) return;
+
+      const uBubble = document.createElement('div');
+      uBubble.className = 'chat-bubble user';
+      uBubble.textContent = txt;
+      container.appendChild(uBubble);
+      input.value = '';
+      container.scrollTop = container.scrollHeight;
+
+      setTimeout(() => {
+        const aiBubble = document.createElement('div');
+        aiBubble.className = 'chat-bubble ai';
+        aiBubble.innerHTML = getAIResponse(txt);
+        container.appendChild(aiBubble);
+        container.scrollTop = container.scrollHeight;
+      }, 500);
+    }
+
+    function getAIResponse(query) {
+      const q = query.toLowerCase();
+      if (q.includes('vip room') || q.includes('vip chat')) {
+        return "💎 <strong>VIP Room Access</strong>: The VIP Room is exclusively available for approved VIP members (Bronze, Silver, Gold, Diamond). You can apply directly on the VIP Club page!";
+      } else if (q.includes('tournament') || q.includes('50') || q.includes('leaderboard')) {
+        return "🏆 <strong>Tournament Info</strong>: Entry fee is ₹50 per game. Compete across all 20 game leaderboards to win big prize pools! Click the '🏆 Tournaments' tab in the sidebar to register!";
+      } else if (q.includes('bonus') || q.includes('gg1675') || q.includes('deposit bonus')) {
+        return "🎁 <strong>100% Welcome Bonus</strong>: Enter promo code <code>GG1675</code> during any deposit to double your cash up to ₹50,000!";
+      } else if (q.includes('withdraw') || q.includes('payout') || q.includes('upi')) {
+        return "⚡ <strong>Instant Withdrawals</strong>: Minimum withdrawal is ₹1,500 via UPI ID or Direct IMPS Bank Transfer in under 15 minutes!";
+      } else if (q.includes('vip') || q.includes('club')) {
+        return "👑 <strong>VIP Club</strong>: Bronze, Silver, and Gold VIP tiers earn daily cash vault drops up to ₹150/day and private VIP Lounge access. Once approved by Admin, your VIP badge will appear on your profile!";
+      } else if (q.includes('crash')) {
+        return "🚀 <strong>GG Crash Rules</strong>: Watch the multiplier climb up to 1,000x! Cash out before the rocket crashes to win.";
+      } else {
+        return `🤖 Hello! As your AI Casino Host, I'm here 24/7. Ask me about games, ₹50 tournaments, or balance options anytime! 🌟`;
+      }
+    }
+
+    // ── LEGAL DEFENCE TERMS & CONDITIONS & PRIVACY POLICY MODALS ──
+    function openInfoModal(type) {
+      const modal = document.getElementById('info-modal');
+      const title = document.getElementById('info-modal-title');
+      const content = document.getElementById('info-modal-content');
+      if (!modal || !title || !content) return;
+
+      if (type === 'terms') {
+        title.textContent = '📜 Terms & Conditions';
+        content.innerHTML = `
+          <div style="background:rgba(239,68,68,0.1);border:1px solid #ef4444;padding:10px;border-radius:8px;margin-bottom:12px">
+            <strong style="color:#ef4444;font-size:12px">⚖️ PRIMARY LEGAL DISCLAIMER &amp; LIMITATION OF LIABILITY:</strong>
+            <p style="margin-top:4px;color:#f8fafc;font-weight:600">
+              <strong>GG WINS IS NOT RESPONSIBLE FOR ANY PLAYER LOSSES UNDER ANY CIRCUMSTANCES.</strong>
+              WE CHARGE SOLELY FOR THE DIGITAL ENTERTAINMENT, SOFTWARE PLATFORM, AND SERVER HOSTING SERVICES WHICH WE PROVIDE. USERS PAY VOLUNTARILY AND EXCLUSIVELY FOR ENTERTAINMENT ACCESS.
+            </p>
+          </div>
+          <h3 style="color:var(--gold);font-size:13px;margin:10px 0 4px">1. Nature of Service – Digital Entertainment Fee</h3>
+          <p>All deposits, registration charges, transaction fees, and tournament entry fees (e.g. ₹50 charges) paid by users constitute consideration strictly for digital gameplay, virtual gaming engines, and server access. GG WINS is NOT a bank, financial institution, or guaranteed return product.</p>
+          <h3 style="color:var(--gold);font-size:13px;margin:10px 0 4px">2. Absolute Disclaimer of Loss Liability</h3>
+          <p>GG WINS, its founders, operators, payment partners, and tech providers bear ABSOLUTELY ZERO LIABILITY for any financial losses incurred while participating on the platform.</p>
+          <h3 style="color:var(--gold);font-size:13px;margin:10px 0 4px">3. No-Chargeback Guarantee</h3>
+          <p>All wallet top-ups are deemed fully consumed upon allocation of in-game credits. The user expressly waives any rights to initiate bank chargebacks or fraud claims.</p>
+        `;
+      } else if (type === 'privacy') {
+        title.textContent = '🔒 Privacy Policy';
+        content.innerHTML = `
+          <div style="background:rgba(0,230,118,0.1);border:1px solid var(--green);padding:10px;border-radius:8px;margin-bottom:12px">
+            <strong style="color:var(--green);font-size:12px">🛡️ ENTERTAINMENT PLATFORM DATA PRIVACY:</strong>
+            <p style="margin-top:4px;color:#f8fafc">
+              GG WINS protects user privacy while clarifying that account credentials and payment references are processed strictly to deliver our digital gaming services.
+            </p>
+          </div>
+          <h3 style="color:var(--gold);font-size:13px;margin:10px 0 4px">1. Data Collected</h3>
+          <p>We collect usernames, emails, hashed passwords (SHA-256), and timestamps solely to manage your gaming profile and ledger balances.</p>
+          <h3 style="color:var(--gold);font-size:13px;margin:10px 0 4px">2. Security &amp; No-Sale Policy</h3>
+          <p>We never sell, rent, or trade player data to external marketing agencies.</p>
+        `;
+      } else if (type === 'help') {
+        title.textContent = '❓ Help & Support Centre';
+        content.innerHTML = `
+          <p><strong>24/7 Player Support:</strong></p>
+          <ul style="margin: 8px 0 12px 18px;">
+            <li><strong>AI Casino Host:</strong> Click the "💬 AI Chat" button for instant real-time assistance.</li>
+            <li><strong>Tournaments:</strong> ₹50 entry fee per game with prize pools up to ₹75,000.</li>
+            <li><strong>Deposits:</strong> Instant UPI QR, PhonePe, Paytm, GooglePay, IMPS, and USDT (TRC-20).</li>
+            <li><strong>Withdrawals:</strong> Processed directly to your bank account or UPI ID in 5-15 mins.</li>
+          </ul>
+        `;
+      }
+      modal.classList.add('active');
+    }
+
+    function closeInfoModal() {
+      const modal = document.getElementById('info-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function showToastMsg(msg) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function openAuthModal(tab = 'login') {
+      const modal = document.getElementById('auth-modal');
+      if (modal) modal.classList.add('active');
+      switchAuthTab(tab);
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('auth-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    // 🔒 Enforce Registration on all Games and Website Features
+    function launchGame(url) {
+      const session = JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+      if (!session) {
+        showToastMsg('🔒 Please register an account first to play games!');
+        openAuthModal('register');
+        return;
+      }
+      window.location.href = url;
+    }
+
+    function requireAuth(actionCallback, msg = '🔒 Please register an account first to continue!') {
+      const session = JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+      if (!session) {
+        showToastMsg(msg);
+        openAuthModal('register');
+        return false;
+      }
+      if (typeof actionCallback === 'function') actionCallback();
+      return true;
+    }
+
+    function switchAuthTab(tab) {
+      const tabLog = document.getElementById('modal-tab-login');
+      const tabReg = document.getElementById('modal-tab-reg');
+      const formLog = document.getElementById('auth-login-form');
+      const formReg = document.getElementById('auth-reg-form');
+      if (tab === 'login') {
+        if (tabLog) tabLog.classList.add('active');
+        if (tabReg) tabReg.classList.remove('active');
+        if (formLog) formLog.style.display = 'block';
+        if (formReg) formReg.style.display = 'none';
+      } else {
+        if (tabReg) tabReg.classList.add('active');
+        if (tabLog) tabLog.classList.remove('active');
+        if (formReg) formReg.style.display = 'block';
+        if (formLog) formLog.style.display = 'none';
+      }
+    }
+
+    // ── PERSISTENT SESSION HELPERS (REMEMBER USER) ──
+    function setPersistentCookie(name, val) {
+      document.cookie = `${name}=${encodeURIComponent(val)}; max-age=31536000; path=/; SameSite=Lax`;
+    }
+    function getPersistentCookie(name) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? decodeURIComponent(match[2]) : null;
+    }
+    function clearPersistentCookie(name) {
+      document.cookie = `${name}=; max-age=0; path=/; SameSite=Lax`;
+    }
+
+    async function submitRegister() {
+      const u = document.getElementById('auth-reg-user').value.trim();
+      const e = document.getElementById('auth-reg-email').value.trim();
+      const p = document.getElementById('auth-reg-pass').value.trim();
+      const refCode = (document.getElementById('auth-reg-ref')?.value || '').trim().toUpperCase();
+      const termsChecked = document.getElementById('terms-agree-check')?.checked;
+
+      if (!u || !e || !p) { showToastMsg('⚠️ Please fill in all fields.'); return; }
+      
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|googlemail\.com|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/i;
+      if (!emailRegex.test(e) || e.length < 6) {
+        showToastMsg('⚠️ Please enter a valid real Google / Gmail address.');
+        return;
+      }
+
+      if (!termsChecked) {
+        showToastMsg('⚠️ You must agree to the Terms & Conditions of GG WINS to register.');
+        return;
+      }
+
+      const userObj = {
+        username: u,
+        email: e,
+        password: p,
+        avatar: '👑',
+        isVIP: false,
+        vipApproved: false,
+        vipLevel: 'None',
+        wallets: { demo: 10000, real: 0, usdt: 0 },
+        agreedToTerms: true,
+        agreedAt: new Date().toISOString(),
+        referredBy: refCode || null
+      };
+
+      let registeredUser = userObj;
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, email: e, password: p, referralCode: refCode, agreedToTerms: true })
+        });
+        const data = await res.json();
+        if (data && data.user) {
+          registeredUser = { ...userObj, ...data.user };
+        }
+      } catch(err){}
+
+      const users = JSON.parse(localStorage.getItem('ggwins_users') || '[]');
+      users.push(registeredUser);
+      localStorage.setItem('ggwins_users', JSON.stringify(users));
+      localStorage.setItem('ggwins_session', JSON.stringify(registeredUser));
+      localStorage.setItem('ggwins_wallets_v2', JSON.stringify(registeredUser.wallets));
+      localStorage.setItem('ggwins_wallets', JSON.stringify(registeredUser.wallets));
+      localStorage.setItem('ggwins_vip_level', 'None');
+      setPersistentCookie('ggwins_persistent_user', JSON.stringify(registeredUser));
+
+      showToastMsg(`🎉 Welcome, ${u}! Real Balance: ₹0.00 | Practice Demo: ₹10,000.`);
+      closeAuthModal();
+      checkAuthUI();
+      if (typeof updateAllWalletDisplays === 'function') updateAllWalletDisplays();
+    }
+
+    // ── REFER & EARN MODAL CONTROLS ──
+    function openReferModal() {
+      const session = JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+      if (!session || !session.username) {
+        showToastMsg('🔒 Please sign in or register to get your Referral Code!');
+        openAuthModal('register');
+        return;
+      }
+
+      const refCode = session.username.toUpperCase();
+      const codeInput = document.getElementById('my-ref-code-input');
+      if (codeInput) codeInput.value = refCode;
+
+      // Update stats from session or server
+      const stats = session.stats || {};
+      const earningsEl = document.getElementById('ref-stat-earnings');
+      const countEl = document.getElementById('ref-stat-count');
+      if (earningsEl) earningsEl.textContent = '₹' + (parseFloat(stats.referralEarnings || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+      if (countEl) countEl.textContent = (stats.referralCount || 0) + ' Players';
+
+      const m = document.getElementById('refer-modal');
+      if (m) m.classList.add('active');
+    }
+
+    function closeReferModal() {
+      const m = document.getElementById('refer-modal');
+      if (m) m.classList.remove('active');
+    }
+
+    function copyReferralCode() {
+      const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
+      const refCode = (session.username || 'PLAYER').toUpperCase();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(refCode);
+      }
+      showToastMsg(`📋 Referral Code Copied: ${refCode}`);
+    }
+
+    function copyReferralLink() {
+      const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
+      const refCode = (session.username || 'PLAYER').toUpperCase();
+      const link = `${window.location.origin}/?ref=${encodeURIComponent(refCode)}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link);
+      }
+      showToastMsg(`🔗 Referral Link Copied: ${link}`);
+    }
+
+    function shareReferralWhatsApp() {
+      const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
+      const refCode = (session.username || 'PLAYER').toUpperCase();
+      const link = `${window.location.origin}/?ref=${encodeURIComponent(refCode)}`;
+      const msg = `🔥 Hey! Join me on GG WINS - India's #1 Casino & Skill Gaming Platform! Use my Referral Code [${refCode}] to signup and claim your ₹10,000 Demo Bonus!\n\nPlay here: ${link}`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // Auto-populate referral code if ?ref= is present in URL
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) {
+          const cleanRef = ref.toUpperCase().trim();
+          localStorage.setItem('ggwins_applied_ref', cleanRef);
+          const refInput = document.getElementById('auth-reg-ref');
+          if (refInput) refInput.value = cleanRef;
+        }
+      } catch(e){}
+    });
+
+    async function submitLogin() {
+      const u = document.getElementById('auth-login-user').value.trim();
+      const p = document.getElementById('auth-login-pass').value.trim();
+      if (!u || !p) { showToastMsg('⚠️ Please enter username & password.'); return; }
+
+      let found = null;
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: u, password: p })
+        });
+        const data = await res.json();
+        if (data.success && data.user) found = data.user;
+      } catch(err){}
+
+      if (!found) {
+        const users = JSON.parse(localStorage.getItem('ggwins_users') || '[]');
+        found = users.find(x => (x.username.toLowerCase() === u.toLowerCase() || x.email.toLowerCase() === u.toLowerCase()) && (x.password === p || x.plainPass === p));
+      }
+
+      if (found) {
+        localStorage.setItem('ggwins_session', JSON.stringify(found));
+        setPersistentCookie('ggwins_persistent_user', JSON.stringify(found));
+        showToastMsg(`🎮 Welcome back, ${found.username}!`);
+        closeAuthModal();
+        checkAuthUI();
+      } else {
+        showToastMsg('❌ Incorrect credentials. Try again.');
+      }
+    }
+
+    // ── VIP STATUS & AUTH UI SYNC ──
+    async function checkAuthUI() {
+      let session = JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+
+      if (!session) {
+        try {
+          const cookieData = getPersistentCookie('ggwins_persistent_user');
+          if (cookieData) {
+            session = JSON.parse(cookieData);
+            localStorage.setItem('ggwins_session', JSON.stringify(session));
+          }
+        } catch(e){}
+      }
+
+      const authBtns = document.getElementById('auth-buttons');
+      const userPill = document.getElementById('user-pill');
+      const userLbl = document.getElementById('username-lbl');
+      const vipPromoIcon = document.getElementById('vip-new-user-icon');
+      const userVipBadge = document.getElementById('user-vip-awarded-badge');
+
+      let isVipApproved = false;
+      let vipTierName = 'VIP';
+
+      if (session && session.username) {
+        if (authBtns) authBtns.style.display = 'none';
+        if (userPill) userPill.style.display = 'flex';
+        if (userLbl) userLbl.textContent = session.username;
+
+        if (session.isVIP || session.vipApproved || (session.vipLevel && session.vipLevel !== 'Standard' && session.vipLevel !== 'Bronze_Pending')) {
+          isVipApproved = true;
+          vipTierName = session.vipLevel || 'VIP';
+        }
+
+        try {
+          const res = await fetch('/api/user-status?username=' + encodeURIComponent(session.username));
+          const data = await res.json();
+          if (data && data.user) {
+            if (data.user.vipApproved || (data.user.vipLevel && !data.user.vipLevel.includes('Pending') && data.user.vipLevel !== 'Standard')) {
+              isVipApproved = true;
+              vipTierName = data.user.vipLevel;
+              session.isVIP = true;
+              session.vipApproved = true;
+              session.vipLevel = vipTierName;
+            }
+            if (data.user.wallets) {
+              localStorage.setItem('ggwins_wallets_v2', JSON.stringify(data.user.wallets));
+              localStorage.setItem('ggwins_wallets', JSON.stringify(data.user.wallets));
+            }
+            localStorage.setItem('ggwins_session', JSON.stringify(session));
+            setPersistentCookie('ggwins_persistent_user', JSON.stringify(session));
+          }
+        } catch(err){}
+      } else {
+        if (authBtns) authBtns.style.display = 'flex';
+        if (userPill) userPill.style.display = 'none';
+      }
+
+      if (isVipApproved) {
+        if (vipPromoIcon) vipPromoIcon.style.display = 'none';
+        if (userVipBadge) {
+          userVipBadge.style.display = 'inline-flex';
+          userVipBadge.textContent = '👑 ' + vipTierName;
+        }
+      } else {
+        if (vipPromoIcon) vipPromoIcon.style.display = 'inline-flex';
+        if (userVipBadge) userVipBadge.style.display = 'none';
+      }
+
+      updateWalletUI();
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('ggwins_session');
+      clearPersistentCookie('ggwins_persistent_user');
+      showToastMsg('👋 Logged out successfully.');
+      checkAuthUI();
+    }
+
+    let activeCategory = 'all';
+
+    function filterGames(cat, btn) {
+      activeCategory = cat;
+      document.querySelectorAll('#filter-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const q = (document.getElementById('game-search-input')?.value || '').toLowerCase().trim();
+      applyFiltersAndSearch(cat, q);
+    }
+
+    function handleGameSearch(query) {
+      const q = query.toLowerCase().trim();
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.style.display = q ? 'flex' : 'none';
+      applyFiltersAndSearch(activeCategory, q);
+    }
+
+    function clearGameSearch() {
+      const input = document.getElementById('game-search-input');
+      if (input) {
+        input.value = '';
+        handleGameSearch('');
+      }
+    }
+
+    function applyFiltersAndSearch(cat, q) {
+      const cards = document.querySelectorAll('#games-grid .game-card');
+      let visibleCount = 0;
+      cards.forEach(card => {
+        const title = (card.querySelector('.game-name')?.textContent || '').toLowerCase();
+        const tag = (card.querySelector('.game-tag')?.textContent || '').toLowerCase();
+        const cardCat = (card.dataset.category || '').toLowerCase();
+
+        const catMatches = (cat === 'all' || cardCat.includes(cat));
+        const searchMatches = (!q || title.includes(q) || tag.includes(q) || cardCat.includes(q));
+
+        if (catMatches && searchMatches) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuthUI();
+      updateWalletUI();
+      startContinuousWinStream();
+      setInterval(checkAuthUI, 8000);
+
+      // Auto-popup register window if redirected from games or requested
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('action') === 'register') {
+        setTimeout(() => {
+          openAuthModal('register');
+          showToastMsg('🔒 Please register your account to start playing!');
+        }, 300);
+      } else if (urlParams.get('action') === 'login') {
+        setTimeout(() => openAuthModal('login'), 300);
+      }
+    });
+    checkAuthUI();
+    updateWalletUI();
+  </script>
+</body>
+</html>

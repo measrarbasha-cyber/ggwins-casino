@@ -1,0 +1,645 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>👑 VIP Membership Checkout – GG Wins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="security-guard.js"></script>
+<style>
+:root {
+  --bg: #070a13;
+  --bg-card: #0f1527;
+  --gold: #ffd700;
+  --green: #00e676;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-gold: rgba(255, 215, 0, 0.35);
+}
+
+html, body {
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  background: radial-gradient(circle at 50% 10%, #151838 0%, #080914 60%, #030408 100%);
+  color: #f8fafc;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px;
+}
+
+.checkout-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: rgba(15, 21, 39, 0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-gold);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.checkout-brand {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkout-container {
+  max-width: 640px;
+  width: 100%;
+  margin: 28px auto 40px;
+  padding: 0 16px;
+}
+
+.checkout-card {
+  background: linear-gradient(145deg, #111827, #0d121f);
+  border: 2px solid var(--border-gold);
+  border-radius: 24px;
+  padding: 28px 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 215, 0, 0.15);
+}
+
+/* Tier Selector Pills */
+.tier-pills-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tier-pill-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tier-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.tier-pill-btn.active.bronze {
+  background: rgba(205, 127, 50, 0.15);
+  border-color: #cd7f32;
+  box-shadow: 0 0 16px rgba(205, 127, 50, 0.35);
+}
+
+.tier-pill-btn.active.silver {
+  background: rgba(192, 192, 192, 0.15);
+  border-color: #c0c0c0;
+  box-shadow: 0 0 16px rgba(192, 192, 192, 0.35);
+}
+
+.tier-pill-btn.active.gold {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.tier-pill-icon { font-size: 22px; }
+.tier-pill-name { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 800; color: #fff; }
+.tier-pill-price { font-size: 11.5px; font-weight: 700; color: var(--green); }
+
+/* Plan Summary Box */
+.plan-summary-box {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 230, 118, 0.08));
+  border: 1.5px solid var(--border-gold);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* 3-QR Container */
+.qr-checkout-box {
+  display: flex;
+  gap: 14px;
+  background: #090e17;
+  border: 2px solid var(--border-gold);
+  border-radius: 16px;
+  padding: 14px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.qr-thumb-wrap {
+  width: 100px;
+  height: 100px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 6px;
+  position: relative;
+  cursor: pointer;
+  border: 2px solid #ffd700;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.qr-thumb-wrap:hover { transform: scale(1.04); }
+.qr-thumb-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 8px; }
+
+.qr-badge-chip {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #ffd700;
+  color: #000;
+  font-size: 9.5px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.qr-info-side { flex: 1; overflow: hidden; }
+.qr-upi-label { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 3px; }
+.qr-upi-val { font-family: monospace; font-size: 14px; font-weight: 900; color: #00e676; margin-bottom: 8px; word-break: break-all; }
+
+.qr-btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.qr-btn {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+.qr-btn-rot { background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; }
+.qr-btn-rot:hover { background: #ffd700; color: #000; }
+.qr-btn-copy { background: rgba(0, 230, 118, 0.15); border: 1px solid #00e676; color: #00e676; }
+.qr-btn-copy:hover { background: #00e676; color: #000; }
+.qr-btn-pop { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; }
+.qr-btn-pop:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* UTR Form */
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 12px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.form-input-wrap {
+  display: flex;
+  align-items: center;
+  background: #090e17;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0 14px;
+  transition: all 0.2s;
+}
+.form-input-wrap:focus-within {
+  border-color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.25);
+}
+.form-input {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 0;
+  outline: none;
+}
+
+.btn-submit-checkout {
+  width: 100%;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  padding: 15px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+}
+.btn-submit-checkout:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 35px rgba(255, 215, 0, 0.7);
+}
+
+/* Lightbox Modal */
+.qr-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(16px);
+  z-index: 100000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.qr-lightbox.show { display: flex; animation: modalSlideUp 0.2s ease; }
+.qr-lightbox-card {
+  background: #111827;
+  border: 2px solid #ffd700;
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+}
+.qr-lightbox-close {
+  position: absolute;
+  top: 14px; right: 14px;
+  background: rgba(255,255,255,0.1);
+  border: none; color: #fff;
+  font-size: 14px; font-weight: 800;
+  width: 28px; height: 28px; border-radius: 50%;
+  cursor: pointer;
+}
+.qr-lightbox-img-wrap {
+  width: 210px; height: 210px;
+  background: #fff; border-radius: 12px;
+  padding: 8px; margin: 14px auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.qr-lightbox-img-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 8px; }
+
+/* Success Screen */
+.success-screen {
+  display: none;
+  text-align: center;
+  padding: 10px 0;
+  animation: modalSlideUp 0.3s ease;
+}
+.success-screen.show { display: block; }
+</style>
+</head>
+<body>
+
+<nav class="checkout-nav">
+  <a href="vip.html" style="display:flex;align-items:center;gap:6px;color:#f8fafc;text-decoration:none;font-weight:700;font-size:13px;background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:8px">
+    ← Back to VIP Plans
+  </a>
+  <div class="checkout-brand">
+    <span>👑</span> VIP Membership <span>Checkout</span>
+  </div>
+  <a href="index.html" style="color:#94a3b8;text-decoration:none;font-size:13px;font-weight:600">Lobby 🎮</a>
+</nav>
+
+<div class="checkout-container">
+  <div class="checkout-card">
+
+    <!-- Form Section -->
+    <div id="checkout-form-section">
+      <div style="text-align:center;margin-bottom:18px">
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:900;color:#ffd700;margin-bottom:4px">
+          👑 Activate Monthly VIP Membership
+        </h1>
+        <p style="font-size:12.5px;color:#94a3b8;margin:0">Pay via UPI QR Code and get approved by host for instant VIP Room access.</p>
+      </div>
+
+      <!-- 1. Select Membership Tier -->
+      <label class="form-label">1. Select VIP Membership Tier (Valid 1 Month)</label>
+      <div class="tier-pills-grid">
+        <div class="tier-pill-btn bronze" id="pill-bronze" onclick="selectTier('bronze')">
+          <div class="tier-pill-icon">🥉</div>
+          <div class="tier-pill-name">Bronze VIP</div>
+          <div class="tier-pill-price">₹1,699 / mo</div>
+          <div style="font-size:10px;color:#ffd700">+₹35 Daily</div>
+        </div>
+
+        <div class="tier-pill-btn silver" id="pill-silver" onclick="selectTier('silver')">
+          <div class="tier-pill-icon">🥈</div>
+          <div class="tier-pill-name">Silver VIP</div>
+          <div class="tier-pill-price">₹2,899 / mo</div>
+          <div style="font-size:10px;color:#ffd700">+₹60 Daily</div>
+        </div>
+
+        <div class="tier-pill-btn gold active" id="pill-gold" onclick="selectTier('gold')">
+          <div class="tier-pill-icon">👑</div>
+          <div class="tier-pill-name">Gold VIP</div>
+          <div class="tier-pill-price">₹5,499 / mo</div>
+          <div style="font-size:10px;color:#ffd700">+₹150 Daily</div>
+        </div>
+      </div>
+
+      <!-- 2. Plan Summary Breakdown -->
+      <div class="plan-summary-box">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:900;color:#fff" id="summary-plan-title">
+            👑 Gold VIP Membership
+          </div>
+          <div style="font-size:12px;color:#cbd5e1;margin-top:2px" id="summary-plan-desc">
+            Includes <strong>₹150 Daily Vault Cashback</strong> (₹4,500/mo) + VIP Lounge Room.
+          </div>
+          <div style="font-size:11px;color:#00e676;font-weight:700;margin-top:4px">
+            📅 Validity: 1 Month (30 Days from activation)
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase">Total Payable</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:900;color:#ffd700" id="summary-plan-price">
+            ₹5,499
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Exact 3-QR UPI Box -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <label class="form-label" style="margin-bottom:0">2. Scan QR or Copy UPI ID</label>
+        <button type="button" class="qr-btn qr-btn-rot" onclick="rotateCheckoutQR()" id="checkout-rot-top">🔄 Next QR (1/3)</button>
+      </div>
+
+      <div class="qr-checkout-box">
+        <div class="qr-thumb-wrap" onclick="openCheckoutLightbox()" title="Click to pop up & save QR image">
+          <img id="checkout-qr-img" src="assets/qr1.jpg" alt="UPI QR Code" data-idx="0">
+          <div class="qr-badge-chip" id="checkout-qr-badge">1/3</div>
+        </div>
+        <div class="qr-info-side">
+          <div class="qr-upi-label">Pay to Official UPI ID:</div>
+          <div class="qr-upi-val" id="checkout-upi-val">amdasrarbasha-1@oksbi</div>
+          <div class="qr-btn-row">
+            <button type="button" class="qr-btn qr-btn-copy" onclick="copyCheckoutUPI(this)">📋 Copy UPI</button>
+            <button type="button" class="qr-btn qr-btn-pop" onclick="openCheckoutLightbox()">🔍 Pop up &amp; Save</button>
+            <button type="button" class="qr-btn qr-btn-rot" onclick="rotateCheckoutQR()">🔄 Switch</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. UTR & Sender Info -->
+      <div class="form-group">
+        <label class="form-label">3. 12-Digit UTR / Transaction Reference Number <span style="color:#ef4444">*Required</span></label>
+        <div class="form-input-wrap">
+          <input type="text" class="form-input" id="checkout-utr" placeholder="e.g. 407123456789" maxlength="24" required onkeydown="if(event.key==='Enter'){event.preventDefault();submitVipCheckout();}">
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px">
+          💡 Enter the 12-digit UTR from your UPI payment receipt (GPay, PhonePe, Paytm, BHIM).
+        </div>
+      </div>
+
+      <button type="button" class="btn-submit-checkout" id="btn-submit-vip" onclick="submitVipCheckout()">
+        ⚡ Submit VIP Membership Request (<span id="btn-price-label">₹5,499</span>) ↵ [Press Enter]
+      </button>
+      <div style="text-align:center;font-size:11.5px;color:#94a3b8;margin-top:10px">
+        🔒 Payment is safely verified by Host. Badge &amp; VIP Lounge unlock automatically once approved.
+      </div>
+    </div>
+
+    <!-- Success / Pending State -->
+    <div id="checkout-success-section" class="success-screen">
+      <div style="font-size:56px;margin-bottom:12px">👑</div>
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:900;color:#ffd700;margin-bottom:8px">
+        VIP Request Dispatched to Admin!
+      </h2>
+      <p style="font-size:13.5px;color:#cbd5e1;line-height:1.6;margin-bottom:16px">
+        Your monthly VIP activation request has been logged and sent to the <strong>Host &amp; Admin Terminal</strong> for verification.
+      </p>
+
+      <div style="background:rgba(255,215,0,0.08);border:1.5px solid #ffd700;border-radius:14px;padding:16px;text-align:left;margin-bottom:20px;font-size:13px;line-height:1.6">
+        <div style="display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,0.15);padding-bottom:6px;margin-bottom:6px">
+          <span style="color:#94a3b8">Order Reference:</span>
+          <strong style="color:#ffd700" id="receipt-order-id">ORD-VIP-XXXXXX</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="color:#94a3b8">Membership Tier:</span>
+          <strong style="color:#fff" id="receipt-tier-name">Gold VIP (1 Month)</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="color:#94a3b8">Daily Reward Benefit:</span>
+          <strong style="color:#00e676" id="receipt-daily-reward">₹150 Daily Cash Vault</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="color:#94a3b8">Amount Paid:</span>
+          <strong style="color:#ffd700" id="receipt-amount">₹5,499.00</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="color:#94a3b8">UTR Ref:</span>
+          <strong style="color:#fff;font-family:monospace" id="receipt-utr">407123456789</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px dashed rgba(255,255,255,0.15);margin-top:6px">
+          <span style="color:#94a3b8">Status:</span>
+          <strong style="color:#f59e0b">⏳ Pending Host Approval</strong>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <a href="vip-lounge.html" class="btn" style="background:var(--green);color:#000;font-weight:800;padding:12px 20px;border-radius:10px;text-decoration:none">
+          🍸 Go to VIP Lounge Room
+        </a>
+        <a href="index.html" class="btn" style="background:rgba(255,255,255,0.1);color:#fff;font-weight:700;padding:12px 20px;border-radius:10px;text-decoration:none">
+          🎮 Back to Lobby
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div id="checkout-lightbox" class="qr-lightbox" onclick="closeCheckoutLightbox()">
+  <div class="qr-lightbox-card" onclick="event.stopPropagation()">
+    <button class="qr-lightbox-close" onclick="closeCheckoutLightbox()">✕</button>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:900;color:#ffd700">📸 Scan &amp; Pay via UPI</div>
+    <div style="font-size:11.5px;color:#94a3b8;margin-top:2px" id="lightbox-sub-text">Option 1 of 3 • Screenshot or Download to Pay</div>
+
+    <div class="qr-lightbox-img-wrap">
+      <img src="assets/qr1.jpg" alt="UPI QR Code" id="lightbox-qr-img">
+    </div>
+
+    <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
+      <div style="text-align:left;overflow:hidden">
+        <div style="font-size:10px;color:#94a3b8;font-weight:700">UPI ID:</div>
+        <div style="font-family:monospace;font-size:13px;font-weight:800;color:#00e676" id="lightbox-upi-txt">amdasrarbasha-1@oksbi</div>
+      </div>
+      <button class="qr-btn qr-btn-copy" onclick="copyCheckoutUPI(this)" style="padding:6px 12px">📋 Copy</button>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:center">
+      <a href="assets/qr1.jpg" download="ggwins-vip-qr.jpg" id="lightbox-dl-btn" style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;text-decoration:none;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:800;padding:10px;border-radius:10px;display:inline-block">
+        📥 Download QR
+      </a>
+      <button class="qr-btn qr-btn-rot" onclick="rotateCheckoutLightboxQR()" style="flex:1;padding:10px;font-size:12px;border-radius:10px">
+        🔄 Next QR
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── THE 3 OFFICIAL UPI QR CODES & IDS ──
+const QR_DATA = [
+  { src: 'assets/qr1.jpg', upi: 'amdasrarbasha-1@oksbi' },
+  { src: 'assets/qr2.jpg', upi: 'kabilanr2210@okhdfcbank' },
+  { src: 'assets/qr3.jpg', upi: 'txchem@slc' }
+];
+
+const VIP_TIERS = {
+  bronze: {
+    icon: '🥉', name: 'Bronze VIP (1 Month)', price: 1699, daily: 35,
+    desc: 'Includes <strong>₹35 Daily Vault Cashback</strong> (₹1,050/mo) + VIP Lounge Room Access.'
+  },
+  silver: {
+    icon: '🥈', name: 'Silver VIP (1 Month)', price: 2899, daily: 60,
+    desc: 'Includes <strong>₹60 Daily Vault Cashback</strong> (₹1,800/mo) + VIP Lounge Room Access.'
+  },
+  gold: {
+    icon: '👑', name: 'Gold VIP (1 Month)', price: 5499, daily: 150,
+    desc: 'Includes <strong>₹150 Daily Vault Cashback</strong> (₹4,500/mo) + VIP Lounge Room Access.'
+  }
+};
+
+let currentTierKey = 'gold';
+let currentQrIdx = 0;
+
+// Read URL Parameter ?tier=bronze / silver / gold
+const urlParams = new URLSearchParams(window.location.search);
+const initialTier = (urlParams.get('tier') || 'gold').toLowerCase();
+if (VIP_TIERS[initialTier]) currentTierKey = initialTier;
+
+function selectTier(key) {
+  if (!VIP_TIERS[key]) return;
+  currentTierKey = key;
+  const cfg = VIP_TIERS[key];
+
+  // Update pills
+  document.querySelectorAll('.tier-pill-btn').forEach(p => p.classList.remove('active'));
+  const activePill = document.getElementById(`pill-${key}`);
+  if (activePill) activePill.classList.add('active');
+
+  // Update summary
+  document.getElementById('summary-plan-title').innerHTML = `${cfg.icon} ${cfg.name}`;
+  document.getElementById('summary-plan-desc').innerHTML = cfg.desc;
+  document.getElementById('summary-plan-price').textContent = `₹${cfg.price.toLocaleString('en-IN')}`;
+  document.getElementById('btn-price-label').textContent = `₹${cfg.price.toLocaleString('en-IN')}`;
+}
+selectTier(currentTierKey);
+
+// ── QR ROTATOR ──
+function rotateCheckoutQR() {
+  currentQrIdx = (currentQrIdx + 1) % QR_DATA.length;
+  updateQrUI();
+}
+
+function updateQrUI() {
+  const item = QR_DATA[currentQrIdx];
+  const img = document.getElementById('checkout-qr-img');
+  const badge = document.getElementById('checkout-qr-badge');
+  const upiTxt = document.getElementById('checkout-upi-val');
+  const topBtn = document.getElementById('checkout-rot-top');
+
+  if (img) img.src = item.src;
+  if (badge) badge.textContent = `${currentQrIdx + 1}/3`;
+  if (upiTxt) upiTxt.textContent = item.upi;
+  if (topBtn) topBtn.textContent = `🔄 Next QR (${currentQrIdx + 1}/3)`;
+}
+
+function copyCheckoutUPI(btn) {
+  const item = QR_DATA[currentQrIdx];
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(item.upi);
+  }
+  const orig = btn.textContent;
+  btn.textContent = 'Copied! ✓';
+  btn.style.background = '#00e676';
+  btn.style.color = '#000';
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.style.background = '';
+    btn.style.color = '';
+  }, 1500);
+}
+
+// ── LIGHTBOX ──
+function openCheckoutLightbox() {
+  const item = QR_DATA[currentQrIdx];
+  document.getElementById('lightbox-qr-img').src = item.src;
+  document.getElementById('lightbox-upi-txt').textContent = item.upi;
+  document.getElementById('lightbox-sub-text').textContent = `Option ${currentQrIdx + 1} of 3 • Screenshot or Download to Pay`;
+  document.getElementById('lightbox-dl-btn').href = item.src;
+  document.getElementById('checkout-lightbox').classList.add('show');
+}
+
+function closeCheckoutLightbox() {
+  document.getElementById('checkout-lightbox').classList.remove('show');
+}
+
+function rotateCheckoutLightboxQR() {
+  rotateCheckoutQR();
+  openCheckoutLightbox();
+}
+
+// ── SUBMIT VIP CHECKOUT ──
+async function submitVipCheckout() {
+  const utr = document.getElementById('checkout-utr').value.trim();
+  if (!utr || utr.length < 6) {
+    alert('⚠️ Please enter your valid 12-digit UTR number from your payment receipt.');
+    document.getElementById('checkout-utr').focus();
+    return;
+  }
+
+  const cfg = VIP_TIERS[currentTierKey];
+  const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
+  const orderId = 'ORD-VIP-' + Math.floor(100000 + Math.random() * 900000);
+
+  const btn = document.getElementById('btn-submit-vip');
+  btn.disabled = true;
+  btn.textContent = '⏳ Dispatching Request to Host...';
+
+  const reqPayload = {
+    orderId: orderId,
+    tier: currentTierKey,
+    tierName: cfg.name,
+    amount: cfg.price,
+    utr: utr,
+    method: 'UPI Instant QR',
+    userId: session.id || '',
+    username: session.username || localStorage.getItem('ggwins_username') || 'Player'
+  };
+
+  try {
+    await fetch('/api/vip-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reqPayload)
+    });
+  } catch(e) {
+    console.warn('Sent with offline persistence fallback:', e);
+  }
+
+  // Populate receipt screen
+  document.getElementById('receipt-order-id').textContent = orderId;
+  document.getElementById('receipt-tier-name').textContent = cfg.name;
+  document.getElementById('receipt-daily-reward').textContent = `₹${cfg.daily} Daily Cash Vault`;
+  document.getElementById('receipt-amount').textContent = `₹${cfg.price.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+  document.getElementById('receipt-utr').textContent = utr;
+
+  document.getElementById('checkout-form-section').style.display = 'none';
+  document.getElementById('checkout-success-section').classList.add('show');
+}
+</script>
+</body>
+</html>

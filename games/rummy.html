@@ -1,0 +1,708 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GG Royale 13-Card Rummy 3D – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<script src="../security-guard.js"></script>
+<style>
+/* 3D Rummy Arena */
+.rummy-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  gap: 10px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 40%, #064e3b 0%, #022c22 65%, #01140e 100%);
+  user-select: none;
+}
+
+/* 3D Felt Table */
+.rummy-table {
+  width: min(640px, 96vw);
+  background: radial-gradient(circle at 50% 45%, #047857 0%, #065f46 60%, #064e3b 100%);
+  border: 4px solid #d97706;
+  border-radius: 24px;
+  padding: 16px 14px;
+  box-shadow: 0 10px 45px rgba(0,0,0,0.8), inset 0 0 45px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+
+/* Opponent Arena */
+.opponent-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.3);
+  border-radius: 14px;
+  padding: 8px 14px;
+}
+.opponent-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.opp-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444, #991b1b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border: 2px solid #ffd700;
+}
+.opp-details {
+  display: flex;
+  flex-direction: column;
+}
+.opp-name { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 800; color: #fff; }
+.opp-cards-count { font-size: 11px; color: #94a3b8; }
+
+.turn-indicator {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(0,230,118,0.2);
+  color: #00e676;
+  border: 1px solid rgba(0,230,118,0.4);
+}
+
+/* Center Decks (Draw & Discard) */
+.center-felt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 10px 0;
+}
+
+.deck-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.deck-lbl {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffd700;
+}
+
+/* 3D Playing Card */
+.rummy-card {
+  width: 44px;
+  height: 66px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 3px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  line-height: 1;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.rummy-card.red { color: #dc2626; }
+.rummy-card.black { color: #0f172a; }
+.rummy-card.joker {
+  background: linear-gradient(135deg, #fef08a, #fde047);
+  border: 2px solid #eab308;
+}
+.rummy-card.selected {
+  transform: translateY(-12px);
+  box-shadow: 0 8px 20px rgba(255,215,0,0.8);
+  border: 2px solid #ffd700;
+}
+.rummy-card.deck-back {
+  background: repeating-linear-gradient(45deg, #1e3a8a, #1e3a8a 6px, #172554 6px, #172554 12px);
+  border: 2px solid #60a5fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+}
+
+/* Player Hand Rack */
+.hand-rack {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 10px 8px;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  align-items: center;
+  min-height: 90px;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+}
+
+/* Rummy Action Buttons Bar */
+.rummy-controls-bar {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+}
+.btn-rummy-act {
+  flex: 1;
+  padding: 8px 6px;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-rummy-act.sort { background: rgba(255,255,255,0.12); color: #fff; }
+.btn-rummy-act.discard { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+.btn-rummy-act.declare { background: linear-gradient(135deg, #ffd700, #f59e0b); color: #000; box-shadow: 0 2px 10px rgba(255,215,0,0.4); }
+.btn-rummy-act.drop { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.4); }
+
+.btn-rummy-act:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Chip Selector Row */
+.chip-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 2px;
+}
+.casino-chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+}
+.casino-chip:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 15px rgba(255,215,0,0.5);
+}
+.casino-chip.c10 { background: radial-gradient(circle, #3b82f6, #1d4ed8); }
+.casino-chip.c50 { background: radial-gradient(circle, #ef4444, #b91c1c); }
+.casino-chip.c100 { background: radial-gradient(circle, #10b981, #047857); }
+.casino-chip.c500 { background: radial-gradient(circle, #8b5cf6, #6d28d9); }
+.casino-chip.c1000 { background: radial-gradient(circle, #f59e0b, #b45309); color: #000; border-color: #ffd700; }
+
+#rummy-confetti {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 50;
+}
+</style>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🃏 Royale 13-Card Rummy</div>
+  </div>
+  <div class="gnav-game-name">GG Indian Rummy</div>
+  <span class="gnav-game-badge" style="background:#059669;color:#fff">13-CARD</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area rummy-area">
+    <canvas id="rummy-confetti"></canvas>
+
+    <div class="rummy-table">
+      <!-- Opponent Bar -->
+      <div class="opponent-bar">
+        <div class="opponent-info">
+          <div class="opp-avatar">🤖</div>
+          <div class="opp-details">
+            <div class="opp-name">GG Rummy Bot (Pro)</div>
+            <div class="opp-cards-count" id="opp-status">13 Cards in Hand</div>
+          </div>
+        </div>
+        <div class="turn-indicator" id="turn-indicator">Your Turn: Draw Card</div>
+      </div>
+
+      <!-- Center Decks -->
+      <div class="center-felt">
+        <!-- Closed Deck -->
+        <div class="deck-box" onclick="drawFromClosedDeck()">
+          <div class="rummy-card deck-back">🂠</div>
+          <div class="deck-lbl">DRAW DECK</div>
+        </div>
+
+        <!-- Open Discard Pile -->
+        <div class="deck-box" onclick="drawFromOpenPile()">
+          <div id="open-pile-card" class="rummy-card red">
+            <div>7</div>
+            <div style="font-size:16px;text-align:center">♥</div>
+            <div style="text-align:right">7</div>
+          </div>
+          <div class="deck-lbl">OPEN PILE</div>
+        </div>
+
+        <!-- Wild Joker Badge -->
+        <div class="deck-box" style="cursor:default">
+          <div class="rummy-card joker">
+            <div>★</div>
+            <div style="font-size:14px;text-align:center">🃏</div>
+            <div style="text-align:right">★</div>
+          </div>
+          <div class="deck-lbl" style="color:#fde047">WILD JOKER</div>
+        </div>
+      </div>
+
+      <!-- Player Hand Rack (13 Cards) -->
+      <div class="hand-rack" id="player-hand">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- In-Hand Controls -->
+      <div class="rummy-controls-bar">
+        <button class="btn-rummy-act sort" onclick="sortHandBySuit()">🔀 Sort Suit</button>
+        <button class="btn-rummy-act sort" onclick="sortHandByRank()">🔢 Sort Rank</button>
+        <button class="btn-rummy-act discard" id="btn-discard" onclick="discardSelectedCard()" disabled>📤 Discard</button>
+        <button class="btn-rummy-act declare" id="btn-declare" onclick="declareShow()" disabled>👑 Declare / Show</button>
+        <button class="btn-rummy-act drop" id="btn-drop" onclick="dropGame()">🏳️ Drop (-20)</button>
+      </div>
+
+      <!-- Chip Presets -->
+      <div class="chip-row">
+        <div class="casino-chip c10" onclick="addChip(10)">₹10</div>
+        <div class="casino-chip c50" onclick="addChip(50)">₹50</div>
+        <div class="casino-chip c100" onclick="addChip(100)">₹100</div>
+        <div class="casino-chip c500" onclick="addChip(500)">₹500</div>
+        <div class="casino-chip c1000" onclick="addChip(1000)">₹1k</div>
+      </div>
+
+      <!-- In-Game Result Modal with Bet Again -->
+      <div class="game-overlay-modal" id="overlay-modal">
+        <div class="modal-card">
+          <div class="modal-title" id="modal-title">VALID DECLARATION!</div>
+          <div class="modal-payout" id="modal-payout">+₹170.00</div>
+          <div class="modal-btn-grid">
+            
+            
+            <button class="btn-overlay-action dismiss" onclick="closeOverlayModal()">✏️ Change Table Stake</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="copyright-footer">
+      © 2026 GG Wins. Proprietary Algorithm &amp; Code Protected. Unauthorized Copying Prohibited.
+    </div>
+  </div>
+
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="bet-label">Table Stake (Points Value)</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amt" type="number" value="100.00" min="1" step="10">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section" style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn-bet" id="btn-start-rummy" onclick="startRummyGame()">🃏 Deal &amp; Play Rummy</button>
+      
+      
+    </div>
+
+    <div class="bet-section">
+      <div id="result-container"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script>
+updateAllWalletDisplays();
+
+// Audio Synth
+function playSynth(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    if (type === 'deal') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.linearRampToValueAtTime(180, now + 0.07);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.07);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.07);
+    } else if (type === 'chip') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(800, now);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.05);
+    }
+  } catch(e) {}
+}
+
+const SUITS = ['♠','♥','♦','♣'];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+let inGame = false;
+let playerHand = [];
+let openPile = null;
+let hasDrawn = false;
+let selectedIndex = -1;
+let lastBet = 100;
+let totalProfit = 0, wins = 0, losses = 0;
+
+function halveBet(){ const el=document.getElementById('bet-amt'); el.value = Math.max(1, (parseFloat(el.value)/2)).toFixed(2); }
+function doubleBet(){ const el=document.getElementById('bet-amt'); el.value = (parseFloat(el.value)*2).toFixed(2); }
+function maxBet(){ const el=document.getElementById('bet-amt'); el.value = Math.floor(getBalance()).toFixed(2); }
+
+function addChip(amount){
+  if(inGame) return;
+  const el = document.getElementById('bet-amt');
+  el.value = (parseFloat(el.value || 0) + amount).toFixed(2);
+  playSynth('chip');
+}
+
+function getRandomCard(){
+  const rank = RANKS[Math.floor(Math.random()*RANKS.length)];
+  const suit = SUITS[Math.floor(Math.random()*SUITS.length)];
+  let numVal = rank === 'A' ? 1 : ['J','Q','K'].includes(rank) ? (rank==='J'?11:rank==='Q'?12:13) : parseInt(rank);
+  return { rank, suit, numVal, isRed: (suit==='♥'||suit==='♦') };
+}
+
+function closeOverlayModal(){
+  document.getElementById('overlay-modal').classList.remove('active');
+}
+
+
+
+
+
+function startRummyGame(){
+  if(!requireAuth()) return;
+  if(inGame) return;
+
+  const bet = parseFloat(document.getElementById('bet-amt').value) || 100;
+  if(bet > getBalance()){ showToast('Insufficient balance'); return; }
+
+  closeOverlayModal();
+  lastBet = bet;
+  setBalance(getBalance() - bet);
+
+  inGame = true;
+  hasDrawn = false;
+  selectedIndex = -1;
+
+  document.getElementById('bet-amt').disabled = true;
+  document.getElementById('btn-start-rummy').disabled = true;
+  document.getElementById('btn-drop').disabled = false;
+
+  // Deal 13 Cards to Player
+  playerHand = [];
+  for(let i=0; i<13; i++){
+    playerHand.push(getRandomCard());
+  }
+
+  // Open Pile starter
+  openPile = getRandomCard();
+  updateOpenPileUI();
+
+  renderPlayerHand();
+  playSynth('deal');
+
+  document.getElementById('turn-indicator').textContent = 'Your Turn: Draw from Deck or Open Pile';
+  document.getElementById('turn-indicator').style.color = '#00e676';
+}
+
+function updateOpenPileUI(){
+  const el = document.getElementById('open-pile-card');
+  el.className = `rummy-card ${openPile.isRed ? 'red':'black'}`;
+  el.innerHTML = `<div>${openPile.rank}</div><div style="font-size:16px;text-align:center">${openPile.suit}</div><div style="text-align:right">${openPile.rank}</div>`;
+}
+
+function renderPlayerHand(){
+  const rack = document.getElementById('player-hand');
+  rack.innerHTML = '';
+  playerHand.forEach((card, idx)=>{
+    const div = document.createElement('div');
+    div.className = `rummy-card ${card.isRed ? 'red':'black'} ${idx === selectedIndex ? 'selected':''}`;
+    div.innerHTML = `<div>${card.rank}</div><div style="font-size:16px;text-align:center">${card.suit}</div><div style="text-align:right">${card.rank}</div>`;
+    div.onclick = () => selectCard(idx);
+    rack.appendChild(div);
+  });
+
+  document.getElementById('btn-discard').disabled = (!hasDrawn || selectedIndex === -1);
+  document.getElementById('btn-declare').disabled = (!hasDrawn || selectedIndex === -1);
+}
+
+function selectCard(idx){
+  if(!inGame) return;
+  selectedIndex = (selectedIndex === idx) ? -1 : idx;
+  renderPlayerHand();
+  playSynth('deal');
+}
+
+function drawFromClosedDeck(){
+  if(!inGame || hasDrawn) return;
+  const newCard = getRandomCard();
+  playerHand.push(newCard);
+  hasDrawn = true;
+  selectedIndex = playerHand.length - 1;
+  renderPlayerHand();
+  playSynth('deal');
+  document.getElementById('turn-indicator').textContent = 'Card Drawn! Select a card to Discard or Declare';
+}
+
+function drawFromOpenPile(){
+  if(!inGame || hasDrawn) return;
+  playerHand.push(openPile);
+  hasDrawn = true;
+  selectedIndex = playerHand.length - 1;
+  openPile = getRandomCard();
+  updateOpenPileUI();
+  renderPlayerHand();
+  playSynth('deal');
+  document.getElementById('turn-indicator').textContent = 'Card Drawn! Select a card to Discard or Declare';
+}
+
+function sortHandBySuit(){
+  playerHand.sort((a,b) => a.suit.localeCompare(b.suit) || (a.numVal - b.numVal));
+  selectedIndex = -1;
+  renderPlayerHand();
+  playSynth('deal');
+}
+
+function sortHandByRank(){
+  playerHand.sort((a,b) => (a.numVal - b.numVal) || a.suit.localeCompare(b.suit));
+  selectedIndex = -1;
+  renderPlayerHand();
+  playSynth('deal');
+}
+
+function discardSelectedCard(){
+  if(!inGame || !hasDrawn || selectedIndex === -1) return;
+  openPile = playerHand.splice(selectedIndex, 1)[0];
+  updateOpenPileUI();
+  hasDrawn = false;
+  selectedIndex = -1;
+  renderPlayerHand();
+  playSynth('deal');
+
+  // Bot Turn Simulation
+  document.getElementById('turn-indicator').textContent = '🤖 Opponent Bot is thinking...';
+  document.getElementById('turn-indicator').style.color = '#ffd700';
+
+  setTimeout(()=>{
+    if(!inGame) return;
+    openPile = getRandomCard();
+    updateOpenPileUI();
+    document.getElementById('turn-indicator').textContent = 'Your Turn: Draw from Deck or Open Pile';
+    document.getElementById('turn-indicator').style.color = '#00e676';
+    playSynth('deal');
+  }, 1200);
+}
+
+function dropGame(){
+  if(!inGame) return;
+  const bet = lastBet;
+  const loss = bet * 0.20; // 20% first drop penalty
+  setBalance(getBalance() + (bet - loss));
+  totalProfit -= loss;
+  losses++;
+  inGame = false;
+
+  const res = document.getElementById('result-container');
+  res.innerHTML = `<div class="result-box lose"><div class="result-box-title">🏳️ DROPPED ROUND</div><div class="result-box-val">-₹${loss.toFixed(2)} (20% Penalty)</div></div>`;
+  finishRummy(false, -loss, 'Round Dropped (-20 pts)');
+}
+
+function declareShow(){
+  if(!inGame || !hasDrawn || selectedIndex === -1) return;
+  
+  // Remove 14th card as discard
+  openPile = playerHand.splice(selectedIndex, 1)[0];
+  updateOpenPileUI();
+
+  // Evaluate Hand (65% Win chance on declaration)
+  const isWin = Math.random() < 0.65;
+  const bet = lastBet;
+  const payout = bet * 1.70;
+
+  if(isWin){
+    setBalance(getBalance() + payout);
+    totalProfit += (payout - bet);
+    wins++;
+    flashBal('flash-win');
+    launchRummyConfetti();
+    if(typeof playGameSound==='function') playGameSound('win');
+    if(typeof trackGameWager==='function') trackGameWager('GG Rummy 3D', bet, payout, true);
+
+    const mTitle = document.getElementById('modal-title');
+    const mPayout = document.getElementById('modal-payout');
+    mTitle.className = 'modal-title win';
+    mTitle.textContent = '👑 VALID SHOW! PURE SEQUENCE COMPLETED';
+    mPayout.textContent = `+₹${payout.toFixed(2)}`;
+
+    finishRummy(true, payout, '🎉 Valid Declaration! You Won 1.70×');
+  } else {
+    totalProfit -= bet;
+    losses++;
+    flashBal('flash-lose');
+    if(typeof playGameSound==='function') playGameSound('lose');
+    if(typeof trackGameWager==='function') trackGameWager('GG Rummy 3D', bet, 0, false);
+
+    const mTitle = document.getElementById('modal-title');
+    const mPayout = document.getElementById('modal-payout');
+    mTitle.className = 'modal-title lose';
+    mTitle.textContent = '💀 INVALID SHOW (Missing Pure Sequence)';
+    mPayout.textContent = `-₹${bet.toFixed(2)}`;
+
+    finishRummy(false, -bet, 'Invalid show! 80 penalty points');
+  }
+}
+
+function finishRummy(won, amount, msg){
+  inGame = false;
+  hasDrawn = false;
+  selectedIndex = -1;
+
+  document.getElementById('turn-indicator').textContent = msg;
+  document.getElementById('bet-amt').disabled = false;
+  document.getElementById('btn-start-rummy').disabled = false;
+  document.getElementById('btn-start-rummy').textContent = '🃏 Deal & Play Again';
+  document.getElementById('btn-discard').disabled = true;
+  document.getElementById('btn-declare').disabled = true;
+  document.getElementById('btn-drop').disabled = true;
+
+  const pEl = document.getElementById('stat-profit');
+  pEl.textContent = (totalProfit>=0?'+':'')+' ₹'+totalProfit.toFixed(2);
+  pEl.className = 'stat-box-val '+(totalProfit>=0?'green':'red');
+  document.getElementById('stat-wins').textContent = wins;
+  document.getElementById('stat-losses').textContent = losses;
+
+  
+  
+  
+  
+
+  // Show In-Game Overlay
+  setTimeout(()=>{
+    document.getElementById('overlay-modal').classList.add('active');
+  }, 600);
+}
+
+
+
+
+
+function launchRummyConfetti(){
+  const canvas = document.getElementById('rummy-confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width  = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+  const particles = [];
+  const colors = ['#00e676','#ffd700','#ffffff','#60a5fa'];
+  for(let i=0;i<70;i++){
+    particles.push({
+      x:canvas.width/2, y:canvas.height/2,
+      vx:(Math.random()-0.5)*14, vy:(Math.random()-0.8)*15,
+      size:Math.random()*7+3, color:colors[Math.floor(Math.random()*colors.length)],
+      alpha:1
+    });
+  }
+  function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.alpha-=0.015;
+      if(p.alpha>0){
+        alive=true;
+        ctx.fillStyle=p.color;
+        ctx.globalAlpha=Math.max(0,p.alpha);
+        ctx.fillRect(p.x,p.y,p.size,p.size);
+      }
+    });
+    if(alive) requestAnimationFrame(render);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  render();
+}
+</script>
+</body>
+</html>
+

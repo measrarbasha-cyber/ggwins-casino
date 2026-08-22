@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIP Club – GG Wins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#090e17;--bg2:#111827;--card:#1e293b;
+  --gold:#ffbe0b;--bronze:#cd7f32;--silver:#c0c0c0;
+  --text:#f8fafc;--text2:#94a3b8;
+  --green:#00e676;
+  --border:rgba(255,255,255,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:rgba(17,24,39,0.85);backdrop-filter:blur(16px);position:sticky;top:0;z-index:10;}
+.nav a{color:var(--text);text-decoration:none;font-weight:700;font-size:14px;background:rgba(255,255,255,0.05);padding:8px 16px;border-radius:8px;transition:background 0.2s;}
+.nav a:hover{background:rgba(255,255,255,0.1);}
+.nav-brand{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:900;color:var(--gold);letter-spacing:-0.5px;}
+
+/* HERO */
+.hero{padding:80px 24px 40px;text-align:center;background:radial-gradient(ellipse at top, rgba(255,190,11,0.12), transparent 65%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,190,11,0.1);border:1px solid rgba(255,190,11,0.3);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:20px;}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(36px,6vw,60px);font-weight:900;color:var(--text);line-height:1.1;margin-bottom:14px;letter-spacing:-1px;}
+.hero h1 span{color:var(--gold);}
+.hero p{font-size:16px;color:var(--text2);max-width:500px;margin:0 auto 40px;line-height:1.6;}
+
+/* TIER CARDS */
+.vip-tiers{display:flex;gap:24px;max-width:1000px;margin:0 auto;padding:0 24px 80px;justify-content:center;flex-wrap:wrap;}
+
+.tier{
+  background:linear-gradient(145deg,#111827,#0f1724);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:36px 28px;
+  text-align:center;
+  width:280px;
+  position:relative;
+  overflow:hidden;
+  transition:transform 0.3s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.3s;
+}
+.tier::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg, transparent 60%, rgba(255,255,255,0.02));
+  pointer-events:none;
+}
+.tier:hover{transform:translateY(-6px);}
+
+/* Bronze */
+.tier.bronze{border-color:rgba(205,127,50,0.35);}
+.tier.bronze:hover{box-shadow:0 20px 50px rgba(205,127,50,0.2);}
+.tier.bronze .tier-accent{background:linear-gradient(135deg,#cd7f32,#f4a460);}
+.tier.bronze .tier-icon-bg{background:rgba(205,127,50,0.12);border-color:rgba(205,127,50,0.25);}
+.tier.bronze .price-btn{background:linear-gradient(135deg,#cd7f32,#e8976a);color:#fff;}
+.tier.bronze .price-btn:hover{box-shadow:0 8px 25px rgba(205,127,50,0.5);}
+.tier.bronze .perk-dot{background:#cd7f32;}
+
+/* Silver */
+.tier.silver{border-color:rgba(192,192,192,0.3);}
+.tier.silver:hover{box-shadow:0 20px 50px rgba(192,192,192,0.15);}
+.tier.silver .tier-accent{background:linear-gradient(135deg,#9e9e9e,#e0e0e0);}
+.tier.silver .tier-icon-bg{background:rgba(192,192,192,0.1);border-color:rgba(192,192,192,0.2);}
+.tier.silver .price-btn{background:linear-gradient(135deg,#9e9e9e,#d4d4d4);color:#000;}
+.tier.silver .price-btn:hover{box-shadow:0 8px 25px rgba(192,192,192,0.4);}
+.tier.silver .perk-dot{background:#c0c0c0;}
+
+/* Gold */
+.tier.gold{border-color:rgba(255,190,11,0.45);}
+.tier.gold:hover{box-shadow:0 20px 50px rgba(255,190,11,0.25);}
+.tier.gold .tier-accent{background:linear-gradient(135deg,#ffbe0b,#ffe066);}
+.tier.gold .tier-icon-bg{background:rgba(255,190,11,0.12);border-color:rgba(255,190,11,0.3);}
+.tier.gold .price-btn{background:linear-gradient(135deg,#ffbe0b,#ffe066);color:#000;}
+.tier.gold .price-btn:hover{box-shadow:0 8px 25px rgba(255,190,11,0.55);}
+.tier.gold .perk-dot{background:#ffbe0b;}
+
+/* Gold popular badge */
+.popular-badge{
+  position:absolute;top:16px;right:16px;
+  background:var(--gold);color:#000;
+  font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;
+  padding:3px 9px;border-radius:20px;
+}
+
+.tier-accent{height:4px;position:absolute;top:0;left:0;right:0;border-radius:20px 20px 0 0;}
+.tier-icon-bg{width:72px;height:72px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:34px;}
+.tier-name{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:900;color:var(--text);margin-bottom:6px;}
+.tier-tagline{font-size:12px;color:var(--text2);margin-bottom:24px;font-weight:500;}
+
+.tier-perks{list-style:none;text-align:left;font-size:13px;line-height:1.6;margin-bottom:28px;display:flex;flex-direction:column;gap:10px;}
+.tier-perks li{display:flex;align-items:center;gap:10px;color:var(--text);}
+.perk-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+.price-section{border-top:1px solid var(--border);padding-top:22px;}
+.price-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text2);margin-bottom:8px;}
+.price-amount{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:900;color:var(--text);margin-bottom:4px;letter-spacing:-1px;}
+.price-sub{font-size:11px;color:var(--text2);margin-bottom:16px;}
+.price-btn{
+  width:100%;padding:13px;border-radius:12px;border:none;
+  font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:800;
+  cursor:pointer;transition:all 0.25s cubic-bezier(0.2,0.8,0.2,1);
+  letter-spacing:0.02em;
+}
+.price-btn:hover{transform:translateY(-2px);}
+.price-btn:active{transform:scale(0.98);}
+
+/* ── PAYMENT MODAL ── */
+#vip-payment-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,0.88);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  z-index:99999;display:none;align-items:center;justify-content:center;padding:16px;
+}
+#vip-payment-modal.active{display:flex;animation:pmOverlay 0.25s ease;}
+@keyframes pmOverlay{from{opacity:0;}to{opacity:1;}}
+
+.pm-card{
+  width:100%;max-width:500px;
+  background:#0f172a;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:22px;
+  box-shadow:0 30px 80px rgba(0,0,0,0.95);
+  overflow:hidden;
+  animation:pmSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes pmSlideUp{from{transform:translateY(24px) scale(0.95);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
+
+.pm-header{
+  padding:18px 24px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:#090e17;
+}
+.pm-header-left{display:flex;align-items:center;gap:12px;}
+.pm-tier-badge{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+.pm-title-group .pm-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:800;color:var(--text);}
+.pm-title-group .pm-subtitle{font-size:12px;color:var(--text2);margin-top:2px;}
+.pm-close{background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;border-radius:8px;padding:4px 8px;transition:color 0.2s;}
+.pm-close:hover{color:var(--text);}
+
+.pm-body{padding:22px 24px;display:flex;flex-direction:column;gap:18px;max-height:70vh;overflow-y:auto;}
+
+/* Summary row */
+.pm-summary{
+  background:rgba(255,190,11,0.06);
+  border:1px solid rgba(255,190,11,0.2);
+  border-radius:12px;padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.pm-summary-plan{font-size:14px;font-weight:700;color:var(--text);}
+.pm-summary-price{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:900;color:var(--gold);}
+
+/* Method Selection */
+.pm-section-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
+.pm-methods{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.pm-method{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.03);
+  border:1.5px solid rgba(255,255,255,0.08);
+  border-radius:10px;padding:11px 12px;cursor:pointer;transition:all 0.2s;
+}
+.pm-method:hover{background:rgba(255,255,255,0.06);}
+.pm-method.active{border-color:var(--green);background:rgba(0,230,118,0.07);}
+.pm-method-icon{font-size:20px;}
+.pm-method-name{font-size:12px;font-weight:700;color:var(--text);}
+.pm-method-sub{font-size:10px;color:var(--text2);}
+
+/* UPI Details Box */
+.pm-upi-box{
+  background:#090e17;border:1px dashed rgba(0,230,118,0.3);
+  border-radius:12px;padding:14px 16px;
+  display:flex;gap:14px;align-items:center;
+}
+.pm-qr{width:64px;height:64px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;}
+.pm-upi-info{flex:1;}
+.pm-upi-id-label{font-size:10px;color:var(--text2);font-weight:600;margin-bottom:4px;}
+.pm-upi-id{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:800;color:var(--green);}
+.pm-upi-copy{font-size:10px;color:var(--text2);margin-top:4px;cursor:pointer;transition:color 0.2s;}
+.pm-upi-copy:hover{color:var(--green);}
+.pm-upi-step{font-size:11px;color:var(--text2);line-height:1.6;margin-top:8px;}
+
+/* Bank Transfer Box */
+.pm-bank-box{
+  background:#090e17;border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;
+}
+.pm-bank-field{display:flex;flex-direction:column;gap:3px;}
+.pm-bank-field-label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;}
+.pm-bank-field-val{font-size:13px;font-weight:700;color:var(--text);}
+
+/* Amount & UTR */
+.pm-input-group{display:flex;flex-direction:column;gap:6px;}
+.pm-input-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;}
+.pm-input-box{display:flex;align-items:center;background:#090e17;border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:0 14px;transition:border-color 0.2s;}
+.pm-input-box:focus-within{border-color:var(--green);box-shadow:0 0 0 2px rgba(0,230,118,0.18);}
+.pm-input-sym{font-weight:700;color:var(--green);margin-right:8px;font-size:15px;}
+.pm-input{flex:1;background:none;border:none;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;padding:11px 0;outline:none;}
+
+/* Pay button */
+.pm-pay-btn{
+  width:100%;padding:15px;border-radius:14px;border:none;
+  font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:900;
+  cursor:pointer;transition:all 0.25s cubic-bezier(0.2,0.8,0.2,1);
+  letter-spacing:0.02em;margin-top:2px;
+}
+.pm-pay-btn:hover{filter:brightness(1.1);transform:translateY(-2px);}
+.pm-pay-btn:active{transform:scale(0.98);}
+
+/* Success State */
+.pm-success{
+  text-align:center;padding:24px 16px;
+  display:none;flex-direction:column;align-items:center;gap:10px;
+}
+.pm-success.show{display:flex;}
+.pm-success-icon{font-size:56px;margin-bottom:4px;}
+.pm-success-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:900;color:var(--green);}
+.pm-success-msg{font-size:14px;color:var(--text2);line-height:1.6;max-width:340px;}
+.pm-success-txid{font-family:'Space Grotesk',sans-serif;font-size:12px;color:var(--text2);background:rgba(255,255,255,0.04);border-radius:8px;padding:6px 12px;margin-top:4px;}
+.pm-success-close{margin-top:8px;padding:12px 32px;background:var(--green);color:#000;border:none;border-radius:10px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all 0.2s;}
+.pm-success-close:hover{filter:brightness(1.1);}
+
+/* Scrollbar */
+.pm-body::-webkit-scrollbar{width:4px;}
+.pm-body::-webkit-scrollbar-track{background:transparent;}
+.pm-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px;}
+
+/* ── 3-QR ROTATOR & LIGHTBOX STYLES ── */
+.vip-qr-box {
+  display: flex;
+  gap: 12px;
+  background: #090e17;
+  border: 1.5px solid rgba(255,215,0,0.3);
+  border-radius: 14px;
+  padding: 12px;
+  align-items: center;
+}
+.vip-qr-thumb {
+  width: 90px;
+  height: 90px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  padding: 4px;
+  position: relative;
+  cursor: pointer;
+  border: 1.5px solid #ffd700;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.vip-qr-thumb:hover { transform: scale(1.03); }
+.vip-qr-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 6px; }
+.vip-qr-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #ffd700;
+  color: #000;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 999px;
+}
+.vip-qr-details { flex: 1; overflow: hidden; }
+.vip-upi-lbl { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+.vip-upi-txt { font-family: monospace; font-size: 13px; font-weight: 800; color: #00e676; margin-bottom: 6px; word-break: break-all; }
+.vip-qr-btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.vip-btn-rot {
+  background: rgba(255,215,0,0.15);
+  border: 1px solid #ffd700;
+  color: #ffd700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.vip-btn-rot:hover { background: #ffd700; color: #000; }
+.vip-btn-copy {
+  background: rgba(0,230,118,0.15);
+  border: 1px solid #00e676;
+  color: #00e676;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.vip-btn-copy:hover { background: #00e676; color: #000; }
+.vip-btn-pop {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.vip-btn-pop:hover { background: rgba(255,255,255,0.18); }
+
+/* QR Lightbox Popup Modal */
+.vip-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(16px);
+  z-index: 1000000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.vip-lightbox-overlay.show { display: flex; animation: pmOverlay 0.2s ease; }
+.vip-lightbox-card {
+  background: #111827;
+  border: 2px solid #ffd700;
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 0 50px rgba(255,215,0,0.3);
+}
+.vip-lightbox-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.vip-lightbox-img-box {
+  width: 200px;
+  height: 200px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px;
+  margin: 14px auto;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.vip-lightbox-img-box img { width: 100%; height: 100%; object-fit: contain; display: block; border-radius: 8px; }
+
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="nav">
+  <a href="index.html">← Back to Lobby</a>
+  <div class="nav-brand">⭐ VIP Club</div>
+  <div style="width:120px;"></div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">👑 Monthly VIP Membership Pass (30 Days Validity)</div>
+  <h1>Elevate Your<br><span>GG Wins</span> Experience</h1>
+  <p>Unlock premium perks, weekly bonuses, and dedicated VIP support. Choose your tier. All VIP memberships are valid for 1 Month (30 Days) with daily ₹150 vault rewards.</p>
+</div>
+
+<!-- VIP TIERS -->
+<div class="vip-tiers">
+
+  <!-- BRONZE -->
+  <div class="tier bronze">
+    <div class="tier-accent"></div>
+    <div class="tier-icon-bg">🥉</div>
+    <div class="tier-name">Bronze</div>
+    <div class="tier-tagline">Perfect to get started</div>
+    <ul class="tier-perks">
+      <li><span class="perk-dot"></span> 🎁 <strong>₹35 Daily Cash Vault</strong> (₹1,050/mo)</li>
+      <li><span class="perk-dot"></span> Weekly Bonus Rewards</li>
+      <li><span class="perk-dot"></span> Monthly Cashback</li>
+      <li><span class="perk-dot"></span> Priority Chat Support</li>
+      <li><span class="perk-dot"></span> VIP Lounge Room Access</li>
+    </ul>
+    <div class="price-section">
+      <div class="price-label">Membership Price</div>
+      <div class="price-amount">₹1,699 <span style="font-size:15px;color:#94a3b8;font-weight:600">/ Month</span></div>
+      <div class="price-sub" style="color:#00e676;font-weight:700">📅 Valid for 30 Days (Monthly Plan)</div>
+      <button class="price-btn" onclick="window.location.href='vip-payment.html?tier=bronze'">
+        Activate Bronze VIP
+      </button>
+    </div>
+  </div>
+
+  <!-- SILVER -->
+  <div class="tier silver">
+    <div class="tier-accent"></div>
+    <div class="tier-icon-bg">🥈</div>
+    <div class="tier-name">Silver</div>
+    <div class="tier-tagline">More rewards, more wins</div>
+    <ul class="tier-perks">
+      <li><span class="perk-dot"></span> 🎁 <strong>₹60 Daily Cash Vault</strong> (₹1,800/mo)</li>
+      <li><span class="perk-dot"></span> All Bronze Perks Included</li>
+      <li><span class="perk-dot"></span> Rakeback Access (5%)</li>
+      <li><span class="perk-dot"></span> Dedicated Account Manager</li>
+      <li><span class="perk-dot"></span> VIP Lounge Room Access</li>
+    </ul>
+    <div class="price-section">
+      <div class="price-label">Membership Price</div>
+      <div class="price-amount">₹2,899 <span style="font-size:15px;color:#94a3b8;font-weight:600">/ Month</span></div>
+      <div class="price-sub" style="color:#00e676;font-weight:700">📅 Valid for 30 Days (Monthly Plan)</div>
+      <button class="price-btn" onclick="window.location.href='vip-payment.html?tier=silver'">
+        Activate Silver VIP
+      </button>
+    </div>
+  </div>
+
+  <!-- GOLD -->
+  <div class="tier gold">
+    <div class="tier-accent"></div>
+    <div class="popular-badge">⭐ Most Popular</div>
+    <div class="tier-icon-bg">👑</div>
+    <div class="tier-name">Gold</div>
+    <div class="tier-tagline">The ultimate VIP experience</div>
+    <ul class="tier-perks">
+      <li><span class="perk-dot"></span> 🎁 <strong>₹150 Daily Cash Vault</strong> (₹4,500/mo)</li>
+      <li><span class="perk-dot"></span> All Silver Perks Included</li>
+      <li><span class="perk-dot"></span> Personal 24/7 VIP Host</li>
+      <li><span class="perk-dot"></span> Rakeback Access (10%)</li>
+      <li><span class="perk-dot"></span> VIP Lounge & Exclusive Fast Withdrawals</li>
+    </ul>
+    <div class="price-section">
+      <div class="price-label">Membership Price</div>
+      <div class="price-amount">₹5,499 <span style="font-size:15px;color:#94a3b8;font-weight:600">/ Month</span></div>
+      <div class="price-sub" style="color:#00e676;font-weight:700">📅 Valid for 30 Days (Monthly Plan)</div>
+      <button class="price-btn" onclick="window.location.href='vip-payment.html?tier=gold'">
+        Activate Gold VIP
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── PAYMENT MODAL ── -->
+<div id="vip-payment-modal" onclick="closeVipPaymentOutside(event)">
+  <div class="pm-card">
+    <!-- Header -->
+    <div class="pm-header">
+      <div class="pm-header-left">
+        <div class="pm-tier-badge" id="pm-tier-badge" style="background:rgba(255,190,11,0.15);">👑</div>
+        <div class="pm-title-group">
+          <div class="pm-title" id="pm-title">Gold VIP Activation</div>
+          <div class="pm-subtitle">📅 1-Month Pass (Valid for 30 Days)</div>
+        </div>
+      </div>
+      <button class="pm-close" onclick="closeVipPayment()">✕</button>
+    </div>
+
+    <!-- Body (form) -->
+    <div class="pm-body" id="pm-body">
+
+      <!-- Price Summary -->
+      <div class="pm-summary">
+        <div class="pm-summary-plan" id="pm-plan-name">Gold VIP Membership</div>
+        <div class="pm-summary-price" id="pm-price-display">₹5,499</div>
+      </div>
+
+      <!-- Payment Method -->
+      <div>
+        <div class="pm-section-label">Select Payment Method</div>
+        <div class="pm-methods">
+          <div class="pm-method active" id="pm-m-upi" onclick="selectPmMethod('upi')">
+            <div class="pm-method-icon">📲</div>
+            <div><div class="pm-method-name">UPI</div><div class="pm-method-sub">GPay / PhonePe / Paytm</div></div>
+          </div>
+          <div class="pm-method" id="pm-m-bank" onclick="selectPmMethod('bank')">
+            <div class="pm-method-icon">🏦</div>
+            <div><div class="pm-method-name">Bank Transfer</div><div class="pm-method-sub">IMPS / NEFT</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPI Details (3 QR Codes Rotator) -->
+      <div id="pm-upi-section">
+        <div class="pm-section-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Scan QR or Copy UPI ID</span>
+          <button type="button" class="vip-btn-rot" onclick="rotateVipQR()" id="vip-rot-btn-top">🔄 Next QR (1/3)</button>
+        </div>
+        <div class="vip-qr-box" id="vip-qr-rotator-box">
+          <div class="vip-qr-thumb" onclick="openVipQRLightbox()" title="Click to enlarge & save QR">
+            <img id="vip-qr-img" src="assets/qr1.jpg" alt="UPI QR Code" data-idx="0">
+            <div class="vip-qr-badge" id="vip-qr-badge">1/3</div>
+          </div>
+          <div class="vip-qr-details">
+            <div class="vip-upi-lbl">Pay to UPI ID:</div>
+            <div class="vip-upi-txt" id="vip-upi-id-display">amdasrarbasha-1@oksbi</div>
+            <div class="vip-qr-btn-row">
+              <button type="button" class="vip-btn-copy" id="vip-copy-btn" onclick="copyCurrentVipUPI(this)">📋 Copy UPI</button>
+              <button type="button" class="vip-btn-pop" onclick="openVipQRLightbox()">🔍 Pop up &amp; Save</button>
+              <button type="button" class="vip-btn-rot" onclick="rotateVipQR()">🔄 Switch</button>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:6px">
+          💡 <strong>Tip:</strong> Tap the QR to enlarge and screenshot, or copy the UPI ID and pay via GPay, PhonePe, Paytm, or BHIM.
+        </div>
+      </div>
+
+      <!-- Bank Transfer Details (hidden by default) -->
+      <div id="pm-bank-section" style="display:none;">
+        <div class="pm-section-label">Bank Transfer Details</div>
+        <div class="pm-bank-box">
+          <div class="pm-bank-field">
+            <div class="pm-bank-field-label">Account Name</div>
+            <div class="pm-bank-field-val">GG Wins Pvt Ltd</div>
+          </div>
+          <div class="pm-bank-field">
+            <div class="pm-bank-field-label">Account Number</div>
+            <div class="pm-bank-field-val">9876543210001</div>
+          </div>
+          <div class="pm-bank-field">
+            <div class="pm-bank-field-label">IFSC Code</div>
+            <div class="pm-bank-field-val">HDFC0001234</div>
+          </div>
+          <div class="pm-bank-field">
+            <div class="pm-bank-field-label">Bank Name</div>
+            <div class="pm-bank-field-val">HDFC Bank</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UTR / Reference -->
+      <div class="pm-input-group">
+        <div class="pm-input-label">Enter UTR / Transaction Reference Number</div>
+        <div class="pm-input-box">
+          <input class="pm-input" id="pm-utr" type="text" placeholder="e.g. 407123456789" maxlength="30">
+        </div>
+      </div>
+
+      <!-- Pay button -->
+      <button class="pm-pay-btn" id="pm-pay-btn" style="background:var(--gold);color:#000;" onclick="submitVipPayment()">
+        ✅ Confirm VIP Activation
+      </button>
+
+    </div>
+
+    <!-- Success State -->
+    <div class="pm-success" id="pm-success">
+      <div class="pm-success-icon">🎉</div>
+      <div class="pm-success-title">VIP Activated!</div>
+      <div class="pm-success-msg" id="pm-success-msg">Your <strong>Gold VIP</strong> membership is now active. Enjoy your exclusive perks and rewards!</div>
+      <div class="pm-success-txid" id="pm-success-txid">TX-GGVIP-XXXXXX</div>
+      <button class="pm-success-close" onclick="closeVipPayment()">Back to Lobby</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentTierKey = 'gold';
+  let currentPmMethod = 'upi';
+
+    const tierConfig = {
+    bronze: {
+      icon: '🥉', name: 'Bronze VIP (1 Month)', price: '1,699 / Month',
+      raw: 1699, upi: 'ggwins@ybl',
+      badgeBg: 'rgba(205,127,50,0.15)', payColor: 'linear-gradient(135deg,#cd7f32,#e8976a)', payText: '#fff'
+    },
+    silver: {
+      icon: '🥈', name: 'Silver VIP (1 Month)', price: '2,899 / Month',
+      raw: 2899, upi: 'ggwins@ybl',
+      badgeBg: 'rgba(192,192,192,0.12)', payColor: 'linear-gradient(135deg,#9e9e9e,#d4d4d4)', payText: '#000'
+    },
+    gold: {
+      icon: '👑', name: 'Gold VIP (1 Month)', price: '5,499 / Month',
+      raw: 5499, upi: 'ggwins@ybl',
+      badgeBg: 'rgba(255,190,11,0.15)', payColor: 'linear-gradient(135deg,#ffbe0b,#ffe066)', payText: '#000'
+    },
+    platinum: {
+      icon: '👑', name: 'Platinum VIP', price: '9,999',
+      raw: 9999, upi: 'ggwins@ybl',
+      badgeBg: 'rgba(129,140,248,0.2)', payColor: 'linear-gradient(135deg,#818cf8,#c7d2fe)', payText: '#000'
+    },
+    diamond: {
+      icon: '💎', name: 'Diamond VIP', price: '19,999',
+      raw: 19999, upi: 'ggwins@ybl',
+      badgeBg: 'rgba(56,189,248,0.25)', payColor: 'linear-gradient(135deg,#38bdf8,#c084fc)', payText: '#fff'
+    }
+  };
+
+  function openVipPayment(tierKey, icon, name, priceRaw) {
+    currentTierKey = tierKey;
+    const cfg = tierConfig[tierKey];
+
+    // Reset to form state
+    document.getElementById('pm-body').style.display = 'flex';
+    document.getElementById('pm-success').classList.remove('show');
+    document.getElementById('pm-utr').value = '';
+    selectPmMethod('upi');
+
+    // Update header
+    const badge = document.getElementById('pm-tier-badge');
+    badge.textContent = cfg.icon;
+    badge.style.background = cfg.badgeBg;
+    document.getElementById('pm-title').textContent = cfg.name + ' Activation';
+
+    // Update summary
+    document.getElementById('pm-plan-name').textContent = cfg.name + ' Membership';
+    document.getElementById('pm-price-display').textContent = '₹' + cfg.price;
+
+    // Update UPI ID
+    document.getElementById('pm-upi-id').textContent = cfg.upi;
+
+    // Update pay button
+    const btn = document.getElementById('pm-pay-btn');
+    btn.style.background = cfg.payColor;
+    btn.style.color = cfg.payText;
+
+    document.getElementById('vip-payment-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeVipPayment() {
+    document.getElementById('vip-payment-modal').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function closeVipPaymentOutside(e) {
+    if (e.target === document.getElementById('vip-payment-modal')) {
+      closeVipPayment();
+    }
+  }
+
+  function selectPmMethod(method) {
+    currentPmMethod = method;
+    document.getElementById('pm-m-upi').classList.toggle('active', method === 'upi');
+    document.getElementById('pm-m-bank').classList.toggle('active', method === 'bank');
+    document.getElementById('pm-upi-section').style.display = method === 'upi' ? 'block' : 'none';
+    document.getElementById('pm-bank-section').style.display = method === 'bank' ? 'block' : 'none';
+  }
+
+  function copyUpiId() {
+    const id = document.getElementById('pm-upi-id').textContent;
+    navigator.clipboard.writeText(id).then(() => {
+      const el = document.querySelector('.pm-upi-copy');
+      el.textContent = '✅ Copied!';
+      el.style.color = '#00e676';
+      setTimeout(() => {
+        el.textContent = '📋 Tap to copy UPI ID';
+        el.style.color = '';
+      }, 2000);
+    });
+  }
+
+    async function submitVipPayment() {
+    const utr = document.getElementById('pm-utr').value.trim();
+    if (!utr || utr.length < 6) {
+      document.getElementById('pm-utr').parentElement.style.borderColor = '#ef4444';
+      document.getElementById('pm-utr').parentElement.style.boxShadow = '0 0 0 2px rgba(239,68,68,0.2)';
+      document.getElementById('pm-utr').placeholder = '⚠️ Please enter 12-digit UTR number';
+      setTimeout(() => {
+        document.getElementById('pm-utr').parentElement.style.borderColor = '';
+        document.getElementById('pm-utr').parentElement.style.boxShadow = '';
+        document.getElementById('pm-utr').placeholder = 'e.g. 407123456789';
+      }, 2500);
+      return;
+    }
+
+    const cfg = tierConfig[currentTierKey];
+    const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
+    const orderId = 'ORD-VIP-' + Math.floor(100000 + Math.random() * 900000);
+
+    const reqData = {
+      orderId: orderId,
+      tier: currentTierKey,
+      tierName: cfg.name,
+      amount: cfg.raw,
+      utr: utr,
+      method: currentPmMethod === 'upi' ? 'UPI Instant' : 'Bank Transfer',
+      userId: session.id || '',
+      username: session.username || localStorage.getItem('ggwins_username') || 'Player'
+    };
+
+    try {
+      await fetch('/api/vip-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reqData)
+      });
+    } catch(e) {
+      console.warn('Sent offline fallback:', e);
+    }
+
+    // Show pending approval success modal
+    document.getElementById('pm-body').style.display = 'none';
+    const success = document.getElementById('pm-success');
+    document.getElementById('pm-success-msg').innerHTML = `
+      <div style="background:rgba(255,215,0,0.1);border:1px solid #ffd700;border-radius:12px;padding:12px;margin:10px 0;text-align:left">
+        <div style="font-weight:800;color:#ffd700;margin-bottom:4px">👑 VIP Upgrade Request Sent to Admin Page</div>
+        <div style="font-size:12.5px;color:#cbd5e1;line-height:1.5">
+          • Tier: <strong>${cfg.name}</strong><br>
+          • Amount: <strong>₹${cfg.price}</strong><br>
+          • UTR Ref: <strong>${utr}</strong><br>
+          • Status: <span style="color:#f59e0b;font-weight:700">⏳ Pending Host Approval</span>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#94a3b8">Once approved by host in the Admin Terminal, your glowing VIP badge and VIP Lounge room access will be automatically unlocked!</p>
+    `;
+    document.getElementById('pm-success-txid').textContent = 'Order Reference: ' + orderId;
+    success.classList.add('show');
+  }
+
+  // Keyboard escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeVipPayment();
+  });
+
+  // ── 3 QR CODES DATA & ROTATOR ──
+  const VIP_QR_DATA = [
+    { src: 'assets/qr1.jpg', upi: 'amdasrarbasha-1@oksbi' },
+    { src: 'assets/qr2.jpg', upi: 'kabilanr2210@okhdfcbank' },
+    { src: 'assets/qr3.jpg', upi: 'txchem@slc' }
+  ];
+
+  let currentVipQrIdx = 0;
+
+  function rotateVipQR() {
+    currentVipQrIdx = (currentVipQrIdx + 1) % VIP_QR_DATA.length;
+    updateVipQRDisplay();
+  }
+
+  function updateVipQRDisplay() {
+    const item = VIP_QR_DATA[currentVipQrIdx];
+    const img = document.getElementById('vip-qr-img');
+    const badge = document.getElementById('vip-qr-badge');
+    const upiTxt = document.getElementById('vip-upi-id-display');
+    const topBtn = document.getElementById('vip-rot-btn-top');
+
+    if (img) {
+      img.src = item.src;
+      img.dataset.idx = currentVipQrIdx;
+    }
+    if (badge) badge.textContent = `${currentVipQrIdx + 1}/3`;
+    if (upiTxt) upiTxt.textContent = item.upi;
+    if (topBtn) topBtn.textContent = `🔄 Next QR (${currentVipQrIdx + 1}/3)`;
+  }
+
+  function copyCurrentVipUPI(btn) {
+    const upi = VIP_QR_DATA[currentVipQrIdx].upi;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(upi);
+    }
+    const orig = btn.textContent;
+    btn.textContent = 'Copied! ✓';
+    btn.style.background = '#00e676';
+    btn.style.color = '#000';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 1500);
+  }
+
+  function openVipQRLightbox() {
+    const item = VIP_QR_DATA[currentVipQrIdx];
+    document.getElementById('vip-lightbox-img').src = item.src;
+    document.getElementById('vip-lightbox-upi-txt').textContent = item.upi;
+    document.getElementById('vip-lightbox-sub').textContent = `Option ${currentVipQrIdx + 1} of 3 • Screenshot or Download to Pay`;
+    document.getElementById('vip-lightbox-dl-btn').href = item.src;
+    document.getElementById('vip-qr-lightbox').classList.add('show');
+  }
+
+  function closeVipQRLightbox() {
+    document.getElementById('vip-qr-lightbox').classList.remove('show');
+  }
+
+  function rotateVipLightboxQR() {
+    rotateVipQR();
+    openVipQRLightbox();
+  }
+
+</script>
+
+
+<!-- ── VIP QR FULLSCREEN LIGHTBOX POPUP ── -->
+<div id="vip-qr-lightbox" class="vip-lightbox-overlay" onclick="closeVipQRLightbox()">
+  <div class="vip-lightbox-card" onclick="event.stopPropagation()">
+    <button class="vip-lightbox-close" onclick="closeVipQRLightbox()">✕</button>
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:900;color:#ffd700">📸 Scan &amp; Pay via UPI</div>
+    <div style="font-size:11.5px;color:#94a3b8;margin-top:2px" id="vip-lightbox-sub">Option 1 of 3 • Screenshot or Download to Pay</div>
+
+    <div class="vip-lightbox-img-box">
+      <img src="assets/qr1.jpg" alt="UPI QR Code" id="vip-lightbox-img">
+    </div>
+
+    <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px">
+      <div style="text-align:left;overflow:hidden">
+        <div style="font-size:10px;color:#94a3b8;font-weight:700">UPI ID:</div>
+        <div style="font-family:monospace;font-size:13px;font-weight:800;color:#00e676" id="vip-lightbox-upi-txt">amdasrarbasha-1@oksbi</div>
+      </div>
+      <button class="vip-btn-copy" onclick="copyCurrentVipUPI(this)" style="padding:6px 12px">📋 Copy</button>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:center">
+      <a href="assets/qr1.jpg" download="ggwins-vip-qr.jpg" id="vip-lightbox-dl-btn" style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;text-decoration:none;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:800;padding:10px;border-radius:10px;display:inline-block">
+        📥 Download QR
+      </a>
+      <button class="vip-btn-rot" onclick="rotateVipLightboxQR()" style="flex:1;padding:10px;font-size:12px;border-radius:10px">
+        🔄 Next QR
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+</body>
+</html>

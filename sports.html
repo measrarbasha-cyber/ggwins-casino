@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportsbook – GG Wins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<style>
+/* Sports specific overrides */
+.sports-header {
+  background:var(--bg-card);
+  padding:20px 24px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sports-title {
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;font-weight:800;color:var(--text-primary);
+  display:flex;align-items:center;gap:10px;
+}
+.sports-tabs {
+  display:flex;gap:8px;padding:16px 24px;border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+}
+.sports-tabs::-webkit-scrollbar{display:none;}
+.sport-tab {
+  background:var(--bg-card);border:1px solid var(--border);
+  padding:8px 16px;border-radius:20px;
+  font-size:13px;font-weight:600;color:var(--text-secondary);
+  cursor:pointer;white-space:nowrap;transition:all 0.2s;
+  display:flex;align-items:center;gap:6px;
+}
+.sport-tab:hover{background:var(--bg-card-hover);color:var(--text-primary);}
+.sport-tab.active{background:var(--green);color:#000;border-color:var(--green);}
+
+.matches-container {
+  padding:24px;
+}
+.league-header {
+  font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;
+  color:var(--text-primary);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.league-header img { width:20px;height:20px;border-radius:50%; }
+
+.match-card {
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:12px;padding:16px;margin-bottom:12px;
+  transition:all 0.2s;
+}
+.match-card:hover { border-color:rgba(255,255,255,0.15); }
+
+.match-top {
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:16px;font-size:12px;color:var(--text-muted);font-weight:600;
+}
+.match-live-badge {
+  background:rgba(239,83,80,0.15);color:#ef5350;
+  padding:2px 6px;border-radius:4px;font-weight:700;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.match-live-badge::before {
+  content:'';width:6px;height:6px;border-radius:50%;background:#ef5350;
+  animation:blink 1.5s infinite;
+}
+
+.teams-area {
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.team {
+  display:flex;align-items:center;gap:12px;flex:1;
+}
+.team-logo {
+  width:32px;height:32px;background:var(--bg);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.team-name { font-size:15px;font-weight:700;color:var(--text-primary); }
+.score { font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:800;color:var(--green);margin:0 24px; }
+.vs { font-size:14px;font-weight:600;color:var(--text-muted);margin:0 24px; }
+
+.odds-grid {
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+}
+.odd-btn {
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:10px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  transition:all 0.2s;
+}
+.odd-btn:hover { background:var(--bg-card-hover);border-color:var(--green); }
+.odd-btn.selected { background:var(--green);color:#000;border-color:var(--green); }
+.odd-btn.selected .odd-val { color:#000; }
+.odd-label { font-size:12px;font-weight:600;color:var(--text-secondary); }
+.odd-btn.selected .odd-label { color:rgba(0,0,0,0.7); }
+.odd-val { font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:800;color:var(--text-primary); }
+
+/* Bet Slip */
+.sports-slip {
+  position:fixed;bottom:24px;right:24px;width:320px;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.5);
+  display:none;flex-direction:column;z-index:100;
+}
+.sports-slip.active { display:flex; }
+.slip-header {
+  background:var(--bg-card-hover);padding:16px;border-bottom:1px solid var(--border);
+  border-radius:12px 12px 0 0;font-weight:700;color:var(--text-primary);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.slip-close { background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px; }
+.slip-body { padding:16px;max-height:300px;overflow-y:auto; }
+.slip-item {
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:12px;margin-bottom:12px;
+}
+.slip-item-top { display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;font-weight:700;color:var(--text-primary); }
+.slip-item-odds { color:var(--green);font-family:'Space Grotesk'; }
+.slip-item-match { font-size:11px;color:var(--text-muted);margin-bottom:8px; }
+.slip-input {
+  width:100%;background:var(--bg-card);border:1px solid var(--border);
+  padding:8px 12px;border-radius:6px;color:var(--text-primary);
+  font-family:'Space Grotesk';outline:none;
+}
+.slip-input:focus { border-color:var(--green); }
+.slip-footer { padding:16px;border-top:1px solid var(--border); }
+.slip-payout { display:flex;justify-content:space-between;margin-bottom:12px;font-size:14px;font-weight:700; }
+.slip-payout-val { color:var(--green);font-family:'Space Grotesk'; }
+.btn-place-bet {
+  width:100%;background:var(--green);color:#000;border:none;
+  padding:14px;border-radius:8px;font-weight:700;cursor:pointer;
+  font-size:15px;transition:all 0.2s;
+}
+.btn-place-bet:hover { filter:brightness(1.1); }
+</style>
+</head>
+<body>
+
+  <!-- TOP HEADER -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo" style="display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:800;color:#fff;">
+        <span style="color:var(--green)">GG</span> Wins
+      </div>
+    </div>
+    <div class="topbar-right">
+      <a href="index.html" class="btn-secondary" style="text-decoration:none">Back to Casino</a>
+      <div id="wallet-chip-target">
+        <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+          <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)" title="Switch Active Account / Currency">
+            <span class="wallet-active-icon">🎮</span>
+            <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+            <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+            <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+            <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="openWalletModal('deposit')" style="padding:7px 14px;font-size:13px;border-radius:8px;font-weight:700;background:var(--green);color:#000;border:none;cursor:pointer">
+        💳 Wallet
+      </button>
+    </div>
+  </header>
+
+  <div class="sports-header">
+    <div class="sports-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24M20 12h-4M4 12H8M12 4V8M12 16v4"/></svg>
+      Sportsbook
+    </div>
+  </div>
+
+  <div class="sports-tabs">
+    <div class="sport-tab active">🔥 Top Events</div>
+    <div class="sport-tab">⚽ Soccer</div>
+    <div class="sport-tab">🏀 Basketball</div>
+    <div class="sport-tab">🎾 Tennis</div>
+    <div class="sport-tab">🎮 Esports</div>
+    <div class="sport-tab">🏏 Cricket</div>
+  </div>
+
+  <div class="matches-container">
+    
+    <!-- Soccer League -->
+    <div class="league-header">
+      <span>⚽</span> English Premier League
+    </div>
+
+    <div class="match-card">
+      <div class="match-top">
+        <div class="match-live-badge">LIVE 68'</div>
+        <div>1X2</div>
+      </div>
+      <div class="teams-area">
+        <div class="team">
+          <div class="team-logo">🦅</div>
+          <div class="team-name">Arsenal</div>
+        </div>
+        <div class="score">2 - 1</div>
+        <div class="team" style="flex-direction:row-reverse">
+          <div class="team-logo">🦁</div>
+          <div class="team-name">Chelsea</div>
+        </div>
+      </div>
+      <div class="odds-grid">
+        <div class="odd-btn" onclick="addBet(this, 'Arsenal', 1.45)">
+          <span class="odd-label">1</span>
+          <span class="odd-val">1.45</span>
+        </div>
+        <div class="odd-btn" onclick="addBet(this, 'Draw', 4.20)">
+          <span class="odd-label">X</span>
+          <span class="odd-val">4.20</span>
+        </div>
+        <div class="odd-btn" onclick="addBet(this, 'Chelsea', 8.50)">
+          <span class="odd-label">2</span>
+          <span class="odd-val">8.50</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Basketball League -->
+    <div class="league-header" style="margin-top:32px">
+      <span>🏀</span> NBA
+    </div>
+
+    <div class="match-card">
+      <div class="match-top">
+        <div>Today, 20:00</div>
+        <div>Winner (incl. OT)</div>
+      </div>
+      <div class="teams-area">
+        <div class="team">
+          <div class="team-logo">☀️</div>
+          <div class="team-name">Phoenix Suns</div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="team" style="flex-direction:row-reverse">
+          <div class="team-logo">🐻</div>
+          <div class="team-name">Memphis Grizzlies</div>
+        </div>
+      </div>
+      <div class="odds-grid" style="grid-template-columns:1fr 1fr">
+        <div class="odd-btn" onclick="addBet(this, 'Phoenix Suns', 1.85)">
+          <span class="odd-label">1</span>
+          <span class="odd-val">1.85</span>
+        </div>
+        <div class="odd-btn" onclick="addBet(this, 'Memphis Grizzlies', 1.95)">
+          <span class="odd-label">2</span>
+          <span class="odd-val">1.95</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Esports -->
+    <div class="league-header" style="margin-top:32px">
+      <span>🎮</span> CS2 Major Championship
+    </div>
+
+    <div class="match-card">
+      <div class="match-top">
+        <div>Tomorrow, 15:30</div>
+        <div>Match Winner</div>
+      </div>
+      <div class="teams-area">
+        <div class="team">
+          <div class="team-logo">🥷</div>
+          <div class="team-name">Ninjas in Pyjamas</div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="team" style="flex-direction:row-reverse">
+          <div class="team-logo">🔥</div>
+          <div class="team-name">FaZe Clan</div>
+        </div>
+      </div>
+      <div class="odds-grid" style="grid-template-columns:1fr 1fr">
+        <div class="odd-btn" onclick="addBet(this, 'Ninjas in Pyjamas', 2.40)">
+          <span class="odd-label">1</span>
+          <span class="odd-val">2.40</span>
+        </div>
+        <div class="odd-btn" onclick="addBet(this, 'FaZe Clan', 1.55)">
+          <span class="odd-label">2</span>
+          <span class="odd-val">1.55</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bet Slip -->
+  <div class="sports-slip" id="bet-slip">
+    <div class="slip-header">
+      <div>Bet Slip (<span id="slip-count">1</span>)</div>
+      <button class="slip-close" onclick="clearSlip()">✕</button>
+    </div>
+    <div class="slip-body" id="slip-body">
+      <!-- Item injected by JS -->
+    </div>
+    <div class="slip-footer">
+      <div class="slip-payout">
+        <span>Est. Payout</span>
+        <span class="slip-payout-val" id="est-payout">$0.00</span>
+      </div>
+      <button class="btn-place-bet" onclick="placeBet()">Place Bet</button>
+    </div>
+  </div>
+
+  <script src="wallet.js"></script>
+  <script>
+    let currentBet = null;
+    let selectedBtn = null;
+
+    function addBet(btn, selection, odds) {
+      if(selectedBtn) selectedBtn.classList.remove('selected');
+      btn.classList.add('selected');
+      selectedBtn = btn;
+      
+      currentBet = { selection, odds };
+      
+      document.getElementById('bet-slip').classList.add('active');
+      document.getElementById('slip-body').innerHTML = `
+        <div class="slip-item">
+          <div class="slip-item-top">
+            <span>${selection}</span>
+            <span class="slip-item-odds">${odds.toFixed(2)}</span>
+          </div>
+          <div class="slip-item-match">Match Winner</div>
+          <input type="number" class="slip-input" id="bet-amount" placeholder="Bet Amount" oninput="calcPayout()">
+        </div>
+      `;
+      calcPayout();
+    }
+
+    function calcPayout() {
+      if(!currentBet) return;
+      const amt = parseFloat(document.getElementById('bet-amount').value || 0);
+      const payout = amt * currentBet.odds;
+      document.getElementById('est-payout').textContent = formatCurrency(payout);
+    }
+
+    function clearSlip() {
+      currentBet = null;
+      if(selectedBtn) { selectedBtn.classList.remove('selected'); selectedBtn = null; }
+      document.getElementById('bet-slip').classList.remove('active');
+    }
+
+    function placeBet() {
+      const amt = parseFloat(document.getElementById('bet-amount').value || 0);
+      const bal = getBalance();
+      if(amt <= 0 || isNaN(amt)) return alert('Enter a valid bet amount');
+      if(amt > bal) return alert('Insufficient balance in active account. Switch accounts or deposit!');
+
+      // Deduct bet from active account
+      setBalance(bal - amt);
+
+      // Simulate a win/loss result after 2 seconds
+      const btn = document.querySelector('.btn-place-bet');
+      btn.textContent = 'Processing...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        const won = Math.random() > 0.5;
+        if(won) {
+          const payout = amt * currentBet.odds;
+          setBalance(getBalance() + payout);
+          alert(`🎉 Bet Won! You got ${formatCurrency(payout)}`);
+        } else {
+          alert('💥 Bet Lost. Better luck next time!');
+        }
+        btn.textContent = 'Place Bet';
+        btn.disabled = false;
+        clearSlip();
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

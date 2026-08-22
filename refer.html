@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refer & Earn – GG Wins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0b1120;--bg2:#111827;--bg3:#1a2332;--card:#1e2d3d;
+  --green:#00e676;--gold:#ffd700;--text:#e8edf5;--text2:#8fa3b8;--muted:#4d6478;
+  --border:rgba(255,255,255,0.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text2);min-height:100vh;}
+a{color:var(--green);text-decoration:none;}
+
+/* NAV */
+.site-nav{position:sticky;top:0;z-index:100;background:rgba(11,17,32,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:60px;gap:16px;}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:800;color:var(--text);}
+.nav-logo span{color:var(--green);}
+.nav-links{display:flex;gap:6px;flex-wrap:wrap;}
+.nav-link{font-size:13px;font-weight:600;color:var(--text2);padding:6px 14px;border-radius:20px;border:1px solid var(--border);transition:all 0.2s;}
+.nav-link:hover,.nav-link.active{color:var(--text);border-color:var(--border);background:var(--card);}
+.nav-link.home{background:var(--green);color:#000;border-color:var(--green);}
+
+/* HERO */
+.refer-hero{background:linear-gradient(135deg,#121a0f,#0b1120);border-bottom:1px solid var(--border);padding:80px 24px;text-align:center;position:relative;overflow:hidden;}
+.refer-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,0.15) 0%,transparent 70%);pointer-events:none;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:800;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+.refer-hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(36px,6vw,64px);font-weight:900;color:var(--text);margin-bottom:16px;line-height:1.1;}
+.refer-hero h1 span{background:linear-gradient(135deg,var(--gold),#ffaa00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.refer-hero p{font-size:16px;color:var(--text2);max-width:500px;margin:0 auto 32px;}
+
+/* MAIN */
+.main-content{max-width:800px;margin:40px auto;padding:0 24px;}
+.referral-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.5);}
+.box-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.box-sub{font-size:14px;color:var(--text2);margin-bottom:24px;}
+
+.link-group{display:flex;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:6px;margin-bottom:24px;}
+.link-input{flex:1;background:none;border:none;color:var(--green);font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;padding:10px 16px;outline:none;}
+.copy-btn{background:var(--gold);color:#000;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.copy-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;text-align:left;margin-top:40px;}
+.step{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.step-num{display:inline-flex;width:32px;height:32px;border-radius:50%;background:rgba(255,215,0,0.1);color:var(--gold);font-family:'Space Grotesk',sans-serif;font-weight:800;align-items:center;justify-content:center;margin-bottom:12px;}
+.step h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.step p{font-size:13px;color:var(--text2);line-height:1.5;}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px;}
+.stat-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.stat-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.stat-val{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:800;color:var(--text);}
+.stat-val.earn{color:var(--gold);}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-logo">GG <span>Wins</span></div>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link home">← Back to Lobby</a>
+    <a href="refer.html" class="nav-link active">Refer & Earn</a>
+  </div>
+</nav>
+
+<div class="refer-hero">
+  <div class="hero-badge">💸 Affiliate Program</div>
+  <h1>Refer a friend and<br>earn up to <span>₹500</span></h1>
+  <p>Invite your friends to GG Wins and get rewarded. You earn ₹500 for every friend who signs up and makes their first deposit!</p>
+</div>
+
+<div class="main-content">
+  <div class="referral-box">
+    <div class="box-title">Your Unique Referral Link</div>
+    <div class="box-sub">Share this link anywhere to start earning immediately.</div>
+    
+    <div class="link-group">
+      <input type="text" class="link-input" id="ref-link" value="https://ggwins.com/?ref=user123" readonly>
+      <button class="copy-btn" onclick="copyLink(this)">Copy Link</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Friends Invited</div>
+        <div class="stat-val" id="ref-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Earned</div>
+        <div class="stat-val earn" id="ref-earned">₹0.00</div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Share your link</h3>
+        <p>Send your unique referral link to friends via WhatsApp, Telegram, or social media.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>They sign up</h3>
+        <p>Your friend creates a GG Wins account using your referral link.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>You get ₹500</h3>
+        <p>Once they make their first deposit (min ₹500), ₹500 is instantly credited to your Real INR wallet!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyLink(btn) {
+  const input = document.getElementById('ref-link');
+  input.select();
+  document.execCommand('copy');
+  btn.textContent = 'Copied! ✓';
+  btn.style.background = 'var(--green)';
+  setTimeout(() => {
+    btn.textContent = 'Copy Link';
+    btn.style.background = 'var(--gold)';
+  }, 2000);
+}
+
+// Set custom referral link if logged in
+window.onload = () => {
+  try {
+    const session = JSON.parse(localStorage.getItem('ggwins_session'));
+    if (session && session.username) {
+      document.getElementById('ref-link').value = `https://ggwins.com/?ref=${session.username.toLowerCase()}`;
+    }
+  } catch(e) {}
+};
+</script>
+</body>
+</html>

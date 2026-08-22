@@ -1,0 +1,7 @@
+cloudflared.exe
+*.log
+__pycache__/
+*.tmp
+.user_uploaded/
+.system_generated/
+*.zip

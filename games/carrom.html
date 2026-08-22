@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Carrom 3D Pro – Carrom King Real Physics – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+/* ── 3D CARROM ARENA ── */
+.carrom-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 50%, #0d1b2a 0%, #050a10 100%);
+}
+
+.table-felt-3d {
+  padding: 8px;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border-radius: 20px;
+  border: 3.5px solid #ffd700;
+  box-shadow: 0 0 45px rgba(255,215,0,0.35), 0 16px 40px rgba(0,0,0,0.85);
+  position: relative;
+  perspective: 1200px;
+}
+
+.board-container-3d {
+  position: relative;
+  width: min(440px, 92vw);
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  transform: rotateX(12deg) scale(0.98);
+  transition: transform 0.4s ease;
+  border-radius: 14px;
+  box-shadow: 0 20px 45px rgba(0,0,0,0.85), inset 0 0 20px rgba(0,0,0,0.7);
+  background: #2b1810;
+  overflow: hidden;
+  border: 6px solid #140a06;
+}
+.board-container-3d:hover {
+  transform: rotateX(6deg) scale(0.99);
+}
+
+#carrom-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* Striker Controls Bar */
+.striker-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.95);
+  padding: 8px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border-gold);
+  margin-top: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  width: min(440px, 92vw);
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.slider-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.slider-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+.carrom-slider {
+  flex: 1;
+  accent-color: #ffd700;
+  cursor: pointer;
+}
+
+/* Pool Cards */
+.pool-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  width: 100%;
+}
+.pool-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.pool-card:hover { border-color: #00e676; }
+.pool-card.selected {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, rgba(255,215,0,0.16), rgba(255,215,0,0.05));
+  box-shadow: 0 0 12px rgba(255,215,0,0.3);
+}
+.pool-name  { font-size: 9.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+.pool-entry { font-size: 12.5px; font-weight: 900; color: #fff; margin-top: 2px; }
+.pool-prize { font-size: 11.5px; font-weight: 900; color: #00e676; margin-top: 1px; }
+
+/* In-Game Toast */
+#game-toast {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-30px);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid #ffd700;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+#game-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+#carrom-confetti {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 60;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<div id="game-toast"></div>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🎯 Carrom 3D Pro</div>
+  </div>
+  <div class="gnav-game-name">Carrom 3D Pro</div>
+  <span class="gnav-game-badge" style="background:#00e676;color:#000">CARROM KING MASTER AI</span>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area carrom-area">
+    <canvas id="carrom-confetti"></canvas>
+
+    <div class="table-felt-3d">
+      <div class="board-container-3d">
+        <canvas id="carrom-canvas" width="440" height="440"></canvas>
+      </div>
+    </div>
+
+    <!-- Striker Controls Bar -->
+    <div class="striker-controls">
+      <div class="control-row">
+        <div class="slider-group">
+          <span class="slider-label">📍 Baseline:</span>
+          <input type="range" class="carrom-slider" id="slider-pos" min="115" max="325" value="220" oninput="updateStrikerX(this.value)">
+        </div>
+        <div class="slider-group">
+          <span class="slider-label">⚡ Power:</span>
+          <input type="range" class="carrom-slider" id="slider-power" min="12" max="32" value="22">
+        </div>
+      </div>
+      <div class="control-row">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:800;color:#cbd5e1" id="turn-status">
+          👑 You: <span id="score-player" style="color:#00e676">0 pts</span> | ⚔️ Bot: <span id="score-bot" style="color:#ef4444">0 pts</span>
+        </div>
+        <button class="btn-bet" style="width:auto;padding:6px 16px;font-size:12px;margin:0" id="btn-strike" onclick="strikePlayer()">
+          🎯 Shoot Striker
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POOL SELECTION PANEL -->
+  <div class="bet-panel">
+    <div class="bet-section" style="flex:1 1 200px">
+      <div class="bet-label">Select Carrom Pool Match</div>
+      <div class="pool-cards">
+        <div class="pool-card selected" onclick="selectCarromPool('bronze')" id="pool-bronze">
+          <div class="pool-name">Bronze Pool</div>
+          <div class="pool-entry">Entry: ₹50</div>
+          <div class="pool-prize">Prize: ₹80</div>
+        </div>
+        <div class="pool-card" onclick="selectCarromPool('silver')" id="pool-silver">
+          <div class="pool-name">Silver Pool</div>
+          <div class="pool-entry">Entry: ₹500</div>
+          <div class="pool-prize">Prize: ₹800</div>
+        </div>
+        <div class="pool-card" onclick="selectCarromPool('gold')" id="pool-gold">
+          <div class="pool-name">Gold Pool</div>
+          <div class="pool-entry">Entry: ₹1,500</div>
+          <div class="pool-prize">Prize: ₹2,400</div>
+        </div>
+        <div class="pool-card" onclick="selectCarromPool('diamond')" id="pool-diamond">
+          <div class="pool-name">Diamond VIP</div>
+          <div class="pool-entry">Entry: ₹13,000</div>
+          <div class="pool-prize">Prize: ₹20,800</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Start Action Button -->
+    <div class="bet-section" style="flex:1 1 140px">
+      <button class="btn-bet" id="btn-join-match" onclick="startCarromMatch()">
+        ⚔️ Join Battle (₹50)
+      </button>
+      <div id="result-container" style="margin-top:2px"></div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+
+    <div class="copyright-footer">
+      © 2026 GG Wins. Carrom King 2D Rigid Vector Physics Engine.
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script>
+// 🛡️ Global Error Boundary
+window.onerror = function(msg, url, line) {
+  console.warn("Carrom Error Intercepted:", msg, line);
+  return true;
+};
+
+const canvas = document.getElementById('carrom-canvas');
+const ctx = canvas.getContext('2d');
+
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('game-toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.borderColor = (type === 'error') ? '#ef4444' : (type === 'success' ? '#00e676' : '#ffd700');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+const POOLS = {
+  bronze:  { name: 'Bronze Pool', entry: 50, prize: 80 },
+  silver:  { name: 'Silver Pool', entry: 500, prize: 800 },
+  gold:    { name: 'Gold Pool', entry: 1500, prize: 2400 },
+  diamond: { name: 'Diamond VIP', entry: 13000, prize: 20800 }
+};
+
+let activePool = 'bronze';
+let matchActive = false; // Must click Join Battle to start!
+let currentTurn = 'player';
+let playerPts = 0, botPts = 0;
+let turnCount = 0;
+let hasShot = false;
+let isMatchSettled = false;
+let pocketedInThisTurn = false;
+let strikerFoul = false;
+let statsProfit = 0, statsWins = 0, statsLosses = 0;
+let turnWatchdog = null;
+
+const POCKETS = [
+  { id: 0, x: 34, y: 34, r: 22 },
+  { id: 1, x: 406, y: 34, r: 22 },
+  { id: 2, x: 34, y: 406, r: 22 },
+  { id: 3, x: 406, y: 406, r: 22 }
+];
+
+let striker = { x: 220, y: 345, r: 17, vx: 0, vy: 0, mass: 2.8 };
+let aimAngle = -Math.PI / 2;
+let isDraggingAim = false;
+let dragStartCoords = null;
+let pieces = [];
+const floatingScores = [];
+
+// 🎵 Sound Synthesizers
+let audioCtx = null;
+let lastClickSoundTime = 0;
+
+function getAudioCtx() {
+  try {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) audioCtx = new AudioContextClass();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  } catch(e){}
+  return audioCtx;
+}
+
+function playCarromClick() {
+  const now = Date.now();
+  if (now - lastClickSoundTime < 50) return;
+  lastClickSoundTime = now;
+  try {
+    const actx = getAudioCtx();
+    if (!actx) return;
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(320 + Math.random() * 60, actx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(70, actx.currentTime + 0.035);
+    gain.gain.setValueAtTime(0.2, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.035);
+    osc.connect(gain);
+    gain.connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + 0.035);
+  } catch(e){}
+}
+
+function playPocketSound() {
+  try {
+    const actx = getAudioCtx();
+    if (!actx) return;
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(240, actx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(480, actx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.35, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.14);
+    osc.connect(gain);
+    gain.connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + 0.14);
+  } catch(e){}
+}
+
+function playFoulSound() {
+  try {
+    const actx = getAudioCtx();
+    if (!actx) return;
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(130, actx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, actx.currentTime + 0.2);
+    gain.gain.setValueAtTime(0.3, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.22);
+    osc.connect(gain);
+    gain.connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + 0.22);
+  } catch(e){}
+}
+
+function initBoardPieces() {
+  pieces = [];
+  const cx = 220, cy = 220;
+  const r = 12.5;
+
+  // 1. Red Queen (Center)
+  pieces.push({ 
+    id: 0, x: cx, y: cy, r: r, vx: 0, vy: 0, mass: 1.0, 
+    type: 'queen', val: 25, color: '#ef4444'
+  });
+
+  // 2. Inner Circle (6 pieces alternating white & black)
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * Math.PI) / 3;
+    const isWhite = (i % 2 === 0);
+    pieces.push({
+      id: i + 1,
+      x: cx + Math.cos(angle) * (r * 2.05),
+      y: cy + Math.sin(angle) * (r * 2.05),
+      r: r, vx: 0, vy: 0, mass: 1.0,
+      type: isWhite ? 'white' : 'black',
+      val: isWhite ? 10 : 5,
+      color: isWhite ? '#ffffff' : '#1e293b'
+    });
+  }
+
+  // 3. Outer Ring (12 pieces alternating)
+  for (let i = 0; i < 12; i++) {
+    const angle = (i * Math.PI) / 6 + (Math.PI / 12);
+    const isWhite = (i % 2 !== 0);
+    pieces.push({
+      id: i + 7,
+      x: cx + Math.cos(angle) * (r * 3.9),
+      y: cy + Math.sin(angle) * (r * 3.9),
+      r: r, vx: 0, vy: 0, mass: 1.0,
+      type: isWhite ? 'white' : 'black',
+      val: isWhite ? 10 : 5,
+      color: isWhite ? '#ffffff' : '#1e293b'
+    });
+  }
+}
+
+function updateStrikerX(v) {
+  if (!matchActive || Math.abs(striker.vx) > 0.05 || Math.abs(striker.vy) > 0.05) return;
+  striker.x = parseFloat(v);
+}
+
+function getCanvasCoords(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : (e.clientX || 0);
+  const clientY = e.touches ? e.touches[0].clientY : (e.clientY || 0);
+  return {
+    x: (clientX - rect.left) * (canvas.width / rect.width),
+    y: (clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+
+function handleAimEvent(e) {
+  if (!matchActive || currentTurn !== 'player' || hasShot) return;
+  const coords = getCanvasCoords(e);
+  const dx = coords.x - striker.x;
+  const dy = coords.y - striker.y;
+  aimAngle = Math.atan2(dy, dx);
+}
+
+canvas.addEventListener('mousedown', (e) => {
+  if (!matchActive) {
+    showToast(`⚠️ Please click "Join Battle" first to enter the match!`, 'info');
+    return;
+  }
+  isDraggingAim = true;
+  dragStartCoords = getCanvasCoords(e);
+  handleAimEvent(e);
+});
+canvas.addEventListener('mousemove', (e) => {
+  if (isDraggingAim) handleAimEvent(e);
+});
+window.addEventListener('mouseup', (e) => {
+  if (isDraggingAim && dragStartCoords && currentTurn === 'player' && !hasShot) {
+    const endCoords = getCanvasCoords(e);
+    const pullDist = Math.hypot(endCoords.x - dragStartCoords.x, endCoords.y - dragStartCoords.y);
+    if (pullDist > 14) {
+      strikePlayer();
+    }
+  }
+  isDraggingAim = false;
+  dragStartCoords = null;
+});
+
+canvas.addEventListener('touchstart', (e) => {
+  if (!matchActive) {
+    showToast(`⚠️ Please click "Join Battle" first to enter the match!`, 'info');
+    return;
+  }
+  isDraggingAim = true;
+  dragStartCoords = getCanvasCoords(e);
+  handleAimEvent(e);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+  if (isDraggingAim) {
+    handleAimEvent(e);
+    e.preventDefault();
+  }
+}, { passive: false });
+
+window.addEventListener('touchend', (e) => {
+  if (isDraggingAim && currentTurn === 'player' && !hasShot) {
+    strikePlayer();
+  }
+  isDraggingAim = false;
+  dragStartCoords = null;
+});
+
+function selectCarromPool(poolKey) {
+  if (matchActive) {
+    showToast('⚠️ A battle is already in progress! Finish the match first.', 'info');
+    return;
+  }
+  activePool = poolKey;
+  document.querySelectorAll('.pool-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById(`pool-${poolKey}`);
+  if (card) card.classList.add('selected');
+  const pool = POOLS[poolKey];
+  const btn = document.getElementById('btn-join-match');
+  if (btn) btn.textContent = `⚔️ Join Battle (₹${pool.entry})`;
+  showToast(`🎯 Selected ${pool.name} (Entry: ₹${pool.entry} | Prize: ₹${pool.prize})`);
+}
+
+function startCarromMatch() {
+  if (matchActive) return;
+  const pool = POOLS[activePool];
+  const currBal = (typeof window.getBalance === 'function') ? window.getBalance() : 50000;
+  if (currBal < pool.entry) {
+    showToast(`Insufficient balance for ${pool.name}!`, 'error');
+    if (typeof openWalletModal === 'function') openWalletModal('deposit');
+    return;
+  }
+
+  // 💸 Deduct Entry Fee from Real User Balance
+  if (typeof window.adjustBalance === 'function') {
+    window.adjustBalance(-pool.entry, `Carrom 3D Entry – ${pool.name}`);
+  }
+
+  matchActive = true;
+  isMatchSettled = false;
+  playerPts = 0;
+  botPts = 0;
+  turnCount = 0;
+  hasShot = false;
+  pocketedInThisTurn = false;
+  strikerFoul = false;
+  currentTurn = 'player';
+  floatingScores.length = 0;
+
+  const btn = document.getElementById('btn-join-match');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = `⚔️ Battle in Progress...`;
+  }
+  document.getElementById('result-container').innerHTML = '';
+  document.getElementById('score-player').textContent = '0 pts';
+  document.getElementById('score-bot').textContent = '0 pts';
+  document.getElementById('turn-status').innerHTML = `👑 Your Turn • Aim &amp; Shoot!`;
+
+  showToast(`⚔️ Joined ${pool.name}! ₹${pool.entry} deducted. Pocket coins to win ₹${pool.prize}!`, 'success');
+
+  initBoardPieces();
+  resetStriker();
+}
+
+function resetStriker() {
+  striker.x = 220;
+  striker.y = (currentTurn === 'player') ? 345 : 95;
+  striker.vx = 0;
+  striker.vy = 0;
+  hasShot = false;
+  pocketedInThisTurn = false;
+  strikerFoul = false;
+  aimAngle = (currentTurn === 'player') ? -Math.PI / 2 : Math.PI / 2;
+  const slider = document.getElementById('slider-pos');
+  if (slider) slider.value = 220;
+  const ts = document.getElementById('turn-status');
+  if (ts) {
+    ts.innerHTML = (currentTurn === 'player') 
+      ? `👑 <strong>Your Turn</strong> • Aim &amp; Shoot!` 
+      : `⚔️ <strong>Bot Master is Aiming...</strong>`;
+  }
+}
+
+function strikePlayer() {
+  if (!matchActive) {
+    showToast(`⚠️ Please click "Join Battle" first to enter the match!`, 'info');
+    return;
+  }
+  if (currentTurn !== 'player' || hasShot || Math.abs(striker.vx) > 0.08 || Math.abs(striker.vy) > 0.08) return;
+  const power = parseFloat(document.getElementById('slider-power')?.value) || 22;
+  striker.vx = Math.cos(aimAngle) * power;
+  striker.vy = Math.sin(aimAngle) * power;
+  hasShot = true;
+  pocketedInThisTurn = false;
+  strikerFoul = false;
+  turnCount++;
+  playCarromClick();
+
+  clearTimeout(turnWatchdog);
+  turnWatchdog = setTimeout(() => {
+    if (matchActive && hasShot) {
+      striker.vx = 0; striker.vy = 0;
+      pieces.forEach(p => { p.vx = 0; p.vy = 0; });
+    }
+  }, 3500);
+}
+
+/* 🤖 MASTER-CLASS BOT AI (100% DIRECT CENTERLINE ALIGNMENT) */
+function botTurn() {
+  if (!matchActive || currentTurn !== 'bot' || hasShot) return;
+  setTimeout(() => {
+    if (!matchActive || currentTurn !== 'bot') return;
+    const activeP = pieces.filter(p => p.x > 0);
+    if (activeP.length === 0) return;
+
+    let bestShot = null;
+    let minScore = 99999;
+
+    activeP.forEach(p => {
+      // Prioritize Queen if available
+      const priorityWeight = (p.type === 'queen') ? 0.6 : 1.0;
+
+      POCKETS.forEach(pkt => {
+        const toPktDx = pkt.x - p.x;
+        const toPktDy = pkt.y - p.y;
+        const toPktDist = Math.hypot(toPktDx, toPktDy) || 1;
+        const normPktX = toPktDx / toPktDist;
+        const normPktY = toPktDy / toPktDist;
+
+        // Ghost contact point behind coin along pocket line
+        const contactX = p.x - normPktX * (p.r + striker.r);
+        const contactY = p.y - normPktY * (p.r + striker.r);
+
+        // Centerline baseline position for 100% direct strike
+        let idealStrikerX = contactX;
+        if (Math.abs(normPktY) > 0.05) {
+          idealStrikerX = contactX - (contactY - 95) * (normPktX / normPktY);
+        }
+        idealStrikerX = Math.max(115, Math.min(325, idealStrikerX));
+
+        // Precision strike angle from baseline straight through contact point
+        const shotAngle = Math.atan2(contactY - 95, contactX - idealStrikerX);
+
+        // Quality score: distance + angle alignment
+        const score = toPktDist * priorityWeight;
+        if (score < minScore) {
+          minScore = score;
+          bestShot = {
+            strikerX: idealStrikerX,
+            angle: shotAngle,
+            power: Math.min(28, Math.max(18, toPktDist * 0.08 + 17))
+          };
+        }
+      });
+    });
+
+    if (bestShot) {
+      striker.x = bestShot.strikerX;
+      aimAngle = bestShot.angle;
+      const speed = bestShot.power;
+      striker.vx = Math.cos(aimAngle) * speed;
+      striker.vy = Math.sin(aimAngle) * speed;
+    } else {
+      const target = activeP[0];
+      const angle = Math.atan2(target.y - striker.y, target.x - striker.x);
+      striker.vx = Math.cos(angle) * 20;
+      striker.vy = Math.sin(angle) * 20;
+    }
+
+    hasShot = true;
+    pocketedInThisTurn = false;
+    strikerFoul = false;
+    turnCount++;
+    playCarromClick();
+
+    clearTimeout(turnWatchdog);
+    turnWatchdog = setTimeout(() => {
+      if (matchActive && hasShot) {
+        striker.vx = 0; striker.vy = 0;
+        pieces.forEach(p => { p.vx = 0; p.vy = 0; });
+      }
+    }, 3500);
+  }, 800);
+}
+
+/* ── 2D 2-BODY ELASTIC MOMENTUM COLLISION RESOLUTION ── */
+function resolveCircleCollision(c1, c2, m1, m2, restitution = 0.94) {
+  if (c1.x < 0 || c2.x < 0) return false;
+  const dx = c2.x - c1.x;
+  const dy = c2.y - c1.y;
+  const dist = Math.hypot(dx, dy);
+  const minDist = c1.r + c2.r;
+  
+  if (dist <= 0 || dist >= minDist) return false;
+
+  const nx = dx / dist;
+  const ny = dy / dist;
+  const tx = -ny;
+  const ty = nx;
+
+  const overlap = (minDist - dist) + 0.2;
+  const totalMass = m1 + m2;
+  c1.x -= nx * (overlap * (m2 / totalMass));
+  c1.y -= ny * (overlap * (m2 / totalMass));
+  c2.x += nx * (overlap * (m1 / totalMass));
+  c2.y += ny * (overlap * (m1 / totalMass));
+
+  const v1n = c1.vx * nx + c1.vy * ny;
+  const v1t = c1.vx * tx + c1.vy * ty;
+  const v2n = c2.vx * nx + c2.vy * ny;
+  const v2t = c2.vx * tx + c2.vy * ty;
+
+  if (v1n - v2n < 0) return false;
+
+  const v1nPost = (v1n * (m1 - m2) + 2 * m2 * v2n) / totalMass;
+  const v2nPost = (v2n * (m2 - m1) + 2 * m1 * v1n) / totalMass;
+
+  c1.vx = (v1nPost * restitution) * nx + (v1t * 0.98) * tx;
+  c1.vy = (v1nPost * restitution) * ny + (v1t * 0.98) * ty;
+  c2.vx = (v2nPost * restitution) * nx + (v2t * 0.98) * tx;
+  c2.vy = (v2nPost * restitution) * ny + (v2t * 0.98) * ty;
+
+  playCarromClick();
+  return true;
+}
+
+function updatePhysics() {
+  const friction = 0.965;
+
+  striker.x += striker.vx;
+  striker.y += striker.vy;
+  striker.vx *= friction;
+  striker.vy *= friction;
+
+  if (Math.hypot(striker.vx, striker.vy) < 0.16) {
+    striker.vx = 0;
+    striker.vy = 0;
+  }
+
+  if (striker.x < 36) { striker.x = 36; striker.vx = Math.abs(striker.vx) * 0.82; playCarromClick(); }
+  if (striker.x > 404) { striker.x = 404; striker.vx = -Math.abs(striker.vx) * 0.82; playCarromClick(); }
+  if (striker.y < 36) { striker.y = 36; striker.vy = Math.abs(striker.vy) * 0.82; playCarromClick(); }
+  if (striker.y > 404) { striker.y = 404; striker.vy = -Math.abs(striker.vy) * 0.82; playCarromClick(); }
+
+  // Check Striker Pocket Drop
+  POCKETS.forEach(pkt => {
+    if (Math.hypot(striker.x - pkt.x, striker.y - pkt.y) < pkt.r + 2) {
+      striker.vx = 0; striker.vy = 0;
+      striker.x = -999;
+      strikerFoul = true;
+      playFoulSound();
+      showToast(`⚠️ FOUL! Striker Pocketed! Turn passes to opponent.`, 'error');
+    }
+  });
+
+  // Update Pieces
+  pieces.forEach(p => {
+    if (p.x < 0) return;
+
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= friction;
+    p.vy *= friction;
+
+    if (Math.hypot(p.vx, p.vy) < 0.16) {
+      p.vx = 0;
+      p.vy = 0;
+    }
+
+    if (p.x < 34) { p.x = 34; p.vx = Math.abs(p.vx) * 0.82; playCarromClick(); }
+    if (p.x > 406) { p.x = 406; p.vx = -Math.abs(p.vx) * 0.82; playCarromClick(); }
+    if (p.y < 34) { p.y = 34; p.vy = Math.abs(p.vy) * 0.82; playCarromClick(); }
+    if (p.y > 406) { p.y = 406; p.vy = -Math.abs(p.vy) * 0.82; playCarromClick(); }
+
+    if (striker.x > 0) resolveCircleCollision(striker, p, striker.mass, p.mass, 0.94);
+
+    pieces.forEach(p2 => {
+      if (p.id >= p2.id || p2.x < 0) return;
+      resolveCircleCollision(p, p2, p.mass, p2.mass, 0.92);
+    });
+
+    // Check Coin Pocket Drops
+    POCKETS.forEach(pkt => {
+      if (Math.hypot(p.x - pkt.x, p.y - pkt.y) < pkt.r + 3) {
+        p.x = -999;
+        p.y = -999;
+        p.vx = 0;
+        p.vy = 0;
+        pocketedInThisTurn = true;
+        playPocketSound();
+
+        if (currentTurn === 'player') playerPts += p.val;
+        else botPts += p.val;
+
+        const sp = document.getElementById('score-player');
+        const sb = document.getElementById('score-bot');
+        if (sp) sp.textContent = `${playerPts} pts`;
+        if (sb) sb.textContent = `${botPts} pts`;
+
+        floatingScores.push({
+          x: pkt.x, y: pkt.y,
+          text: `+${p.val} pts (${p.type.toUpperCase()})`,
+          color: (currentTurn === 'player' ? '#00e676' : '#ffd700'),
+          alpha: 1.0, dy: 0
+        });
+
+        showToast(`🎯 ${currentTurn === 'player' ? 'You' : 'Bot'} pocketed ${p.type.toUpperCase()} (+${p.val} pts)!`, 'success');
+      }
+    });
+  });
+
+  // Update Floating Scores
+  for (let i = floatingScores.length - 1; i >= 0; i--) {
+    const fs = floatingScores[i];
+    fs.dy -= 0.8;
+    fs.alpha -= 0.02;
+    if (fs.alpha <= 0) floatingScores.splice(i, 1);
+  }
+
+  // 🏆 Check Match Completion ONLY when all coins are pocketed or target reached
+  if (matchActive && !isMatchSettled && turnCount > 0) {
+    const activeRemaining = pieces.filter(p => p.x > 0).length;
+    if (playerPts >= 40 || botPts >= 40 || activeRemaining === 0) {
+      const isMotionStopped = (striker.vx === 0 && striker.vy === 0) &&
+        pieces.every(p => p.x < 0 || (p.vx === 0 && p.vy === 0));
+      if (isMotionStopped) {
+        endCarromMatch();
+        return;
+      }
+    }
+  }
+
+  // Turn Passing Rules
+  if (matchActive && hasShot) {
+    const isStrikerSettled = (striker.vx === 0 && striker.vy === 0);
+    const allPiecesSettled = pieces.every(p => p.x < 0 || (p.vx === 0 && p.vy === 0));
+
+    if (isStrikerSettled && allPiecesSettled) {
+      clearTimeout(turnWatchdog);
+      if (strikerFoul) {
+        currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
+        resetStriker();
+        if (currentTurn === 'bot') botTurn();
+      } else if (pocketedInThisTurn) {
+        resetStriker();
+        if (currentTurn === 'player') {
+          showToast(`🔥 EXTRA SHOT! You pocketed a coin, shoot again!`, 'info');
+        } else if (currentTurn === 'bot') {
+          botTurn();
+        }
+      } else {
+        currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
+        resetStriker();
+        if (currentTurn === 'bot') botTurn();
+      }
+    }
+  }
+}
+
+/* 👑 DECIDE WINNER BY EARNED POINTS AND PAYOUT ONLY IF USER WINS */
+function endCarromMatch() {
+  if (isMatchSettled) return;
+  isMatchSettled = true;
+  matchActive = false;
+
+  const btn = document.getElementById('btn-join-match');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = `⚔️ Join Battle (₹${POOLS[activePool].entry})`;
+  }
+
+  const pool = POOLS[activePool];
+  // Strict points comparison: Player wins ONLY if their score is strictly higher than bot
+  const isPlayerWin = (playerPts > botPts);
+  const isDraw = (playerPts === botPts);
+  const res = document.getElementById('result-container');
+
+  if (isPlayerWin) {
+    statsWins++;
+    const profit = pool.prize - pool.entry;
+    statsProfit += profit;
+
+    // 💰 ADD WINNING AMOUNT OF SELECTED POOL TO REAL USER BALANCE (ONLY ON USER WIN)
+    if (typeof window.adjustBalance === 'function') {
+      window.adjustBalance(pool.prize, `Carrom 3D 1st Prize – ${pool.name}`);
+    }
+    if (typeof flashBal === 'function') flashBal('flash-win');
+    launchCarromConfetti();
+
+    if (res) {
+      res.innerHTML = `
+        <div class="result-box win">
+          <div class="result-box-title">👑 VICTORY! YOU WON (${playerPts} vs ${botPts} pts)</div>
+          <div class="result-box-val">+₹${pool.prize.toLocaleString()}</div>
+        </div>
+      `;
+    }
+    showToast(`🏆 VICTORY! You won ₹${pool.prize.toLocaleString()}! Credited to your balance.`, 'success');
+  } else if (isDraw) {
+    // Refund on draw
+    if (typeof window.adjustBalance === 'function') {
+      window.adjustBalance(pool.entry, `Carrom 3D Draw Refund – ${pool.name}`);
+    }
+    if (res) {
+      res.innerHTML = `
+        <div class="result-box win" style="border-color:#ffd700">
+          <div class="result-box-title">🤝 TIE DRAW (${playerPts} vs ${botPts} pts)</div>
+          <div class="result-box-val">Refund: ₹${pool.entry.toLocaleString()}</div>
+        </div>
+      `;
+    }
+    showToast(`🤝 Match Tied! Entry fee refunded.`, 'info');
+  } else {
+    // Bot Won -> Player Loss (No money added)
+    statsLosses++;
+    statsProfit -= pool.entry;
+    if (typeof flashBal === 'function') flashBal('flash-lose');
+
+    if (res) {
+      res.innerHTML = `
+        <div class="result-box lose">
+          <div class="result-box-title">❌ DEFEAT: Bot Won (${botPts} vs ${playerPts} pts)</div>
+          <div class="result-box-val">-₹${pool.entry.toLocaleString()}</div>
+        </div>
+      `;
+    }
+    showToast(`❌ Bot won with ${botPts} pts! Better luck next battle!`, 'error');
+  }
+
+  if (typeof window.recordTournamentMatch === 'function') {
+    window.recordTournamentMatch('carrom', isPlayerWin);
+  }
+
+  const sw = document.getElementById('stat-wins');
+  const sl = document.getElementById('stat-losses');
+  const sp = document.getElementById('stat-profit');
+  if (sw) sw.textContent = statsWins;
+  if (sl) sl.textContent = statsLosses;
+  if (sp) {
+    sp.textContent = (statsProfit >= 0 ? '+₹' : '-₹') + Math.abs(statsProfit).toFixed(2);
+    sp.className = 'stat-box-val ' + (statsProfit >= 0 ? 'green' : 'red');
+  }
+}
+
+/* 🎨 DRAW CANVAS */
+function drawCarromBoard() {
+  ctx.clearRect(0, 0, 440, 440);
+
+  // 1. Board Wood Finish
+  const grad = ctx.createRadialGradient(220, 220, 40, 220, 220, 220);
+  grad.addColorStop(0, '#fef08a');
+  grad.addColorStop(1, '#ca8a04');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 440, 440);
+
+  // Center Rosette
+  ctx.strokeStyle = '#991b1b';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(220, 220, 42, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(220, 220, 16, 0, Math.PI * 2); ctx.stroke();
+
+  // Baselines
+  ctx.strokeStyle = '#78350f';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(95, 335, 250, 20);
+  ctx.fillStyle = '#dc2626';
+  ctx.beginPath(); ctx.arc(95, 345, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(345, 345, 8, 0, Math.PI * 2); ctx.fill();
+
+  ctx.strokeRect(95, 85, 250, 20);
+  ctx.beginPath(); ctx.arc(95, 95, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(345, 95, 8, 0, Math.PI * 2); ctx.fill();
+
+  // Corner Pockets
+  POCKETS.forEach(pkt => {
+    ctx.save();
+    ctx.fillStyle = '#0f172a';
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(pkt.x, pkt.y, pkt.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Pieces
+  pieces.forEach(p => {
+    if (p.x < 0) return;
+    ctx.save();
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = (p.type === 'queen') ? '#ffd700' : (p.type === 'white' ? '#d4af37' : '#94a3b8');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r * 0.45, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Striker
+  if (striker.x > 0) {
+    ctx.save();
+    ctx.fillStyle = (currentTurn === 'player') ? '#00e676' : '#ef4444';
+    ctx.shadowColor = 'rgba(0,0,0,0.85)';
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(striker.x, striker.y, striker.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(currentTurn === 'player' ? '👑' : '⚔️', striker.x, striker.y);
+    ctx.restore();
+  }
+
+  // Aiming Ray & Deflection Guide (Active only when match is active)
+  if (matchActive && currentTurn === 'player' && !hasShot && striker.x > 0 && Math.abs(striker.vx) < 0.08 && Math.abs(striker.vy) < 0.08) {
+    ctx.save();
+    const rayDirX = Math.cos(aimAngle);
+    const rayDirY = Math.sin(aimAngle);
+
+    let closestHit = null;
+    let minT = 160;
+
+    pieces.forEach(p => {
+      if (p.x < 0) return;
+      const ocX = p.x - striker.x;
+      const ocY = p.y - striker.y;
+      const proj = ocX * rayDirX + ocY * rayDirY;
+      if (proj > 0) {
+        const perpDistSq = (ocX * ocX + ocY * ocY) - (proj * proj);
+        const hitRadius = striker.r + p.r;
+        if (perpDistSq < hitRadius * hitRadius) {
+          const tIntersect = proj - Math.sqrt(Math.max(0, (hitRadius * hitRadius) - perpDistSq));
+          if (tIntersect > 0 && tIntersect < minT) {
+            minT = tIntersect;
+            closestHit = p;
+          }
+        }
+      }
+    });
+
+    const endX = striker.x + rayDirX * minT;
+    const endY = striker.y + rayDirY * minT;
+
+    ctx.strokeStyle = '#00e676';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([5, 5]);
+    ctx.shadowColor = '#00e676';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.moveTo(striker.x, striker.y);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(0,230,118,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(endX, endY, striker.r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (closestHit) {
+      const normalX = closestHit.x - endX;
+      const normalY = closestHit.y - endY;
+      const normLen = Math.hypot(normalX, normalY) || 1;
+      const nx = normalX / normLen;
+      const ny = normalY / normLen;
+
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(closestHit.x, closestHit.y);
+      ctx.lineTo(closestHit.x + nx * 35, closestHit.y + ny * 35);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.arc(closestHit.x + nx * 35, closestHit.y + ny * 35, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // Floating Scores
+  floatingScores.forEach(fs => {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, fs.alpha);
+    ctx.font = 'bold 12px "Space Grotesk", sans-serif';
+    ctx.fillStyle = fs.color;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    ctx.fillText(fs.text, fs.x, fs.y + fs.dy);
+    ctx.restore();
+  });
+
+  updatePhysics();
+  requestAnimationFrame(drawCarromBoard);
+}
+
+/* 🎊 CONFETTI */
+function launchCarromConfetti() {
+  const cvs = document.getElementById('carrom-confetti');
+  if (!cvs) return;
+  const cctx = cvs.getContext('2d');
+  cvs.width = cvs.parentElement.clientWidth;
+  cvs.height = cvs.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#ffd700', '#00e676', '#38bdf8', '#ff6b35'];
+  for (let i = 0; i < 75; i++) {
+    particles.push({
+      x: cvs.width / 2, y: cvs.height / 2,
+      vx: (Math.random() - 0.5) * 16, vy: (Math.random() - 0.8) * 16,
+      size: Math.random() * 8 + 4, color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1
+    });
+  }
+
+  function render() {
+    cctx.clearRect(0, 0, cvs.width, cvs.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.45; p.alpha -= 0.015;
+      if (p.alpha > 0) {
+        alive = true;
+        cctx.fillStyle = p.color;
+        cctx.globalAlpha = Math.max(0, p.alpha);
+        cctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    });
+    if (alive) requestAnimationFrame(render);
+    else cctx.clearRect(0, 0, cvs.width, cvs.height);
+  }
+  render();
+}
+
+window.addEventListener('load', () => {
+  initBoardPieces();
+  drawCarromBoard();
+  const ts = document.getElementById('turn-status');
+  if (ts) ts.innerHTML = `👆 Select a pool and click <strong>"Join Battle"</strong> to start!`;
+});
+</script>
+</body>
+</html>

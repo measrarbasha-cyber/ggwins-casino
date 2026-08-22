@@ -1,0 +1,493 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coin Flip 3D – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<script src="../security-guard.js"></script>
+<style>
+.coin-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  gap: 14px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 50%, #1e1438 0%, #080512 100%);
+  user-select: none;
+}
+.coin-stage {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  perspective: 1200px;
+}
+.coin-3d {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.coin-3d.flipping {
+  animation: coinToss3D 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes coinToss3D {
+  0%{transform: translateY(0) rotateX(0deg) scale(1);}
+  50%{transform: translateY(-110px) rotateX(1080deg) scale(1.2);}
+  100%{transform: translateY(0) rotateX(2160deg) scale(1);}
+}
+.coin-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #ffd700;
+  box-shadow: 0 0 35px rgba(255,215,0,0.5), inset 0 0 20px rgba(0,0,0,0.6);
+  font-family: 'Space Grotesk', sans-serif;
+}
+.coin-heads {
+  background: radial-gradient(circle at 35% 35%, #ffd700, #ff8c00, #b35900);
+  color: #000;
+}
+.coin-tails {
+  background: radial-gradient(circle at 35% 35%, #e2e8f0, #94a3b8, #475569);
+  color: #000;
+  transform: rotateX(180deg);
+}
+.coin-icon { font-size: 52px; line-height: 1; }
+.coin-label { font-size: 14px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 4px; }
+
+/* Choice buttons */
+.choice-btns {
+  display: flex;
+  gap: 16px;
+  width: min(380px, 92vw);
+}
+.choice-btn {
+  flex: 1;
+  padding: 14px 8px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-family: 'Space Grotesk', sans-serif;
+}
+.choice-btn:hover {
+  transform: translateY(-3px);
+  border-color: #ffd700;
+}
+.choice-btn.selected {
+  background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05));
+  border-color: #ffd700;
+  box-shadow: 0 0 25px rgba(255,215,0,0.5);
+  transform: scale(1.03);
+}
+.choice-name { font-size: 16px; font-weight: 900; color: #fff; }
+.choice-mult { font-size: 12px; font-weight: 700; color: #00e676; }
+
+/* Result Banner on Stage */
+.result-banner {
+  display: none;
+  width: min(420px, 92vw);
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  text-align: center;
+  font-size: 15px;
+  animation: bannerSlide 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes bannerSlide {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.result-banner.win {
+  display: block;
+  background: linear-gradient(135deg, rgba(0,230,118,0.25), rgba(0,180,216,0.2));
+  border: 2px solid #00e676;
+  color: #00e676;
+  box-shadow: 0 0 20px rgba(0,230,118,0.4);
+}
+.result-banner.lose {
+  display: block;
+  background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(185,28,28,0.2));
+  border: 2px solid #ef4444;
+  color: #ef4444;
+  box-shadow: 0 0 20px rgba(239,68,68,0.4);
+}
+
+/* Quick Action Bar */
+.round-action-bar {
+  display: flex;
+  gap: 8px;
+  width: min(380px, 92vw);
+}
+.btn-action-main {
+  flex: 1.2;
+  padding: 12px;
+  background: linear-gradient(135deg, #00e676, #00b0ff);
+  border: none;
+  border-radius: 12px;
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,230,118,0.4);
+  transition: all 0.2s;
+}
+.btn-action-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,230,118,0.6);
+}
+.btn-action-2x {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  border-radius: 12px;
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-action-2x:hover {
+  transform: translateY(-2px);
+}
+
+/* Chip Selector Row */
+.chip-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 2px;
+}
+.casino-chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+}
+.casino-chip:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 15px rgba(255,215,0,0.5);
+}
+.casino-chip.c10 { background: radial-gradient(circle, #3b82f6, #1d4ed8); }
+.casino-chip.c50 { background: radial-gradient(circle, #ef4444, #b91c1c); }
+.casino-chip.c100 { background: radial-gradient(circle, #10b981, #047857); }
+.casino-chip.c500 { background: radial-gradient(circle, #8b5cf6, #6d28d9); }
+.casino-chip.c1000 { background: radial-gradient(circle, #f59e0b, #b45309); color: #000; border-color: #ffd700; }
+
+#coin-confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 30;
+}
+</style>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🪙 GG Coin Flip 3D</div>
+  </div>
+  <div class="gnav-game-name">Coin Flip</div>
+  <span class="gnav-game-badge" style="background:#ffd700;color:#000">3D ORIGINAL</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area coin-area">
+    <canvas id="coin-confetti"></canvas>
+    
+    <!-- Result Banner -->
+    <div id="stage-result-banner" class="result-banner"></div>
+
+    <div class="coin-stage">
+      <div class="coin-3d" id="coin-element">
+        <div class="coin-face coin-heads">
+          <div class="coin-icon">👑</div>
+          <div class="coin-label">Heads</div>
+        </div>
+        <div class="coin-face coin-tails">
+          <div class="coin-icon">🦅</div>
+          <div class="coin-label">Tails</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Choice Pickers -->
+    <div class="choice-btns">
+      <div class="choice-btn selected" id="btn-heads" onclick="selectChoice('heads')">
+        <span style="font-size:28px">👑</span>
+        <span class="choice-name">Heads</span>
+        <span class="choice-mult">1.70×</span>
+      </div>
+      <div class="choice-btn" id="btn-tails" onclick="selectChoice('tails')">
+        <span style="font-size:28px">🦅</span>
+        <span class="choice-name">Tails</span>
+        <span class="choice-mult">1.70×</span>
+      </div>
+    </div>
+
+    <!-- Quick Action Controls for Instant Play Again -->
+    <div class="round-action-bar" id="round-action-bar">
+      <button class="btn-action-main" id="btn-main-flip" onclick="flipCoin()">🪙 FLIP / PLAY (₹<span id="lbl-bet-val">100</span>)</button>
+      
+    </div>
+
+    <!-- Chip Presets -->
+    <div class="chip-row">
+      <div class="casino-chip c10" onclick="addChip(10)">₹10</div>
+      <div class="casino-chip c50" onclick="addChip(50)">₹50</div>
+      <div class="casino-chip c100" onclick="addChip(100)">₹100</div>
+      <div class="casino-chip c500" onclick="addChip(500)">₹500</div>
+      <div class="casino-chip c1000" onclick="addChip(1000)">₹1k</div>
+    </div>
+  
+    <div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm &amp; Code Protected. Unauthorized Copying Prohibited.</div>
+  </div>
+
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="bet-label">Bet Amount</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="10" oninput="updateBetLabels()">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section" style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn-bet" id="flip-btn" onclick="flipCoin()">🪙 Flip Coin</button>
+      
+      
+    </div>
+
+    <div class="bet-section">
+      <div id="result-container"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script>
+updateAllWalletDisplays();
+
+let selectedSide = 'heads';
+let isFlipping = false;
+let lastBet = 100;
+let totalProfit = 0, wins = 0, losses = 0;
+
+function updateBetLabels(){
+  const b = parseFloat(document.getElementById('bet-amount').value) || 100;
+  document.getElementById('lbl-bet-val').textContent = b.toFixed(0);
+  document.getElementById('lbl-bet-2x').textContent = (b*2).toFixed(0);
+}
+
+function halveBet(){ const el=document.getElementById('bet-amount'); el.value = Math.max(1, (parseFloat(el.value)/2)).toFixed(2); updateBetLabels(); }
+function doubleBet(){ const el=document.getElementById('bet-amount'); el.value = (parseFloat(el.value)*2).toFixed(2); updateBetLabels(); }
+function maxBet(){ const el=document.getElementById('bet-amount'); el.value = Math.floor(getBalance()).toFixed(2); updateBetLabels(); }
+
+function addChip(amount){
+  if(isFlipping) return;
+  const el = document.getElementById('bet-amount');
+  el.value = (parseFloat(el.value || 0) + amount).toFixed(2);
+  updateBetLabels();
+}
+
+function selectChoice(side){
+  if(isFlipping) return;
+  selectedSide = side;
+  document.getElementById('btn-heads').classList.toggle('selected', side === 'heads');
+  document.getElementById('btn-tails').classList.toggle('selected', side === 'tails');
+}
+
+updateBetLabels();
+
+
+
+function flipCoin(){
+  if(!requireAuth()) return;
+  if(isFlipping) return;
+
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if(isNaN(amt) || amt <= 0){ showToast('Enter valid amount'); return; }
+  if(amt > getBalance()){ showToast('Insufficient balance'); return; }
+
+  lastBet = amt;
+  setBalance(getBalance() - amt);
+  if(typeof playGameSound === 'function') playGameSound('bet');
+
+  isFlipping = true;
+  document.getElementById('stage-result-banner').style.display = 'none';
+  document.getElementById('bet-amount').disabled = true;
+  document.getElementById('btn-main-flip').disabled = true;
+  
+  document.getElementById('flip-btn').disabled = true;
+
+  const coin = document.getElementById('coin-element');
+  coin.classList.remove('flipping');
+  void coin.offsetWidth;
+  coin.classList.add('flipping');
+  if(typeof playGameSound === 'function') playGameSound('tick');
+
+  // 60% chance to win on Coin Flip
+  const won = Math.random() < 0.60;
+  const outcome = won ? selectedSide : (selectedSide === 'heads' ? 'tails' : 'heads');
+
+  setTimeout(() => {
+    coin.classList.remove('flipping');
+    coin.style.transform = outcome === 'tails' ? 'rotateX(180deg)' : 'rotateX(0deg)';
+
+    const payout = amt * 1.70;
+    const banner = document.getElementById('stage-result-banner');
+    const resContainer = document.getElementById('result-container');
+
+    if(won){
+      setBalance(getBalance() + payout);
+      totalProfit += payout - amt;
+      wins++;
+      flashBal('flash-win');
+      launchCoinConfetti();
+      if(typeof playGameSound === 'function') playGameSound('win');
+      if(typeof trackGameWager === 'function') trackGameWager('GG Coin Flip', amt, payout, true);
+
+      banner.className = 'result-banner win';
+      banner.innerHTML = `🎉 <strong>YOU WON +₹${payout.toFixed(2)} (1.70×)!</strong> Result was ${outcome.toUpperCase()} (You picked ${selectedSide.toUpperCase()})`;
+      resContainer.innerHTML = `<div class="result-box win"><div class="result-box-title">🎉 WON ${outcome.toUpperCase()}</div><div class="result-box-val">+₹${payout.toFixed(2)}</div></div>`;
+    } else {
+      totalProfit -= amt;
+      losses++;
+      flashBal('flash-lose');
+      if(typeof playGameSound === 'function') playGameSound('lose');
+      if(typeof trackGameWager === 'function') trackGameWager('GG Coin Flip', amt, 0, false);
+
+      banner.className = 'result-banner lose';
+      banner.innerHTML = `💀 <strong>YOU LOST -₹${amt.toFixed(2)}!</strong> Result was ${outcome.toUpperCase()} (You picked ${selectedSide.toUpperCase()})`;
+      resContainer.innerHTML = `<div class="result-box lose"><div class="result-box-title">💸 LOST ${outcome.toUpperCase()}</div><div class="result-box-val">-₹${amt.toFixed(2)}</div></div>`;
+    }
+
+    const p = document.getElementById('stat-profit');
+    p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
+    p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
+    document.getElementById('stat-wins').textContent = wins;
+    document.getElementById('stat-losses').textContent = losses;
+
+    // Reactivate controls for instant Play Again
+    isFlipping = false;
+    document.getElementById('bet-amount').disabled = false;
+    document.getElementById('btn-main-flip').disabled = false;
+    
+    document.getElementById('flip-btn').disabled = false;
+    document.getElementById('btn-main-flip').innerHTML = `🔁 FLIP AGAIN (₹<span id="lbl-bet-val">${amt.toFixed(0)}</span>)`;
+    document.getElementById('flip-btn').textContent = '🪙 Flip Again';
+  }, 1100);
+}
+
+function launchCoinConfetti(){
+  const canvas = document.getElementById('coin-confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#ffd700', '#ff8c00', '#00e676', '#00bcd4', '#fff'];
+  for(let i=0; i<60; i++){
+    particles.push({
+      x: canvas.width/2, y: canvas.height/2,
+      vx: (Math.random()-0.5)*12, vy: (Math.random()-0.8)*14,
+      size: Math.random()*7+3, color: colors[Math.floor(Math.random()*colors.length)],
+      alpha: 1
+    });
+  }
+
+  function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.35; p.alpha -= 0.015;
+      if(p.alpha > 0){
+        alive = true;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    });
+    if(alive) requestAnimationFrame(render);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  render();
+}
+</script>
+</body>
+</html>

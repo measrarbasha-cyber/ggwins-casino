@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Aviator Pro – Real Flight Physics – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+/* ── PRO SPRIBE-STYLE AVIATOR ARENA ── */
+.aviator-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 120%, #2b0b14 0%, #0c0d14 60%, #05060a 100%);
+}
+
+/* Flight History Ribbon */
+.flight-history-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(10, 12, 20, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  scrollbar-width: none;
+  z-index: 30;
+}
+.flight-history-ribbon::-webkit-scrollbar { display: none; }
+.history-pill {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  animation: pillPop 0.3s ease-out;
+}
+@keyframes pillPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.history-pill.blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+.history-pill.purple { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+.history-pill.gold { background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.5); box-shadow: 0 0 8px rgba(234, 179, 8, 0.3); }
+
+.aviator-canvas-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+}
+#aviator-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Flight Multiplier Overlay */
+.flight-hud {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  z-index: 20;
+}
+.flight-mult-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(48px, 11vw, 84px);
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 0 35px rgba(239, 68, 68, 0.85), 0 4px 20px rgba(0,0,0,0.9);
+  line-height: 1;
+  letter-spacing: -1px;
+  transition: color 0.2s;
+}
+.flight-mult-val.crashed {
+  color: #ef4444 !important;
+  text-shadow: 0 0 40px rgba(239,68,68,1), 0 4px 20px rgba(0,0,0,0.9) !important;
+  animation: shakeMult 0.4s ease;
+}
+@keyframes shakeMult {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.08) rotate(-2deg); }
+  75% { transform: scale(0.96) rotate(2deg); }
+}
+
+.flight-status-sub {
+  font-size: 13px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 2px;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+.flight-status-sub.flying {
+  color: #00e676;
+}
+.flight-status-sub.crashed {
+  color: #ef4444;
+  font-weight: 900;
+  font-size: 15px;
+}
+
+/* Dual Betting Panels Grid */
+.dual-bet-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+@media (max-width: 600px) {
+  .dual-bet-container {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+.single-bet-dock {
+  background: rgba(255,255,255,0.03);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.single-bet-dock.active-bet {
+  border-color: #00e676;
+  background: rgba(0, 230, 118, 0.05);
+  box-shadow: 0 0 15px rgba(0,230,118,0.2);
+}
+.single-bet-dock.queued-bet {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.05);
+  box-shadow: 0 0 15px rgba(255,215,0,0.2);
+}
+
+.dock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+/* Stepper Input Row */
+.bet-stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.stepper-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  border-radius: 6px;
+  width: 32px;
+  height: 36px;
+  font-size: 18px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.stepper-btn:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: #ffd700;
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+.input-prefix {
+  position: absolute;
+  left: 10px;
+  color: #ffd700;
+  font-weight: 900;
+  font-size: 14px;
+}
+.bet-input {
+  width: 100%;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 8px 8px 8px 24px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* Quick Chips */
+.quick-chip-row {
+  display: flex;
+  gap: 4px;
+}
+.chip-btn {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 0;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chip-btn:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border-color: #ffd700;
+}
+
+/* Auto Cashout Controls */
+.auto-cashout-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(0,0,0,0.3);
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.auto-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #cbd5e1;
+  cursor: pointer;
+}
+.auto-mult-input {
+  width: 65px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: #00e676;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 3px 6px;
+  text-align: right;
+}
+
+/* Action Buttons */
+.btn-flight-action {
+  width: 100%;
+  padding: 12px 6px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.btn-flight-action.bet-btn {
+  background: linear-gradient(135deg, #00e676, #059669);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(0,230,118,0.35);
+}
+.btn-flight-action.queued-btn {
+  background: linear-gradient(135deg, #ffd700, #d97706);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(255,215,0,0.35);
+}
+.btn-flight-action.cancel-btn {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(239,68,68,0.35);
+}
+.btn-flight-action.cashout-btn {
+  background: linear-gradient(135deg, #ff9800, #e65100);
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(255,152,0,0.6);
+  animation: pulseCashout 0.7s infinite alternate;
+}
+@keyframes pulseCashout {
+  0% { transform: scale(0.99); }
+  100% { transform: scale(1.02); }
+}
+
+#aviator-confetti {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 60;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🚀 Aviator Pro</div>
+  </div>
+  <div class="gnav-game-name">Aviator Pro</div>
+  <span class="gnav-game-badge" style="background:#ef4444;color:#fff">PRO EDITION</span>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area aviator-area">
+    <!-- Top Multiplier History Ribbon -->
+    <div class="flight-history-ribbon" id="history-ribbon">
+      <div class="history-pill blue">1.45×</div>
+      <div class="history-pill purple">2.82×</div>
+      <div class="history-pill blue">1.18×</div>
+      <div class="history-pill gold">12.40×</div>
+      <div class="history-pill blue">1.60×</div>
+      <div class="history-pill purple">4.15×</div>
+    </div>
+
+    <div class="aviator-canvas-container">
+      <canvas id="aviator-confetti"></canvas>
+      <canvas id="aviator-canvas"></canvas>
+
+      <div class="flight-hud">
+        <div class="flight-mult-val" id="flight-mult">1.00×</div>
+        <div class="flight-status-sub" id="flight-status">WAITING FOR NEXT FLIGHT...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DUAL BETTING PANEL -->
+  <div class="bet-panel">
+    <div class="dual-bet-container">
+      <!-- Bet 1 -->
+      <div class="single-bet-dock" id="dock-1">
+        <div class="dock-header">
+          <span>BET PANEL 1</span>
+          <span style="color:#00e676" id="status-bet1">Ready</span>
+        </div>
+        
+        <div class="bet-stepper-row">
+          <button class="stepper-btn" onclick="stepBetVal(1, -50)">−</button>
+          <div class="input-wrap">
+            <span class="input-prefix">₹</span>
+            <input type="number" class="bet-input" id="bet1-amount" value="50" min="10" step="10">
+          </div>
+          <button class="stepper-btn" onclick="stepBetVal(1, 50)">+</button>
+        </div>
+
+        <div class="quick-chip-row">
+          <button class="chip-btn" onclick="setBetVal(1, 50)">50</button>
+          <button class="chip-btn" onclick="setBetVal(1, 100)">100</button>
+          <button class="chip-btn" onclick="setBetVal(1, 500)">500</button>
+          <button class="chip-btn" onclick="setBetVal(1, 1000)">1k</button>
+          <button class="chip-btn" onclick="doubleBetVal(1)">2X</button>
+        </div>
+
+        <div class="auto-cashout-bar">
+          <label class="auto-toggle-label">
+            <input type="checkbox" id="auto-toggle-1" style="accent-color:#00e676">
+            Auto Cash Out
+          </label>
+          <input type="number" class="auto-mult-input" id="auto-mult-1" value="2.00" min="1.05" step="0.05">
+        </div>
+
+        <button class="btn-flight-action bet-btn" id="btn-action-1" onclick="handleBet1Action()">
+          <span>🚀 PLACE BET</span>
+        </button>
+      </div>
+
+      <!-- Bet 2 -->
+      <div class="single-bet-dock" id="dock-2">
+        <div class="dock-header">
+          <span>BET PANEL 2</span>
+          <span style="color:#00e676" id="status-bet2">Ready</span>
+        </div>
+        
+        <div class="bet-stepper-row">
+          <button class="stepper-btn" onclick="stepBetVal(2, -50)">−</button>
+          <div class="input-wrap">
+            <span class="input-prefix">₹</span>
+            <input type="number" class="bet-input" id="bet2-amount" value="100" min="10" step="10">
+          </div>
+          <button class="stepper-btn" onclick="stepBetVal(2, 50)">+</button>
+        </div>
+
+        <div class="quick-chip-row">
+          <button class="chip-btn" onclick="setBetVal(2, 50)">50</button>
+          <button class="chip-btn" onclick="setBetVal(2, 100)">100</button>
+          <button class="chip-btn" onclick="setBetVal(2, 500)">500</button>
+          <button class="chip-btn" onclick="setBetVal(2, 1000)">1k</button>
+          <button class="chip-btn" onclick="doubleBetVal(2)">2X</button>
+        </div>
+
+        <div class="auto-cashout-bar">
+          <label class="auto-toggle-label">
+            <input type="checkbox" id="auto-toggle-2" style="accent-color:#00e676">
+            Auto Cash Out
+          </label>
+          <input type="number" class="auto-mult-input" id="auto-mult-2" value="2.00" min="1.05" step="0.05">
+        </div>
+
+        <button class="btn-flight-action bet-btn" id="btn-action-2" onclick="handleBet2Action()">
+          <span>🚀 PLACE BET</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+
+    <div class="copyright-footer">
+      © 2026 GG Wins. Aviator Pro Real Engine.
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script>
+/* ── 🚀 AVIATOR PRO HIGH-DEFINITION AEROSPACE ENGINE ── */
+const canvas = document.getElementById('aviator-canvas');
+const ctx = canvas.getContext('2d');
+
+let gameState = 'waiting'; // 'waiting', 'flying', 'crashed'
+let currentMult = 1.00;
+let crashPoint = 1.00;
+let flightStartTime = 0;
+
+let bet1 = { active: false, queued: false, cashedOut: false, amt: 0 };
+let bet2 = { active: false, queued: false, cashedOut: false, amt: 0 };
+let statsProfit = 0, statsWins = 0, statsLosses = 0;
+
+// Particle Systems
+const stars = [];
+for (let i = 0; i < 70; i++) {
+  stars.push({
+    x: Math.random(),
+    y: Math.random(),
+    s: Math.random() * 2 + 0.6,
+    speed: Math.random() * 0.6 + 0.3
+  });
+}
+const exhaustParticles = [];
+let propellerAngle = 0;
+
+// 🎵 Web Audio Sound FX
+let audioCtx = null;
+function getAudioCtx() {
+  try {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) audioCtx = new AudioContextClass();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  } catch(e){}
+  return audioCtx;
+}
+
+function playPropellerTone() {
+  try {
+    const actx = getAudioCtx();
+    if (!actx) return;
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(110 + Math.min(220, currentMult * 20), actx.currentTime);
+    gain.gain.setValueAtTime(0.04, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.1);
+    osc.connect(gain);
+    gain.connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + 0.1);
+  } catch(e){}
+}
+
+function playCrashBoom() {
+  try {
+    const actx = getAudioCtx();
+    if (!actx) return;
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(140, actx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, actx.currentTime + 0.35);
+    gain.gain.setValueAtTime(0.4, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + 0.35);
+  } catch(e){}
+}
+
+function resizeCanvas() {
+  const container = canvas.parentElement;
+  if (!container) return;
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+
+function setBetVal(panel, v) {
+  const el = document.getElementById(`bet${panel}-amount`);
+  if (el) el.value = v;
+}
+function stepBetVal(panel, delta) {
+  const el = document.getElementById(`bet${panel}-amount`);
+  if (el) {
+    const next = Math.max(10, (parseFloat(el.value) || 50) + delta);
+    el.value = next;
+  }
+}
+function doubleBetVal(panel) {
+  const el = document.getElementById(`bet${panel}-amount`);
+  if (el) el.value = Math.max(10, Math.round((parseFloat(el.value) || 50) * 2));
+}
+
+function generateCrashPoint() {
+  const r = Math.random();
+  // Heavily reduced crash points (conservative low-multiplier curve)
+  if (r < 0.50) return parseFloat((1.02 + Math.random() * 0.18).toFixed(2)); // 1.02x - 1.20x
+  if (r < 0.85) return parseFloat((1.21 + Math.random() * 0.35).toFixed(2)); // 1.21x - 1.56x
+  if (r < 0.97) return parseFloat((1.57 + Math.random() * 0.50).toFixed(2)); // 1.57x - 2.07x
+  return parseFloat((2.08 + Math.random() * 0.42).toFixed(2));               // max rare ~2.50x
+}
+
+/* 🎯 BET ACTIONS & QUEUING */
+function handleBet1Action() {
+  handlePanelAction(1);
+}
+function handleBet2Action() {
+  handlePanelAction(2);
+}
+
+function handlePanelAction(panel) {
+  const betObj = (panel === 1) ? bet1 : bet2;
+  const dock = document.getElementById(`dock-${panel}`);
+  const btn = document.getElementById(`btn-action-${panel}`);
+  const statusEl = document.getElementById(`status-bet${panel}`);
+
+  // Case 1: Currently flying and bet is active -> CASHOUT!
+  if (gameState === 'flying' && betObj.active && !betObj.cashedOut) {
+    cashOutBet(panel);
+    return;
+  }
+
+  // Case 2: In waiting period and already placed bet -> CANCEL / REFUND
+  if (gameState === 'waiting' && betObj.active) {
+    if (typeof window.adjustBalance === 'function') window.adjustBalance(betObj.amt, `Aviator Bet ${panel} Cancelled`);
+    betObj.active = false;
+    betObj.queued = false;
+    dock.classList.remove('active-bet', 'queued-bet');
+    statusEl.textContent = 'Ready';
+    statusEl.style.color = '#00e676';
+    btn.className = 'btn-flight-action bet-btn';
+    btn.innerHTML = '<span>🚀 PLACE BET</span>';
+    return;
+  }
+
+  // Case 3: In flying/crashed state and already queued -> CANCEL QUEUED BET
+  if (betObj.queued) {
+    if (typeof window.adjustBalance === 'function') window.adjustBalance(betObj.amt, `Aviator Bet ${panel} Cancelled`);
+    betObj.queued = false;
+    dock.classList.remove('active-bet', 'queued-bet');
+    statusEl.textContent = 'Ready';
+    statusEl.style.color = '#00e676';
+    btn.className = 'btn-flight-action bet-btn';
+    btn.innerHTML = '<span>🚀 PLACE BET</span>';
+    return;
+  }
+
+  // Case 4: Place New Bet
+  const amt = Math.max(10, parseFloat(document.getElementById(`bet${panel}-amount`).value) || 50);
+  const curr = (typeof window.getBalance === 'function') ? window.getBalance() : 50000;
+  if (curr < amt) {
+    if (typeof showToast === 'function') showToast(`Insufficient balance for Bet ${panel} (₹${amt})!`, 'error');
+    return;
+  }
+
+  if (typeof window.adjustBalance === 'function') window.adjustBalance(-amt, `Aviator Pro Bet ${panel}`);
+
+  if (gameState === 'waiting') {
+    // Active for current countdown
+    betObj.active = true;
+    betObj.queued = false;
+    betObj.cashedOut = false;
+    betObj.amt = amt;
+    dock.classList.add('active-bet');
+    dock.classList.remove('queued-bet');
+    statusEl.textContent = `₹${amt} (Waiting)`;
+    statusEl.style.color = '#00e676';
+    btn.className = 'btn-flight-action cancel-btn';
+    btn.innerHTML = `<span>❌ CANCEL (₹${amt})</span>`;
+  } else {
+    // Queued for Next Flight
+    betObj.queued = true;
+    betObj.active = false;
+    betObj.cashedOut = false;
+    betObj.amt = amt;
+    dock.classList.add('queued-bet');
+    dock.classList.remove('active-bet');
+    statusEl.textContent = `₹${amt} (Next Flight)`;
+    statusEl.style.color = '#ffd700';
+    btn.className = 'btn-flight-action cancel-btn';
+    btn.innerHTML = `<span>❌ CANCEL (NEXT ROUND)</span>`;
+  }
+}
+
+function cashOutBet(panel) {
+  const betObj = (panel === 1) ? bet1 : bet2;
+  betObj.cashedOut = true;
+  const mult = currentMult;
+  const winPayout = Math.round(betObj.amt * mult);
+
+  statsWins++;
+  const profit = winPayout - betObj.amt;
+  statsProfit += profit;
+
+  if (typeof window.adjustBalance === 'function') {
+    window.adjustBalance(winPayout, `Aviator Pro Cashout (${mult.toFixed(2)}×)`);
+  }
+  if (typeof flashBal === 'function') flashBal('flash-win');
+  launchAviatorConfetti();
+
+  const btn = document.getElementById(`btn-action-${panel}`);
+  btn.className = 'btn-flight-action bet-btn';
+  btn.innerHTML = `<span>✓ CASHED OUT</span><span style="font-size:11px">+₹${winPayout.toLocaleString()}</span>`;
+  btn.disabled = true;
+
+  const statusEl = document.getElementById(`status-bet${panel}`);
+  statusEl.textContent = `Cashed Out (+₹${winPayout.toLocaleString()})`;
+  statusEl.style.color = '#00e676';
+
+  if (typeof showToast === 'function') {
+    showToast(`🎉 Panel ${panel} Cashed out at ${mult.toFixed(2)}×! (+₹${winPayout.toLocaleString()})`, 'success');
+  }
+
+  if (typeof window.recordTournamentMatch === 'function') {
+    window.recordTournamentMatch('aviator', true);
+  }
+
+  updateStatsUI();
+}
+
+function addHistoryPill(mult) {
+  const ribbon = document.getElementById('history-ribbon');
+  if (!ribbon) return;
+  const pill = document.createElement('div');
+  const cls = mult >= 10 ? 'gold' : (mult >= 2 ? 'purple' : 'blue');
+  pill.className = `history-pill ${cls}`;
+  pill.textContent = `${mult.toFixed(2)}×`;
+  ribbon.insertBefore(pill, ribbon.firstChild);
+  if (ribbon.children.length > 20) ribbon.removeChild(ribbon.lastChild);
+}
+
+function startCountdown() {
+  gameState = 'waiting';
+  currentMult = 1.00;
+  exhaustParticles.length = 0;
+
+  document.getElementById('flight-mult').className = 'flight-mult-val';
+  document.getElementById('flight-mult').textContent = '1.00×';
+  document.getElementById('flight-status').className = 'flight-status-sub';
+  document.getElementById('flight-status').textContent = 'WAITING FOR NEXT FLIGHT...';
+
+  // Transition Queued Bets to Active
+  [1, 2].forEach(p => {
+    const betObj = (p === 1) ? bet1 : bet2;
+    const btn = document.getElementById(`btn-action-${p}`);
+    const dock = document.getElementById(`dock-${p}`);
+    const statusEl = document.getElementById(`status-bet${p}`);
+
+    if (betObj.queued) {
+      betObj.active = true;
+      betObj.queued = false;
+      betObj.cashedOut = false;
+      dock.className = 'single-bet-dock active-bet';
+      statusEl.textContent = `₹${betObj.amt} (Active)`;
+      btn.className = 'btn-flight-action cancel-btn';
+      btn.disabled = false;
+      btn.innerHTML = `<span>❌ CANCEL (₹${betObj.amt})</span>`;
+    } else if (!betObj.active) {
+      dock.className = 'single-bet-dock';
+      statusEl.textContent = 'Ready';
+      statusEl.style.color = '#00e676';
+      btn.className = 'btn-flight-action bet-btn';
+      btn.disabled = false;
+      btn.innerHTML = '<span>🚀 PLACE BET</span>';
+    }
+  });
+
+  let cd = 4;
+  const cdTimer = setInterval(() => {
+    cd--;
+    if (cd > 0) {
+      document.getElementById('flight-status').textContent = `TAKING OFF IN ${cd}s...`;
+    } else {
+      clearInterval(cdTimer);
+      launchFlight();
+    }
+  }, 1000);
+}
+
+function launchFlight() {
+  gameState = 'flying';
+  crashPoint = generateCrashPoint();
+  flightStartTime = Date.now();
+  document.getElementById('flight-status').className = 'flight-status-sub flying';
+  document.getElementById('flight-status').textContent = 'SUPERSONIC FLIGHT IN PROGRESS';
+
+  // Activate Cashout buttons
+  [1, 2].forEach(p => {
+    const betObj = (p === 1) ? bet1 : bet2;
+    const btn = document.getElementById(`btn-action-${p}`);
+    if (betObj.active && !betObj.cashedOut) {
+      btn.className = 'btn-flight-action cashout-btn';
+      btn.disabled = false;
+      btn.innerHTML = `<span>💰 CASH OUT</span><span style="font-size:12px">₹${betObj.amt} (1.00×)</span>`;
+    }
+  });
+}
+
+function triggerCrash() {
+  gameState = 'crashed';
+  playCrashBoom();
+  addHistoryPill(crashPoint);
+
+  document.getElementById('flight-mult').className = 'flight-mult-val crashed';
+  document.getElementById('flight-mult').textContent = `${crashPoint.toFixed(2)}×`;
+  document.getElementById('flight-status').className = 'flight-status-sub crashed';
+  document.getElementById('flight-status').textContent = '💥 FLEW AWAY!';
+
+  // Loss handling for un-cashed bets
+  [1, 2].forEach(p => {
+    const b = (p === 1) ? bet1 : bet2;
+    const btn = document.getElementById(`btn-action-${p}`);
+    const statusEl = document.getElementById(`status-bet${p}`);
+
+    if (b.active && !b.cashedOut) {
+      statsLosses++;
+      statsProfit -= b.amt;
+      btn.className = 'btn-flight-action cancel-btn';
+      btn.disabled = true;
+      btn.innerHTML = `<span>💥 FLEW AWAY</span><span style="font-size:11px">-₹${b.amt}</span>`;
+      statusEl.textContent = `Lost (-₹${b.amt})`;
+      statusEl.style.color = '#ef4444';
+
+      if (typeof window.recordTournamentMatch === 'function') {
+        window.recordTournamentMatch('aviator', false);
+      }
+    }
+    b.active = false;
+    b.cashedOut = false;
+  });
+
+  if (typeof flashBal === 'function') flashBal('flash-lose');
+  updateStatsUI();
+
+  setTimeout(startCountdown, 3200);
+}
+
+function updateStatsUI() {
+  const sw = document.getElementById('stat-wins');
+  const sl = document.getElementById('stat-losses');
+  const sp = document.getElementById('stat-profit');
+  if (sw) sw.textContent = statsWins;
+  if (sl) sl.textContent = statsLosses;
+  if (sp) {
+    sp.textContent = (statsProfit >= 0 ? '+₹' : '-₹') + Math.abs(statsProfit).toFixed(2);
+    sp.className = 'stat-box-val ' + (statsProfit >= 0 ? 'green' : 'red');
+  }
+}
+
+/* ── 🎨 PRO AVIATOR GRAPHICS & VECTOR PLANE RENDERER ── */
+function drawLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // 1. Perspective Space Grid
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+  ctx.lineWidth = 1;
+  const gridStep = 40;
+  for (let x = 0; x < w; x += gridStep) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+  for (let y = 0; y < h; y += gridStep) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+
+  // 2. Stars
+  ctx.fillStyle = '#ffffff';
+  stars.forEach(st => {
+    st.x -= (gameState === 'flying' ? st.speed * 0.006 * Math.min(2.5, currentMult) : st.speed * 0.001);
+    if (st.x < 0) st.x = 1;
+    ctx.globalAlpha = Math.random() * 0.4 + 0.4;
+    ctx.beginPath();
+    ctx.arc(st.x * w, st.y * h, st.s, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // 3. Flight Multiplier Progression
+  if (gameState === 'flying') {
+    const elapsedSec = (Date.now() - flightStartTime) / 1000;
+    currentMult = Math.max(1.00, parseFloat(Math.pow(Math.E, 0.050 * elapsedSec).toFixed(2)));
+    document.getElementById('flight-mult').textContent = `${currentMult.toFixed(2)}×`;
+
+    if (Math.random() < 0.3) playPropellerTone();
+
+    // Check Auto Cashout and update live cashout buttons
+    [1, 2].forEach(p => {
+      const betObj = (p === 1) ? bet1 : bet2;
+      const btn = document.getElementById(`btn-action-${p}`);
+      const autoToggle = document.getElementById(`auto-toggle-${p}`);
+      const autoMultInput = document.getElementById(`auto-mult-${p}`);
+
+      if (betObj.active && !betObj.cashedOut) {
+        const liveWin = Math.round(betObj.amt * currentMult);
+        btn.innerHTML = `<span>💰 CASH OUT</span><span style="font-size:12px">₹${liveWin.toLocaleString()} (${currentMult.toFixed(2)}×)</span>`;
+
+        if (autoToggle && autoToggle.checked) {
+          const target = parseFloat(autoMultInput.value) || 2.00;
+          if (currentMult >= target) {
+            cashOutBet(p);
+          }
+        }
+      }
+    });
+
+    if (currentMult >= crashPoint) {
+      triggerCrash();
+    }
+  }
+
+  // 4. Calculate Jet Trajectory Arc
+  let progress = (gameState === 'waiting') ? 0 : Math.min(1, (currentMult - 1) / 5.5);
+  const startX = w * 0.08;
+  const startY = h * 0.88;
+  const jetX = startX + progress * (w * 0.76);
+  const jetY = startY - Math.pow(progress, 0.85) * (h * 0.68);
+
+  // 5. Draw Glowing Crimson Flight Area & Arc
+  if (gameState === 'flying' || gameState === 'crashed') {
+    const grad = ctx.createLinearGradient(0, jetY, 0, startY);
+    grad.addColorStop(0, 'rgba(239, 68, 68, 0.4)');
+    grad.addColorStop(0.7, 'rgba(239, 68, 68, 0.08)');
+    grad.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+    
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.quadraticCurveTo(startX + (jetX - startX) * 0.5, startY + (jetY - startY) * 0.1, jetX, jetY);
+    ctx.lineTo(jetX, startY);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 4;
+    ctx.shadowColor = '#ef4444';
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.quadraticCurveTo(startX + (jetX - startX) * 0.5, startY + (jetY - startY) * 0.1, jetX, jetY);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // 6. Spawn Jet Thruster Particles
+  if (gameState === 'flying') {
+    exhaustParticles.push({
+      x: jetX - 18,
+      y: jetY + 3,
+      vx: -(Math.random() * 4 + 3),
+      vy: (Math.random() - 0.5) * 2,
+      size: Math.random() * 4 + 2,
+      alpha: 1.0,
+      color: Math.random() < 0.6 ? '#ef4444' : '#ffd700'
+    });
+  }
+
+  // Update & Draw Exhaust Particles
+  for (let i = exhaustParticles.length - 1; i >= 0; i--) {
+    const p = exhaustParticles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.alpha -= 0.04;
+    p.size *= 0.96;
+    if (p.alpha <= 0) {
+      exhaustParticles.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 7. Draw Realistic Red Propeller Fighter Plane
+  if (gameState !== 'crashed') {
+    propellerAngle += 0.45;
+    ctx.save();
+    ctx.translate(jetX, jetY);
+    ctx.rotate(gameState === 'flying' ? -0.22 : 0);
+
+    // Fuselage Body (Glossy Crimson Red)
+    ctx.fillStyle = '#dc2626';
+    ctx.shadowColor = 'rgba(239, 68, 68, 0.6)';
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.moveTo(28, 0);       // Nose
+    ctx.lineTo(-24, -8);     // Top tail
+    ctx.lineTo(-30, -14);    // Vertical rudder
+    ctx.lineTo(-26, 0);      // Rudder base
+    ctx.lineTo(-28, 6);      // Bottom tail
+    ctx.lineTo(10, 4);       // Underbelly
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Aerodynamic White Racing Stripe
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(18, 0);
+    ctx.lineTo(-18, -4);
+    ctx.lineTo(-20, -1);
+    ctx.lineTo(12, 2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Main Wings
+    ctx.fillStyle = '#b91c1c';
+    ctx.beginPath();
+    ctx.moveTo(8, -2);
+    ctx.lineTo(-8, -22);     // Wingtip
+    ctx.lineTo(-16, -20);
+    ctx.lineTo(-6, -2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cockpit Canopy (Reflective Cyan Glass)
+    ctx.fillStyle = '#38bdf8';
+    ctx.beginPath();
+    ctx.ellipse(4, -3, 8, 3.5, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Spinning Front Propeller Blur
+    ctx.save();
+    ctx.translate(28, 0);
+    ctx.rotate(propellerAngle);
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.85)';
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 6;
+    ctx.fillRect(-1.5, -14, 3, 28);
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  requestAnimationFrame(drawLoop);
+}
+
+/* 🎊 CONFETTI */
+function launchAviatorConfetti() {
+  const cvs = document.getElementById('aviator-confetti');
+  if (!cvs) return;
+  const cctx = cvs.getContext('2d');
+  cvs.width = cvs.parentElement.clientWidth;
+  cvs.height = cvs.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#ffd700', '#00e676', '#38bdf8', '#ef4444'];
+  for (let i = 0; i < 70; i++) {
+    particles.push({
+      x: cvs.width / 2, y: cvs.height / 2,
+      vx: (Math.random() - 0.5) * 16, vy: (Math.random() - 0.8) * 16,
+      size: Math.random() * 8 + 4, color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1
+    });
+  }
+
+  function render() {
+    cctx.clearRect(0, 0, cvs.width, cvs.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.45; p.alpha -= 0.015;
+      if (p.alpha > 0) {
+        alive = true;
+        cctx.fillStyle = p.color;
+        cctx.globalAlpha = Math.max(0, p.alpha);
+        cctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    });
+    if (alive) requestAnimationFrame(render);
+    else cctx.clearRect(0, 0, cvs.width, cvs.height);
+  }
+  render();
+}
+
+window.addEventListener('load', () => {
+  resizeCanvas();
+  drawLoop();
+  startCountdown();
+});
+</script>
+</body>
+</html>

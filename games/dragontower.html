@@ -1,0 +1,411 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dragon Tower – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+.tower-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 60%, #1e1022 0%, #07040a 100%);
+}
+.tower-container {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  width: min(420px, 92vw);
+  perspective: 1000px;
+}
+.tower-row {
+  display: flex;
+  gap: 6px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 4px;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.3s;
+  position: relative;
+}
+.tower-row.active-row {
+  background: rgba(124,77,255,0.15);
+  border-color: #7c4dff;
+  box-shadow: 0 0 20px rgba(124,77,255,0.3);
+}
+.row-mult-tag {
+  position: absolute;
+  left: -55px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  color: #ffd700;
+  width: 45px;
+  text-align: right;
+}
+.tower-tile {
+  flex: 1;
+  height: 48px;
+  background: linear-gradient(145deg, #241432, #12091a);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.tower-tile:hover:not(.disabled) {
+  border-color: #ffd700;
+  transform: scale(1.04);
+}
+.tower-tile.egg {
+  background: radial-gradient(circle, #059669 0%, #064e3b 100%);
+  border-color: #34d399;
+  box-shadow: 0 0 20px rgba(52,211,153,0.5);
+  animation: eggSparkle 0.4s ease;
+}
+.tower-tile.skull {
+  background: radial-gradient(circle, #dc2626 0%, #450a0a 100%);
+  border-color: #ef4444;
+  box-shadow: 0 0 25px rgba(239,68,68,0.8);
+  animation: skullBlast 0.5s ease;
+}
+@keyframes eggSparkle {
+  0%{transform:scale(0.5)} 70%{transform:scale(1.15)} 100%{transform:scale(1)}
+}
+@keyframes skullBlast {
+  0%{transform:scale(1)} 25%{transform:scale(1.3) rotate(-10deg)} 75%{transform:scale(0.9)} 100%{transform:scale(1)}
+}
+.tower-tile.disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🐉 GG Dragon Tower</div>
+  </div>
+  <div class="gnav-game-name">Dragon Tower</div>
+  <span class="gnav-game-badge" style="background:#ff6b35;color:#fff">ORIGINAL</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area tower-area">
+    <div class="tower-container" id="tower-container"></div>
+  
+<div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected. Unauthorized Copying Prohibited.</div>
+</div>
+
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="bet-label">Bet Amount</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="1">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div class="bet-label">Difficulty</div>
+      <div class="seg-ctrl" id="diff-ctrl">
+        <div class="seg-btn active" data-diff="easy">Easy</div>
+        <div class="seg-btn" data-diff="medium">Medium</div>
+        <div class="seg-btn" data-diff="hard">Hard</div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <button class="btn-bet" id="start-btn" onclick="startTower()">Climb Tower</button>
+      
+      <div id="cashout-box-container" style="display:none;margin-top:10px;padding:12px;background:linear-gradient(135deg,rgba(0,230,118,0.15),rgba(255,215,0,0.1));border:2px solid #00e676;border-radius:12px;box-shadow:0 0 20px rgba(0,230,118,0.3);text-align:center;">
+        <div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Potential Payout</div>
+        <div id="cashout-live-amount" style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:900;color:#00e676;margin-bottom:8px">₹0.00</div>
+        <button class="btn-cashout" id="cashout-btn" onclick="cashOut()" style="width:100%;padding:10px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900;font-size:14px;border:none;border-radius:8px;cursor:pointer;box-shadow:0 4px 15px rgba(0,230,118,0.4)">💰 CASH OUT NOW</button>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div id="result-container"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script>
+function updateBal(){ updateAllWalletDisplays(); }
+updateBal();
+
+const TOWER_CONFIG = {
+  easy:   { cols: 4, eggs: 3, mults: [1.10, 1.25, 1.45, 1.70, 2.05, 2.50, 3.10, 3.85, 4.80] },
+  medium: { cols: 3, eggs: 2, mults: [1.18, 1.45, 1.85, 2.40, 3.15, 4.20, 5.60, 7.50, 10.00] },
+  hard:   { cols: 2, eggs: 1, mults: [1.45, 2.20, 3.40, 5.20, 8.00, 12.50, 19.50, 30.00, 48.00] }
+};
+
+let currentDiff = 'easy';
+let gameActive = false;
+let currentFloor = 0;
+let betAmt = 100;
+let totalProfit = 0, wins = 0, losses = 0;
+
+function buildTower(){
+  const container = document.getElementById('tower-container');
+  container.innerHTML = '';
+  const cfg = TOWER_CONFIG[currentDiff];
+
+  cfg.mults.forEach((m, floorIdx) => {
+    const row = document.createElement('div');
+    row.className = 'tower-row' + (gameActive && floorIdx === currentFloor ? ' active-row' : '');
+    row.dataset.floor = floorIdx;
+
+    const tag = document.createElement('div');
+    tag.className = 'row-mult-tag';
+    tag.textContent = m + '×';
+    row.appendChild(tag);
+
+    for(let c=0; c<cfg.cols; c++){
+      const tile = document.createElement('div');
+      tile.className = 'tower-tile disabled';
+      tile.dataset.floor = floorIdx;
+      tile.dataset.col = c;
+      tile.textContent = '🥚';
+      tile.onclick = () => pickTile(floorIdx, c, tile);
+      row.appendChild(tile);
+    }
+
+    container.appendChild(row);
+  });
+}
+buildTower();
+
+document.querySelectorAll('#diff-ctrl .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if(gameActive) return;
+    document.querySelectorAll('#diff-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentDiff = btn.dataset.diff;
+    buildTower();
+  });
+});
+
+function startTower(){ if(!requireAuth()) return;
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if(isNaN(amt) || amt <= 0){ showToast('Enter valid amount'); return; }
+  if(amt > getBalance()){ showToast('Insufficient balance'); return; }
+
+  betAmt = amt;
+  setBalance(getBalance() - amt);
+  if(typeof playGameSound === 'function') playGameSound('bet');
+
+  gameActive = true;
+  currentFloor = 0;
+  buildTower();
+
+  // Activate first row
+  unlockFloor(0);
+
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('cashout-box-container').style.display = 'block';
+  document.getElementById('cashout-btn').textContent = `Cash Out ₹${betAmt.toFixed(2)}`;
+  document.querySelectorAll('#diff-ctrl .seg-btn').forEach(b => b.style.opacity = '0.5');
+}
+
+function unlockFloor(floorIdx){
+  document.querySelectorAll('.tower-row').forEach((r, idx) => {
+    r.classList.toggle('active-row', idx === floorIdx);
+  });
+  document.querySelectorAll(`.tower-tile[data-floor="${floorIdx}"]`).forEach(t => {
+    t.classList.remove('disabled');
+  });
+}
+
+function pickTile(floorIdx, colIdx, tile){
+  if(!gameActive || floorIdx !== currentFloor) return;
+
+  const cfg = TOWER_CONFIG[currentDiff];
+  // House edge bias: 40% loss on 1st floor, 75% on 2nd, 90% on 3rd+
+  const biasChance = currentFloor === 0 ? 0.40 : (currentFloor === 1 ? 0.75 : 0.90);
+  const isSkull = Math.random() < biasChance;
+
+  if(isSkull){
+    // Hit skull!
+    tile.className = 'tower-tile skull disabled';
+    tile.textContent = '💀';
+    if(typeof playGameSound === 'function') playGameSound('bomb');
+    endTower(false);
+  } else {
+    // Safe egg!
+    tile.className = 'tower-tile egg disabled';
+    tile.textContent = '✨';
+    if(typeof playGameSound === 'function') playGameSound('gem');
+
+    const mult = cfg.mults[currentFloor];
+    document.getElementById('cashout-btn').textContent = `Cash Out ₹${(betAmt * mult).toFixed(2)} (${mult}×)`;
+
+    // Lock current floor
+    document.querySelectorAll(`.tower-tile[data-floor="${currentFloor}"]`).forEach(t => t.classList.add('disabled'));
+
+    currentFloor++;
+    if(currentFloor >= cfg.mults.length){
+      // Reached apex!
+      cashOut();
+    } else {
+      unlockFloor(currentFloor);
+    }
+  }
+}
+
+function launchTowerConfetti(){
+  let canvas = document.getElementById('tower-confetti');
+  if(!canvas){
+    canvas = document.createElement('canvas');
+    canvas.id = 'tower-confetti';
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;';
+    document.querySelector('.tower-area').appendChild(canvas);
+  }
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#ffd700', '#34d399', '#ff6b35', '#7c4dff', '#ffffff'];
+  for(let i=0; i<65; i++){
+    particles.push({
+      x: canvas.width/2, y: canvas.height/2,
+      vx: (Math.random()-0.5)*14, vy: (Math.random()-0.8)*16,
+      size: Math.random()*8+3, color: colors[Math.floor(Math.random()*colors.length)],
+      alpha: 1
+    });
+  }
+
+  function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.35; p.alpha -= 0.015;
+      if(p.alpha > 0){
+        alive = true;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    });
+    if(alive) requestAnimationFrame(render);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  render();
+}
+
+function cashOut(){
+  if(!gameActive) return;
+  const cfg = TOWER_CONFIG[currentDiff];
+  const mult = currentFloor > 0 ? cfg.mults[currentFloor - 1] : 1.0;
+  const payout = betAmt * mult;
+
+  setBalance(getBalance() + payout);
+  totalProfit += payout - betAmt;
+  wins++;
+  flashBal('flash-win');
+  launchTowerConfetti();
+  if(typeof playGameSound === 'function') playGameSound('win');
+  if(typeof trackGameWager === 'function') trackGameWager('GG Dragon Tower', betAmt, payout, true);
+  endTower(true, payout, mult);
+}
+
+function endTower(won, payout = 0, mult = 1.0){
+  gameActive = false;
+  document.querySelectorAll('.tower-tile').forEach(t => t.classList.add('disabled'));
+  document.querySelectorAll('.tower-row').forEach(r => r.classList.remove('active-row'));
+  document.querySelectorAll('#diff-ctrl .seg-btn').forEach(b => b.style.opacity = '');
+
+  document.getElementById('start-btn').style.display = 'block';
+  document.getElementById('cashout-box-container').style.display = 'none';
+
+  const resContainer = document.getElementById('result-container');
+  if(won){
+    resContainer.innerHTML = `<div class="result-box win"><div class="result-box-title">🎉 Tower Conquered!</div><div class="result-box-val">+₹${payout.toFixed(2)} (${mult}×)</div></div>`;
+  } else {
+    totalProfit -= betAmt;
+    losses++;
+    flashBal('flash-lose');
+    if(typeof playGameSound === 'function') playGameSound('lose');
+    if(typeof trackGameWager === 'function') trackGameWager('GG Dragon Tower', betAmt, 0, false);
+    resContainer.innerHTML = `<div class="result-box lose"><div class="result-box-title">💀 Dragon Slain You!</div><div class="result-box-val">-₹${betAmt.toFixed(2)}</div></div>`;
+  }
+  setTimeout(() => resContainer.innerHTML = '', 3500);
+  updateStats();
+}
+
+function updateStats(){
+  const p = document.getElementById('stat-profit');
+  p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
+  p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
+  document.getElementById('stat-wins').textContent = wins;
+  document.getElementById('stat-losses').textContent = losses;
+}
+
+function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
+function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
+function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); }
+</script>
+</body>
+</html>
+
+
+

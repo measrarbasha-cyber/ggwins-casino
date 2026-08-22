@@ -1,0 +1,2 @@
+# GG Wins Python Cloud Server
+# Uses Python standard library (http.server, urllib, hashlib, json, threading)

@@ -1,0 +1,588 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GG Diamond Rush – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+.diamonds-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  gap: 14px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 30%, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+  user-select: none;
+}
+
+/* 5-Slot Gem Showcase */
+.gem-matrix {
+  display: flex;
+  gap: 10px;
+  width: min(520px, 94vw);
+  background: rgba(0,0,0,0.5);
+  border: 3px solid #818cf8;
+  border-radius: 24px;
+  padding: 20px 14px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.7), inset 0 0 30px rgba(99,102,241,0.2);
+  justify-content: space-around;
+  position: relative;
+}
+.gem-slot {
+  flex: 1;
+  height: 96px;
+  background: linear-gradient(145deg, #1e1b4b, #0f172a);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.gem-slot.spinning {
+  animation: gemSpin 0.18s infinite linear;
+}
+@keyframes gemSpin {
+  0% { transform: translateY(-8px) scale(0.9); filter: blur(2px); }
+  50% { transform: translateY(8px) scale(1.1); filter: blur(0px); }
+  100% { transform: translateY(-8px) scale(0.9); filter: blur(2px); }
+}
+.gem-slot.match-glow {
+  border-color: #ffd700;
+  background: linear-gradient(145deg, #4338ca, #312e81);
+  box-shadow: 0 0 25px rgba(255,215,0,0.8);
+  transform: scale(1.08);
+}
+
+/* Paytable combo bar */
+.paytable-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(520px, 94vw);
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.pay-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.pay-row.highlight {
+  background: rgba(0,230,118,0.2);
+  color: #00e676;
+  font-weight: 800;
+  transform: scale(1.02);
+}
+
+/* Chip Selector Row */
+.chip-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 4px;
+}
+.casino-chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+}
+.casino-chip:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 15px rgba(255,215,0,0.5);
+}
+.casino-chip.c10 { background: radial-gradient(circle, #3b82f6, #1d4ed8); }
+.casino-chip.c50 { background: radial-gradient(circle, #ef4444, #b91c1c); }
+.casino-chip.c100 { background: radial-gradient(circle, #10b981, #047857); }
+.casino-chip.c500 { background: radial-gradient(circle, #8b5cf6, #6d28d9); }
+.casino-chip.c1000 { background: radial-gradient(circle, #f59e0b, #b45309); color: #000; border-color: #ffd700; }
+
+
+
+/* In-Game Round Over Modal Overlay */
+.game-overlay-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(6px);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s ease-out;
+}
+.game-overlay-modal.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.modal-card {
+  width: min(340px, 90%);
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 2px solid #ffd700;
+  border-radius: 20px;
+  padding: 20px 18px;
+  text-align: center;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.8);
+  transform: scale(0.9);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.game-overlay-modal.active .modal-card {
+  transform: scale(1);
+}
+.modal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+.modal-title.win { color: #00e676; text-shadow: 0 0 15px rgba(0,230,118,0.5); }
+.modal-title.lose { color: #ef4444; text-shadow: 0 0 15px rgba(239,68,68,0.5); }
+.modal-payout {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  margin: 6px 0 14px 0;
+  color: #fff;
+}
+.modal-btn-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.btn-overlay-action {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.btn-overlay-action.primary {
+  background: linear-gradient(135deg, #00e676, #00b0ff);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(0,230,118,0.4);
+}
+.btn-overlay-action.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,230,118,0.6);
+}
+.btn-overlay-action.secondary {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+}
+.btn-overlay-action.dismiss {
+  background: rgba(255,255,255,0.08);
+  color: #94a3b8;
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 8px;
+  font-size: 12px;
+}
+.btn-overlay-action.dismiss:hover {
+  color: #fff;
+  border-color: #ffd700;
+}
+
+#diamonds-confetti {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 50;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">💎 Diamond Rush</div>
+  </div>
+  <div class="gnav-game-name">GG Diamonds</div>
+  <span class="gnav-game-badge" style="background:#6366f1;color:#fff">5-REEL</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area diamonds-area">
+    <canvas id="diamonds-confetti"></canvas>
+
+    <div class="gem-matrix" id="gem-container">
+      <div class="gem-slot" id="slot-0">💎</div>
+      <div class="gem-slot" id="slot-1">🔮</div>
+      <div class="gem-slot" id="slot-2">👑</div>
+      <div class="gem-slot" id="slot-3">💚</div>
+      <div class="gem-slot" id="slot-4">🔥</div>
+
+      <!-- In-Game Result Modal with Bet Again -->
+      <div class="game-overlay-modal" id="overlay-modal">
+        <div class="modal-card">
+          <div class="modal-title" id="modal-title">FULL HOUSE!</div>
+          <div class="modal-payout" id="modal-payout">+₹500.00</div>
+          <div class="modal-btn-grid">
+            
+            
+            <button class="btn-overlay-action dismiss" onclick="closeOverlayModal()">✏️ Change Bet Amount</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paytable -->
+    <div class="paytable-bar">
+      <div class="pay-row" id="pay-5kind"><span>5 of a Kind (Same Color)</span><span style="color:#ffd700">50.00×</span></div>
+      <div class="pay-row" id="pay-4kind"><span>4 of a Kind</span><span style="color:#ffd700">12.00×</span></div>
+      <div class="pay-row" id="pay-fullhouse"><span>Full House (3 + 2)</span><span style="color:#ffd700">5.00×</span></div>
+      <div class="pay-row" id="pay-3kind"><span>3 of a Kind</span><span style="color:#ffd700">2.25×</span></div>
+      <div class="pay-row" id="pay-2pair"><span>2 Pairs</span><span style="color:#ffd700">1.80×</span></div>
+      <div class="pay-row" id="pay-1pair"><span>1 Pair</span><span style="color:#94a3b8">0.10× (Push)</span></div>
+    </div>
+
+    <!-- Chip Presets -->
+    <div class="chip-row">
+      <div class="casino-chip c10" onclick="addChip(10)">₹10</div>
+      <div class="casino-chip c50" onclick="addChip(50)">₹50</div>
+      <div class="casino-chip c100" onclick="addChip(100)">₹100</div>
+      <div class="casino-chip c500" onclick="addChip(500)">₹500</div>
+      <div class="casino-chip c1000" onclick="addChip(1000)">₹1k</div>
+    </div>
+  
+<div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected. Unauthorized Copying Prohibited.</div>
+</div>
+
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="bet-label">Bet Amount</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amt" type="number" value="100.00" min="1" step="10">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section" style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn-bet" id="btn-spin-diamonds" onclick="spinDiamonds()">💎 Spin Diamonds</button>
+      
+      
+    </div>
+
+    <div class="bet-section">
+      <div id="result-container"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script>
+updateAllWalletDisplays();
+
+// Audio Synth helper
+function playSynth(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    if (type === 'spin') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(300 + Math.random()*200, now);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.08);
+    } else if (type === 'lock') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.linearRampToValueAtTime(900, now + 0.06);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.06);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.06);
+    } else if (type === 'chip') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(800, now);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.05);
+    }
+  } catch(e) {}
+}
+
+const GEMS = ['💎','🔮','👑','💚','🔥','⭐','⚡'];
+
+let isSpinning = false;
+let lastBet = 100;
+let totalProfit = 0, wins = 0, losses = 0;
+
+function halveBet(){ const el=document.getElementById('bet-amt'); el.value = Math.max(1, (parseFloat(el.value)/2)).toFixed(2); }
+function doubleBet(){ const el=document.getElementById('bet-amt'); el.value = (parseFloat(el.value)*2).toFixed(2); }
+function maxBet(){ const el=document.getElementById('bet-amt'); el.value = Math.floor(getBalance()).toFixed(2); }
+
+function addChip(amount){
+  if(isSpinning) return;
+  const el = document.getElementById('bet-amt');
+  el.value = (parseFloat(el.value || 0) + amount).toFixed(2);
+  playSynth('chip');
+}
+
+function closeOverlayModal(){
+  document.getElementById('overlay-modal').classList.remove('active');
+}
+
+
+
+
+
+function spinDiamonds(){
+  if(!requireAuth()) return;
+  if(isSpinning) return;
+
+  const bet = parseFloat(document.getElementById('bet-amt').value) || 100;
+  if(bet > getBalance()){ showToast('Insufficient balance'); return; }
+
+  closeOverlayModal();
+  lastBet = bet;
+  setBalance(getBalance() - bet);
+
+  isSpinning = true;
+  document.getElementById('bet-amt').disabled = true;
+  document.getElementById('btn-spin-diamonds').disabled = true;
+  
+
+  // Clear highlights
+  document.querySelectorAll('.pay-row').forEach(r=>r.classList.remove('highlight'));
+  document.querySelectorAll('.gem-slot').forEach(s=>s.className = 'gem-slot spinning');
+
+  // Spin interval
+  let spinsCount = 0;
+  const spinInterval = setInterval(()=>{
+    for(let i=0; i<5; i++){
+      document.getElementById(`slot-${i}`).textContent = GEMS[Math.floor(Math.random()*GEMS.length)];
+    }
+    playSynth('spin');
+    spinsCount++;
+    if(spinsCount >= 10){
+      clearInterval(spinInterval);
+      resolveDiamonds(bet);
+    }
+  }, 75);
+}
+
+function resolveDiamonds(bet){
+  const finalGems = [];
+  for(let i=0; i<5; i++){
+    finalGems.push(GEMS[Math.floor(Math.random()*GEMS.length)]);
+  }
+
+  // Animate stop one by one
+  finalGems.forEach((g, i)=>{
+    setTimeout(()=>{
+      const slot = document.getElementById(`slot-${i}`);
+      slot.className = 'gem-slot';
+      slot.textContent = g;
+      playSynth('lock');
+
+      if(i === 4){
+        evaluateGems(finalGems, bet);
+      }
+    }, i * 160);
+  });
+}
+
+function evaluateGems(gems, bet){
+  const counts = {};
+  gems.forEach(g => counts[g] = (counts[g] || 0) + 1);
+  const freq = Object.values(counts).sort((a,b)=>b-a);
+
+  let mult = 0;
+  let comboName = '';
+  let highlightRowId = '';
+
+  if(freq[0] === 5){
+    mult = 25.0; comboName = '💎 5 of a Kind!'; highlightRowId = 'pay-5kind';
+  } else if(freq[0] === 4){
+    mult = 8.0; comboName = '👑 4 of a Kind!'; highlightRowId = 'pay-4kind';
+  } else if(freq[0] === 3 && freq[1] === 2){
+    mult = 3.5; comboName = '⚡ Full House!'; highlightRowId = 'pay-fullhouse';
+  } else if(freq[0] === 3){
+    mult = 1.3; comboName = '🔥 3 of a Kind!'; highlightRowId = 'pay-3kind';
+  } else if(freq[0] === 2 && freq[1] === 2){
+    mult = 1.3; comboName = '✨ 2 Pairs!'; highlightRowId = 'pay-2pair';
+  } else if(freq[0] === 2){
+    mult = 0.10; comboName = '🔮 1 Pair (Partial)'; highlightRowId = 'pay-1pair';
+  }
+
+  if(highlightRowId){
+    document.getElementById(highlightRowId).classList.add('highlight');
+  }
+
+  const payout = bet * mult;
+  const res = document.getElementById('result-container');
+  const mTitle = document.getElementById('modal-title');
+  const mPayout = document.getElementById('modal-payout');
+
+  if(mult >= 1.0){
+    setBalance(getBalance() + payout);
+    totalProfit += (payout - bet);
+    wins++;
+    flashBal('flash-win');
+    launchDiamondsConfetti();
+    if(typeof playGameSound==='function') playGameSound('win');
+    if(typeof trackGameWager==='function') trackGameWager('GG Diamonds', bet, payout, true);
+    
+    res.innerHTML = `<div class="result-box win"><div class="result-box-title">${comboName} (${mult}×)</div><div class="result-box-val">+₹${payout.toFixed(2)}</div></div>`;
+    
+    mTitle.className = 'modal-title win';
+    mTitle.textContent = `${comboName} (${mult}×)`;
+    mPayout.textContent = `+₹${payout.toFixed(2)}`;
+  } else {
+    if(payout > 0) setBalance(getBalance() + payout);
+    totalProfit -= (bet - payout);
+    losses++;
+    flashBal('flash-lose');
+    if(typeof playGameSound==='function') playGameSound('lose');
+    if(typeof trackGameWager==='function') trackGameWager('GG Diamonds', bet, payout, false);
+    
+    res.innerHTML = `<div class="result-box lose"><div class="result-box-title">${comboName || '💀 No Combo'}</div><div class="result-box-val">-₹${(bet-payout).toFixed(2)}</div></div>`;
+    
+    mTitle.className = 'modal-title lose';
+    mTitle.textContent = comboName || '💀 No Matching Combo';
+    mPayout.textContent = `-₹${(bet-payout).toFixed(2)}`;
+  }
+
+  const pEl = document.getElementById('stat-profit');
+  pEl.textContent = (totalProfit>=0?'+':'')+' ₹'+totalProfit.toFixed(2);
+  pEl.className = 'stat-box-val '+(totalProfit>=0?'green':'red');
+  document.getElementById('stat-wins').textContent = wins;
+  document.getElementById('stat-losses').textContent = losses;
+
+  isSpinning = false;
+  document.getElementById('bet-amt').disabled = false;
+  document.getElementById('btn-spin-diamonds').disabled = false;
+  document.getElementById('btn-spin-diamonds').textContent = '💎 Spin Again';
+
+  
+  
+  
+  
+  
+
+  // Show In-Game Overlay
+  setTimeout(()=>{
+    document.getElementById('overlay-modal').classList.add('active');
+  }, 600);
+}
+
+
+
+
+
+function launchDiamondsConfetti(){
+  const canvas = document.getElementById('diamonds-confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width  = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+  const particles = [];
+  const colors = ['#818cf8','#c084fc','#38bdf8','#ffd700'];
+  for(let i=0;i<70;i++){
+    particles.push({
+      x:canvas.width/2, y:canvas.height/2,
+      vx:(Math.random()-0.5)*14, vy:(Math.random()-0.8)*15,
+      size:Math.random()*7+3, color:colors[Math.floor(Math.random()*colors.length)],
+      alpha:1
+    });
+  }
+  function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.alpha-=0.015;
+      if(p.alpha>0){
+        alive=true;
+        ctx.fillStyle=p.color;
+        ctx.globalAlpha=Math.max(0,p.alpha);
+        ctx.fillRect(p.x,p.y,p.size,p.size);
+      }
+    });
+    if(alive) requestAnimationFrame(render);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  render();
+}
+</script>
+</body>
+</html>
+

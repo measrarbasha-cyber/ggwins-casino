@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GG WINS – Animated AI Gaming Presenter Commercial Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: radial-gradient(circle at 50% 10%, #1e0b3c 0%, #090317 55%, #020005 100%);
+  color: #fff;
+  font-family: 'Outfit', 'Space Grotesk', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px 14px;
+  overflow-x: hidden;
+}
+
+.studio-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.studio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: rgba(217, 70, 239, 0.15);
+  border: 1px solid rgba(217, 70, 239, 0.4);
+  color: #f472b6;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.studio-title {
+  font-size: 32px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #f472b6 0%, #06b6d4 50%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 25px rgba(217, 70, 239, 0.5));
+}
+.studio-sub {
+  font-size: 14px;
+  color: #a5b4fc;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* Master 16:9 Cinema Viewport */
+.cinema-container {
+  position: relative;
+  width: 100%;
+  max-width: 1040px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 0 90px rgba(217, 70, 239, 0.35), 0 0 40px rgba(6, 182, 212, 0.35), 0 35px 80px rgba(0,0,0,0.95);
+  border: 2px solid rgba(217, 70, 239, 0.5);
+}
+
+#showcaseCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Settings Bar */
+.settings-bar {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1040px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 18px;
+  border-radius: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.voice-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #a5b4fc;
+}
+select {
+  background: #1e1035;
+  color: #fff;
+  border: 1px solid #7c3aed;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Progress Tracker */
+.progress-container {
+  width: 100%;
+  max-width: 1040px;
+  margin-top: 14px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #d946ef, #06b6d4, #10b981, #ffd700);
+  transition: width 0.08s linear;
+}
+
+.timer-label {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #06b6d4;
+  letter-spacing: 0.5px;
+}
+
+/* 8-Scene Chapter Navigation Bar */
+.chapter-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1040px;
+}
+.chapter-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: rgba(255,255,255,0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.chapter-btn.active {
+  background: rgba(217, 70, 239, 0.25);
+  color: #fff;
+  border-color: #d946ef;
+  box-shadow: 0 0 14px rgba(217, 70, 239, 0.45);
+}
+
+/* Controls */
+.control-bar {
+  margin-top: 16px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-action {
+  padding: 14px 26px;
+  border-radius: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14.5px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.btn-play {
+  background: linear-gradient(135deg, #d946ef, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 4px 25px rgba(217, 70, 239, 0.5);
+}
+.btn-record {
+  background: linear-gradient(135deg, #06b6d4, #10b981);
+  color: #000;
+  box-shadow: 0 4px 25px rgba(6, 182, 212, 0.5);
+}
+.btn-action:hover {
+  transform: translateY(-3px) scale(1.03);
+  filter: brightness(1.2);
+}
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+</style>
+</head>
+<body>
+
+<div class="studio-header">
+  <div class="studio-badge">🎮 Young Adult Male Gaming Presenter • 1080p 60FPS</div>
+  <div class="studio-title">GG WINS – ANIMATED STORYBOARD COMMERCIAL</div>
+  <div class="studio-sub">Clean Animated Characters • Pure Procedural UI Motion Graphics • Energetic Male Presenter Voice</div>
+</div>
+
+<div class="cinema-container">
+  <canvas id="showcaseCanvas" width="1920" height="1080"></canvas>
+</div>
+
+<div class="progress-container">
+  <div class="progress-fill" id="progFill"></div>
+</div>
+<div class="timer-label" id="timerDisplay">00:00 / 00:58 • Gaming Presenter Ready</div>
+
+<div class="settings-bar">
+  <div class="voice-select-wrap">
+    <span>🎙️ Presenter Voice (Young Adult Male):</span>
+    <select id="voiceSelect" onchange="updateSelectedVoice()">
+      <option value="auto">🌟 Young Adult Male (Energetic & Smooth)</option>
+    </select>
+  </div>
+  <div style="font-size: 12.5px; color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+    <span>●</span> Unbroken Audio Stream Engine (18+ Compliant)
+  </div>
+</div>
+
+<div class="chapter-bar">
+  <div class="chapter-btn active" id="btn-sc-0" onclick="seekScene(0)">1. Opening (0:00-0:05)</div>
+  <div class="chapter-btn" id="btn-sc-1" onclick="seekScene(5000)">2. Game Lobby (0:05-0:12)</div>
+  <div class="chapter-btn" id="btn-sc-2" onclick="seekScene(12000)">3. Categories (0:12-0:20)</div>
+  <div class="chapter-btn" id="btn-sc-3" onclick="seekScene(20000)">4. Demo Mode (0:20-0:27)</div>
+  <div class="chapter-btn" id="btn-sc-4" onclick="seekScene(27000)">5. Account Options (0:27-0:34)</div>
+  <div class="chapter-btn" id="btn-sc-5" onclick="seekScene(34000)">6. Features (0:34-0:42)</div>
+  <div class="chapter-btn" id="btn-sc-6" onclick="seekScene(42000)">7. Responsible Use (0:42-0:50)</div>
+  <div class="chapter-btn" id="btn-sc-7" onclick="seekScene(50000)">8. Closing (0:50-0:58)</div>
+</div>
+
+<div class="control-bar">
+  <button class="btn-action btn-play" id="btnPlay" onclick="startCommercial(false)">
+    ▶ Play 58s Official Video
+  </button>
+  <button class="btn-action btn-record" id="btnRecord" onclick="startCommercial(true)">
+    🎥 Record & Download 1080p Video (.webm)
+  </button>
+  <button class="btn-action" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;box-shadow:0 4px 20px rgba(99,102,241,0.5)" onclick="window.location.href='/vip_promo_video.html'">
+    ⚡ 3D Cyber Hype Video
+  </button>
+  <button class="btn-action" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2)" onclick="window.open('https://ggwins.site','_blank')">
+    🌐 Visit ggwins.site
+  </button>
+</div>
+
+<script>
+const canvas = document.getElementById('showcaseCanvas');
+const ctx = canvas.getContext('2d');
+const W = 1920;
+const H = 1080;
+
+let isPlaying = false;
+let isRecording = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let animFrame = null;
+let commercialStartTime = 0;
+const TOTAL_DURATION = 58000; // Exact 58s duration matching storyboard
+
+// ════════════════════════════════════════════════════════════════
+// 🖼️ PRELOAD CLEAN CHARACTER CUTOUT IMAGES
+// ════════════════════════════════════════════════════════════════
+const CHAR_ASSETS = {};
+const charFiles = {
+  boyPointing: 'char_boy_pointing_alpha.png',
+  girlGesture: 'char_girl_gesture_alpha.png',
+  boyCat: 'char_boy_cat_alpha.png',
+  boyLaptop: 'char_boy_laptop_alpha.png',
+  girlAccounts: 'char_girl_accounts_alpha.png',
+  girlFeatures: 'char_girl_features_alpha.png',
+  boyResponsible: 'char_boy_responsible_alpha.png',
+  duoClosing: 'char_duo_closing_alpha.png'
+};
+
+for (const [k, v] of Object.entries(charFiles)) {
+  const img = new Image();
+  img.src = `assets/storyboard/${v}`;
+  CHAR_ASSETS[k] = img;
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎵 PROCEDURAL UPBEAT ELECTRONIC GAMING SOUNDTRACK
+// ════════════════════════════════════════════════════════════════
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+const gamingChords = [
+  [349.23, 440.00, 523.25, 659.25], // Fmaj7
+  [392.00, 493.88, 587.33, 698.46], // G9
+  [329.63, 392.00, 493.88, 587.33], // Em7
+  [440.00, 523.25, 659.25, 783.99]  // Am7
+];
+
+let chordTimer = null;
+let currentChordIdx = 0;
+function playAmbientMusic() {
+  if (!isPlaying || !audioCtx) return;
+  try {
+    const notes = gamingChords[currentChordIdx % gamingChords.length];
+    currentChordIdx++;
+
+    notes.forEach((freq, idx) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = idx === 0 ? 'sawtooth' : 'sine';
+      osc.frequency.setValueAtTime(freq * 0.5, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.035, audioCtx.currentTime + 0.8);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 3.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 3.5);
+    });
+  } catch(e){}
+
+  chordTimer = setTimeout(playAmbientMusic, 3200);
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎙️ YOUNG ADULT MALE GAMING PRESENTER VOICEOVER ENGINE
+// ════════════════════════════════════════════════════════════════
+let availableVoices = [];
+let chosenVoice = null;
+let voiceKeepAliveTimer = null;
+
+function populateVoiceList() {
+  if (!('speechSynthesis' in window)) return;
+  availableVoices = window.speechSynthesis.getVoices();
+  const select = document.getElementById('voiceSelect');
+  select.innerHTML = '<option value="auto">🌟 Young Adult Male (Energetic & Smooth)</option>';
+
+  const maleKeywords = ['male', 'david', 'guy', 'mark', 'daniel', 'alex', 'google us english', 'google uk english male', 'en-us', 'en-gb'];
+  
+  availableVoices.forEach((v, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    const isMale = maleKeywords.some(k => v.name.toLowerCase().includes(k)) && !v.name.toLowerCase().includes('female') && !v.name.toLowerCase().includes('zira') && !v.name.toLowerCase().includes('samantha');
+    opt.textContent = `${v.name} (${v.lang}) ${isMale ? '⚡ [Young Adult Male Presenter]' : ''}`;
+    select.appendChild(opt);
+  });
+
+  pickBestMaleVoice();
+}
+
+function pickBestMaleVoice() {
+  if (!availableVoices.length) return;
+  chosenVoice = availableVoices.find(v => (
+    (v.name.includes('Google UK English Male') ||
+     v.name.includes('Google US English') ||
+     v.name.includes('David') ||
+     v.name.includes('Guy') ||
+     v.name.includes('Mark') ||
+     v.name.includes('Alex') ||
+     v.name.includes('Daniel') ||
+     (v.lang.startsWith('en') && v.name.toLowerCase().includes('male'))) &&
+    !v.name.toLowerCase().includes('female')
+  )) || availableVoices.find(v => v.lang.startsWith('en')) || availableVoices[0];
+}
+
+function updateSelectedVoice() {
+  const val = document.getElementById('voiceSelect').value;
+  if (val === 'auto') pickBestMaleVoice();
+  else chosenVoice = availableVoices[parseInt(val)];
+}
+
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = populateVoiceList;
+  populateVoiceList();
+}
+
+// 📜 SCRIPT & TIMINGS FOR THE 8 SCENES
+const SCENES = [
+  {
+    index: 0,
+    title: "1. OPENING (0:00 - 0:05)",
+    startMs: 0,
+    endMs: 5000,
+    speechText: "Welcome to GG Wins – a modern gaming lobby bringing multiple game experiences together in one place.",
+    caption: "Welcome to GG Wins – a modern gaming lobby bringing multiple game experiences together in one place.",
+    charKey: 'boyPointing',
+    sub: "PLAY. COMPETE. WIN."
+  },
+  {
+    index: 1,
+    title: "2. GAME LOBBY (0:05 - 0:12)",
+    startMs: 5000,
+    endMs: 12000,
+    speechText: "Explore a wide selection of games, from arcade-style experiences and card games to classic casino-inspired formats.",
+    caption: "Explore a wide selection of games, from arcade-style experiences and card games to classic casino-inspired formats.",
+    charKey: 'girlGesture',
+    sub: "YOUR WINNING DESTINATION"
+  },
+  {
+    index: 2,
+    title: "3. CATEGORIES (0:12 - 0:20)",
+    startMs: 12000,
+    endMs: 20000,
+    speechText: "Use the simple categories and search feature to quickly find the game you're looking for.",
+    caption: "Use the simple categories and search feature to quickly find the game you're looking for.",
+    charKey: 'boyCat',
+    sub: "ALL • ORIGINALS • CARDS • ARCADE"
+  },
+  {
+    index: 3,
+    title: "4. DEMO MODE (0:20 - 0:27)",
+    startMs: 20000,
+    endMs: 27000,
+    speechText: "For users who want to explore the interface first, GG Wins also provides a demo practice mode.",
+    caption: "For users who want to explore the interface first, GG Wins also provides a demo practice mode.",
+    charKey: 'boyLaptop',
+    sub: "PRACTICE ACCOUNT • ₹10,000.00 DEMO"
+  },
+  {
+    index: 4,
+    title: "5. ACCOUNT OPTIONS (0:27 - 0:34)",
+    startMs: 27000,
+    endMs: 34000,
+    speechText: "The platform displays different account and balance options, including demo, INR, and USDT accounts. Availability and eligibility depend on the applicable rules and terms.",
+    caption: "The platform displays different account and balance options, including demo, INR, and USDT accounts. Availability and eligibility depend on the applicable rules and terms.",
+    charKey: 'girlAccounts',
+    sub: "CHOOSE YOUR ACCOUNT • DEMO | INR | USDT"
+  },
+  {
+    index: 5,
+    title: "6. FEATURES (0:34 - 0:42)",
+    startMs: 34000,
+    endMs: 42000,
+    speechText: "Additional platform features include tournaments, a VIP area, an AI host interface, and referral functionality.",
+    caption: "Additional platform features include tournaments, a VIP area, an AI host interface, and referral functionality.",
+    charKey: 'girlFeatures',
+    sub: "TOURNAMENTS • VIP AREA • AI HOST • REFER & EARN"
+  },
+  {
+    index: 6,
+    title: "7. RESPONSIBLE USE (0:42 - 0:50)",
+    startMs: 42000,
+    endMs: 50000,
+    speechText: "Real-money gaming involves financial risk. Only eligible adults should use real-money features, and users should review the applicable laws, terms, and responsible-play information before participating.",
+    caption: "Real-money gaming involves financial risk. Only eligible adults should use real-money features, and users should review the applicable laws, terms, and responsible-play information before participating.",
+    charKey: 'boyResponsible',
+    sub: "18+ • PLAY RESPONSIBLY"
+  },
+  {
+    index: 7,
+    title: "8. CLOSING (0:50 - 0:58)",
+    startMs: 50000,
+    endMs: 58000,
+    speechText: "Visit GG Wins. Explore, understand, and play responsibly.",
+    caption: "EXPLORE. UNDERSTAND. PLAY RESPONSIBLY.",
+    charKey: 'duoClosing',
+    sub: "VISIT GGWINS.SITE"
+  }
+];
+
+function speakSceneSegment(index) {
+  if (!isPlaying || index >= SCENES.length) return;
+  const sc = SCENES[index];
+
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(sc.speechText);
+    if (chosenVoice) utter.voice = chosenVoice;
+    utter.rate = 1.14;  // Medium-fast, energetic gaming presenter pacing
+    utter.pitch = 1.02; // Medium pitch, warm and confident young adult male tone
+    utter.volume = 1.0;
+
+    window.speechSynthesis.speak(utter);
+
+    if (voiceKeepAliveTimer) clearInterval(voiceKeepAliveTimer);
+    voiceKeepAliveTimer = setInterval(() => {
+      if (window.speechSynthesis.speaking && isPlaying) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }
+    }, 8000);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎨 PURE PROCEDURAL ANIMATED UI & CHARACTER RENDER PIPELINE
+// ════════════════════════════════════════════════════════════════
+function renderFrame(t) {
+  ctx.clearRect(0, 0, W, H);
+
+  const sec = t / 1000;
+  const currentSceneIdx = Math.min(7, Math.max(0, SCENES.findIndex(s => t >= s.startMs && t < s.endMs)));
+  const sc = SCENES[currentSceneIdx >= 0 ? currentSceneIdx : 7];
+
+  updateChapterBadges(currentSceneIdx);
+
+  // 1. Dynamic Cyberpunk Background Skybox
+  const bgGrad = ctx.createRadialGradient(W/2, H*0.35, 100, W/2, H/2, W*0.85);
+  bgGrad.addColorStop(0, '#240f47');
+  bgGrad.addColorStop(0.5, '#0b041c');
+  bgGrad.addColorStop(1, '#020005');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // 2. Animated Cyber Perspective Grid Floor & Ceiling
+  ctx.save();
+  ctx.strokeStyle = 'rgba(217, 70, 239, 0.18)';
+  ctx.lineWidth = 2;
+  const gridYOffset = (sec * 50) % 60;
+  for (let y = H - 280 + gridYOffset; y < H; y += 60) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+  for (let x = 0; x < W; x += 120) {
+    ctx.beginPath();
+    ctx.moveTo(x, H - 280);
+    ctx.lineTo(x + (x - W/2)*0.8, H);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 3. Floating Neon Particles & Light Orbs
+  for (let i = 0; i < 28; i++) {
+    const px = ((Math.sin(sec * 0.5 + i * 0.7) * 0.5 + 0.5) * W);
+    const py = ((Math.cos(sec * 0.4 + i * 1.1) * 0.5 + 0.5) * (H - 180));
+    const rad = Math.sin(sec * 3 + i) * 2 + 3.5;
+    ctx.fillStyle = i % 3 === 0 ? 'rgba(217, 70, 239, 0.45)' : (i % 3 === 1 ? 'rgba(6, 182, 212, 0.45)' : 'rgba(255, 215, 0, 0.4)');
+    ctx.beginPath();
+    ctx.arc(px, py, rad, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 4. Header Bar
+  ctx.save();
+  ctx.fillStyle = 'rgba(15, 7, 30, 0.85)';
+  ctx.strokeStyle = '#d946ef';
+  ctx.lineWidth = 2;
+  ctx.fillRect(60, 40, 440, 65);
+  ctx.strokeRect(60, 40, 440, 65);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 30px "Outfit"';
+  ctx.fillText('⚡ GG WINS', 85, 84);
+
+  ctx.fillStyle = '#06b6d4';
+  ctx.font = '800 16px "Outfit"';
+  ctx.fillText('OFFICIAL COMMERCIAL', 260, 82);
+
+  // Scene Title Tag on Right
+  ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
+  ctx.strokeStyle = '#10b981';
+  ctx.fillRect(W - 460, 40, 400, 65);
+  ctx.strokeRect(W - 460, 40, 400, 65);
+  ctx.fillStyle = '#10b981';
+  ctx.font = '900 22px "Outfit"';
+  ctx.fillText(sc.title, W - 435, 82);
+  ctx.restore();
+
+  // ════════════════════════════════════════════════════════════════
+  // 🎬 PROCEDURAL ANIMATED UI CARDS (Left 60% of Screen)
+  // ════════════════════════════════════════════════════════════════
+  const cardX = 70;
+  const cardY = 140;
+  const cardW = 1140;
+  const cardH = 750;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(12, 6, 28, 0.84)';
+  ctx.strokeStyle = '#d946ef';
+  ctx.lineWidth = 3.5;
+  ctx.shadowColor = '#d946ef';
+  ctx.shadowBlur = 35;
+  ctx.fillRect(cardX, cardY, cardW, cardH);
+  ctx.strokeRect(cardX, cardY, cardW, cardH);
+
+  // Top Title Bar of Card
+  ctx.fillStyle = 'rgba(28, 12, 58, 0.9)';
+  ctx.fillRect(cardX, cardY, cardW, 85);
+
+  if (sc.index === 0) {
+    // ── SCENE 1: OPENING (0:00 - 0:05) ──
+    ctx.fillStyle = '#10b981';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('🚀 WELCOME TO GG WINS', cardX + 40, cardY + 58);
+
+    // Glowing Massive Logo & Title
+    const pulse = 1.0 + Math.sin(sec * 4) * 0.04;
+    ctx.save();
+    ctx.translate(cardX + cardW/2, cardY + 220);
+    ctx.scale(pulse, pulse);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = '#d946ef';
+    ctx.shadowBlur = 45;
+    ctx.font = '900 86px "Space Grotesk"';
+    ctx.textAlign = 'center';
+    ctx.fillText('GG WINS', 0, 0);
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('PLAY. COMPETE. WIN.', 0, 60);
+    ctx.restore();
+
+    // 3 Feature Bullet Badges
+    const bts = [
+      { t: '🎮 Modern Gaming Lobby', d: 'Multiple game experiences together in one place', c: '#10b981' },
+      { t: '⚡ Instant Browser Play', d: 'No downloads required – play 24/7 on any device', c: '#06b6d4' },
+      { t: '🛡️ 100% Fair & Certified', d: 'Provably fair algorithms with instant payouts', c: '#d946ef' }
+    ];
+    bts.forEach((b, i) => {
+      const by = cardY + 360 + i * 115;
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.strokeStyle = b.c;
+      ctx.lineWidth = 2;
+      ctx.fillRect(cardX + 40, by, cardW - 80, 95);
+      ctx.strokeRect(cardX + 40, by, cardW - 80, 95);
+
+      ctx.fillStyle = b.c;
+      ctx.font = '800 26px "Outfit"';
+      ctx.fillText(b.t, cardX + 70, by + 40);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '600 18px "Outfit"';
+      ctx.fillText(b.d, cardX + 70, by + 72);
+    });
+  }
+  else if (sc.index === 1) {
+    // ── SCENE 2: GAME LOBBY (0:05 - 0:12) ──
+    ctx.fillStyle = '#06b6d4';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('🔥 MODERN GAMING LOBBY', cardX + 40, cardY + 58);
+
+    // Live Wallet Bar Inside Lobby
+    const balVal = (25000 + Math.floor(Math.sin(sec * 4) * 1200)).toLocaleString('en-IN');
+    ctx.fillStyle = 'rgba(6, 182, 212, 0.2)';
+    ctx.strokeStyle = '#06b6d4';
+    ctx.lineWidth = 2;
+    ctx.fillRect(cardX + cardW - 420, cardY + 18, 380, 50);
+    ctx.strokeRect(cardX + cardW - 420, cardY + 18, 380, 50);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 24px "Outfit"';
+    ctx.fillText(`💰 INR ${balVal}.00`, cardX + cardW - 395, cardY + 52);
+
+    // 5 Popular Games Docks with Bouncing Animation
+    const games = [
+      { n: 'WINGO', tag: 'Color Prediction', c: '#ef4444', ico: '🎯' },
+      { n: 'FANTAN', tag: 'Classic Beads', c: '#f59e0b', ico: '🎲' },
+      { n: 'GG MINES', tag: '500× Cash Gems', c: '#10b981', ico: '💎' },
+      { n: 'DRAGON TOWER', tag: 'Cash Climber', c: '#a855f7', ico: '🐲' },
+      { n: '7 UP DOWN', tag: 'Dice Multipliers', c: '#38bdf8', ico: '🎲' }
+    ];
+
+    games.forEach((g, i) => {
+      const gx = cardX + 40 + i * 215;
+      const gBounce = Math.sin(sec * 3 + i) * 6;
+
+      ctx.save();
+      ctx.translate(0, gBounce);
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.strokeStyle = g.c;
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = g.c;
+      ctx.shadowBlur = 18;
+      ctx.fillRect(gx, cardY + 140, 195, 520);
+      ctx.strokeRect(gx, cardY + 140, 195, 520);
+
+      ctx.font = '54px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(g.ico, gx + 97, cardY + 240);
+
+      ctx.fillStyle = g.c;
+      ctx.font = '900 22px "Outfit"';
+      ctx.fillText(g.n, gx + 97, cardY + 340);
+
+      ctx.fillStyle = '#ffd700';
+      ctx.font = '700 16px "Outfit"';
+      ctx.fillText(g.tag, gx + 97, cardY + 390);
+
+      ctx.fillStyle = g.c;
+      ctx.fillRect(gx + 20, cardY + 560, 155, 45);
+      ctx.fillStyle = '#000';
+      ctx.font = '900 16px "Outfit"';
+      ctx.fillText('PLAY ⚡', gx + 97, cardY + 590);
+      ctx.restore();
+    });
+  }
+  else if (sc.index === 2) {
+    // ── SCENE 3: CATEGORIES (0:12 - 0:20) ──
+    ctx.fillStyle = '#f472b6';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('🎯 CATEGORIES & SEARCH FEATURE', cardX + 40, cardY + 58);
+
+    // Search Bar Simulation
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.strokeStyle = '#a855f7';
+    ctx.lineWidth = 2;
+    ctx.fillRect(cardX + 40, cardY + 120, cardW - 80, 60);
+    ctx.strokeRect(cardX + 40, cardY + 120, cardW - 80, 60);
+    ctx.fillStyle = '#a5b4fc';
+    ctx.font = '700 22px "Outfit"';
+    ctx.fillText('🔍 Search games, slots, originals, and live tables...', cardX + 70, cardY + 158);
+
+    // 4 Category Docks
+    const cats = [
+      { name: 'ALL', sub: 'Complete Library', ico: '🏆', col: '#ffd700' },
+      { name: 'ORIGINALS', sub: 'Exclusive GG Games', ico: '🤖', col: '#d946ef' },
+      { name: 'CARDS', sub: 'Poker & Teen Patti', ico: '🎴', col: '#38bdf8' },
+      { name: 'ARCADE', sub: 'Aviator & Crash', ico: '🚀', col: '#ef4444' }
+    ];
+
+    cats.forEach((c, idx) => {
+      const cx = cardX + 40 + idx * 270;
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.strokeStyle = c.col;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = c.col;
+      ctx.shadowBlur = 22;
+      ctx.fillRect(cx, cardY + 220, 250, 440);
+      ctx.strokeRect(cx, cardY + 220, 250, 440);
+
+      ctx.font = '64px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(c.ico, cx + 125, cardY + 340);
+
+      ctx.fillStyle = c.col;
+      ctx.font = '900 28px "Outfit"';
+      ctx.fillText(c.name, cx + 125, cardY + 430);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '700 18px "Outfit"';
+      ctx.fillText(c.sub, cx + 125, cardY + 480);
+
+      ctx.fillStyle = c.col;
+      ctx.fillRect(cx + 30, cardY + 560, 190, 50);
+      ctx.fillStyle = '#000';
+      ctx.font = '900 18px "Outfit"';
+      ctx.fillText('EXPLORE', cx + 125, cardY + 592);
+      ctx.textAlign = 'left';
+    });
+  }
+  else if (sc.index === 3) {
+    // ── SCENE 4: DEMO MODE (0:20 - 0:27) ──
+    ctx.fillStyle = '#10b981';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('🎮 FREE DEMO PRACTICE MODE', cardX + 40, cardY + 58);
+
+    // Glowing Practice Card
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 3.5;
+    ctx.fillRect(cardX + 50, cardY + 130, cardW - 100, 540);
+    ctx.strokeRect(cardX + 50, cardY + 130, cardW - 100, 540);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#10b981';
+    ctx.font = '900 32px "Outfit"';
+    ctx.fillText('PRACTICE ACCOUNT', cardX + cardW/2, cardY + 220);
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 92px "Space Grotesk"';
+    ctx.fillText('₹10,000.00', cardX + cardW/2, cardY + 340);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 24px "Outfit"';
+    ctx.fillText('Free Practice Credits • Zero Risk • Test All Games & Strategies', cardX + cardW/2, cardY + 420);
+
+    ctx.fillStyle = '#10b981';
+    ctx.fillRect(cardX + cardW/2 - 200, cardY + 490, 400, 70);
+    ctx.fillStyle = '#000';
+    ctx.font = '900 28px "Outfit"';
+    ctx.fillText('START PRACTICE ⚡', cardX + cardW/2, cardY + 535);
+    ctx.textAlign = 'left';
+  }
+  else if (sc.index === 4) {
+    // ── SCENE 5: ACCOUNT OPTIONS (0:27 - 0:34) ──
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('💳 CHOOSE YOUR ACCOUNT & BALANCES', cardX + 40, cardY + 58);
+
+    const accs = [
+      { name: 'DEMO ACCOUNT', bal: '₹10,000.00', tag: 'Practice & Explore', ico: '🎮', col: '#10b981' },
+      { name: 'INR ACCOUNT', bal: 'Real Money', tag: 'Direct Bank & UPI Payouts', ico: '₹', col: '#ffd700' },
+      { name: 'USDT ACCOUNT', bal: '₮ Crypto Wallet', tag: 'Zero Fee USDT Transfers', ico: '₮', col: '#06b6d4' }
+    ];
+
+    accs.forEach((a, idx) => {
+      const ax = cardX + 50 + idx * 355;
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.strokeStyle = a.col;
+      ctx.lineWidth = 3.5;
+      ctx.shadowColor = a.col;
+      ctx.shadowBlur = 25;
+      ctx.fillRect(ax, cardY + 140, 325, 520);
+      ctx.strokeRect(ax, cardY + 140, 325, 520);
+
+      ctx.font = '68px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(a.ico, ax + 162, cardY + 260);
+
+      ctx.fillStyle = a.col;
+      ctx.font = '900 28px "Outfit"';
+      ctx.fillText(a.name, ax + 162, cardY + 350);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 24px "Outfit"';
+      ctx.fillText(a.bal, ax + 162, cardY + 410);
+
+      ctx.fillStyle = '#a5b4fc';
+      ctx.font = '600 18px "Outfit"';
+      ctx.fillText(a.tag, ax + 162, cardY + 460);
+
+      ctx.fillStyle = a.col;
+      ctx.fillRect(ax + 35, cardY + 550, 255, 55);
+      ctx.fillStyle = '#000';
+      ctx.font = '900 20px "Outfit"';
+      ctx.fillText('SELECT ACCOUNT', ax + 162, cardY + 585);
+      ctx.textAlign = 'left';
+    });
+  }
+  else if (sc.index === 5) {
+    // ── SCENE 6: FEATURES (0:34 - 0:42) ──
+    ctx.fillStyle = '#d946ef';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('🌟 EXCLUSIVE PLATFORM FEATURES', cardX + 40, cardY + 58);
+
+    const feats = [
+      { name: 'TOURNAMENTS', sub: 'Compete & Win Rewards', ico: '🏆', col: '#ffd700' },
+      { name: 'VIP AREA', sub: 'Exclusive VIP Benefits', ico: '👑', col: '#d946ef' },
+      { name: 'AI HOST', sub: 'Smart Gaming Assistant', ico: '🤖', col: '#06b6d4' },
+      { name: 'REFER & EARN', sub: 'Invite Friends & Earn Cash', ico: '👥', col: '#10b981' }
+    ];
+
+    feats.forEach((f, idx) => {
+      const fx = cardX + 40 + idx * 270;
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.strokeStyle = f.col;
+      ctx.lineWidth = 3;
+      ctx.shadowColor = f.col;
+      ctx.shadowBlur = 22;
+      ctx.fillRect(fx, cardY + 140, 250, 520);
+      ctx.strokeRect(fx, cardY + 140, 250, 520);
+
+      ctx.font = '64px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(f.ico, fx + 125, cardY + 270);
+
+      ctx.fillStyle = f.col;
+      ctx.font = '900 24px "Outfit"';
+      ctx.fillText(f.name, fx + 125, cardY + 360);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '600 18px "Outfit"';
+      ctx.fillText(f.sub, fx + 125, cardY + 420);
+
+      ctx.fillStyle = f.col;
+      ctx.fillRect(fx + 25, cardY + 550, 200, 50);
+      ctx.fillStyle = '#000';
+      ctx.font = '900 18px "Outfit"';
+      ctx.fillText('EXPLORE', fx + 125, cardY + 582);
+      ctx.textAlign = 'left';
+    });
+  }
+  else if (sc.index === 6) {
+    // ── SCENE 7: RESPONSIBLE USE (0:42 - 0:50) ──
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('🛡️ RESPONSIBLE GAMING & COMPLIANCE', cardX + 40, cardY + 58);
+
+    // Big 18+ Shield
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 4;
+    ctx.fillRect(cardX + 50, cardY + 130, cardW - 100, 540);
+    ctx.strokeRect(cardX + 50, cardY + 130, cardW - 100, 540);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '900 100px "Space Grotesk"';
+    ctx.fillText('18+', cardX + cardW/2, cardY + 260);
+
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 34px "Outfit"';
+    ctx.fillText('REAL-MONEY GAMING INVOLVES FINANCIAL RISK', cardX + cardW/2, cardY + 340);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 22px "Outfit"';
+    ctx.fillText('Only eligible adults should use real-money features.', cardX + cardW/2, cardY + 410);
+    ctx.fillText('Users should review applicable laws, terms, and responsible-play information before participating.', cardX + cardW/2, cardY + 455);
+
+    ctx.fillStyle = '#10b981';
+    ctx.font = '900 28px "Outfit"';
+    ctx.fillText('🛡️ PLAY RESPONSIBLY', cardX + cardW/2, cardY + 550);
+    ctx.textAlign = 'left';
+  }
+  else {
+    // ── SCENE 8: CLOSING (0:50 - 0:58) ──
+    ctx.fillStyle = '#ffd700';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('🎉 JOIN GG WINS TODAY', cardX + 40, cardY + 58);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 76px "Space Grotesk"';
+    ctx.fillText('GG WINS', cardX + cardW/2, cardY + 240);
+
+    ctx.fillStyle = '#d946ef';
+    ctx.font = '900 58px "Outfit"';
+    ctx.fillText('👉 ggwins.site 👈', cardX + cardW/2, cardY + 340);
+
+    ctx.fillStyle = '#10b981';
+    ctx.font = '900 36px "Outfit"';
+    ctx.fillText('EXPLORE. UNDERSTAND. PLAY RESPONSIBLY.', cardX + cardW/2, cardY + 440);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '700 26px "Outfit"';
+    ctx.fillText('⚡ 25+ Games  •  👑 VIP Area  •  🤖 AI Host  •  💳 30s UPI', cardX + cardW/2, cardY + 520);
+    ctx.textAlign = 'left';
+  }
+
+  ctx.restore();
+
+  // ════════════════════════════════════════════════════════════════
+  // 🤖 CLEAN ANIMATED CHARACTER PRESENTER (Right Side / Center)
+  // ════════════════════════════════════════════════════════════════
+  const charImg = CHAR_ASSETS[sc.charKey];
+  if (charImg && charImg.complete) {
+    const charBob = Math.sin(sec * 2.8) * 9;
+    const charSway = Math.sin(sec * 1.6) * 5;
+
+    ctx.save();
+    ctx.translate(charSway, charBob);
+
+    // Glowing Holographic Frame on Character
+    ctx.shadowColor = '#d946ef';
+    ctx.shadowBlur = 35;
+
+    if (sc.index === 7) {
+      // Scene 8: Duo waving in center
+      ctx.drawImage(charImg, W - 680, 190, 620, 680);
+    } else {
+      // Scenes 1-7: Character on right side
+      ctx.drawImage(charImg, W - 660, 200, 600, 660);
+    }
+
+    ctx.restore();
+  }
+
+  // 5. Dynamic Karaoke Teleprompter Caption Bar (Bottom Center)
+  ctx.save();
+  ctx.fillStyle = 'rgba(6, 2, 16, 0.94)';
+  ctx.strokeStyle = '#d946ef';
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = '#d946ef';
+  ctx.shadowBlur = 25;
+  ctx.fillRect(120, H - 145, W - 240, 85);
+  ctx.strokeRect(120, H - 145, W - 240, 85);
+
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '800 25px "Outfit"';
+  ctx.textAlign = 'center';
+  ctx.fillText(sc.caption, W / 2, H - 95);
+  ctx.restore();
+
+  // 6. Regulatory 18+ Compliance Footer
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '700 16px "Outfit"';
+  ctx.textAlign = 'center';
+  ctx.fillText('🔞 18+ | Play Responsibly | Terms and Eligibility Apply | ggwins.site', W / 2, H - 25);
+  ctx.restore();
+}
+
+function updateChapterBadges(activeIdx) {
+  for (let i = 0; i < 8; i++) {
+    const b = document.getElementById(`btn-sc-${i}`);
+    if (b) {
+      if (i === activeIdx) b.classList.add('active');
+      else b.classList.remove('active');
+    }
+  }
+}
+
+function seekScene(ms) {
+  if (isPlaying) {
+    commercialStartTime = performance.now() - ms;
+    const scIdx = SCENES.findIndex(s => ms >= s.startMs && ms < s.endMs);
+    if (scIdx >= 0) speakSceneSegment(scIdx);
+  } else {
+    renderFrame(ms);
+    const scIdx = SCENES.findIndex(s => ms >= s.startMs && ms < s.endMs);
+    if (scIdx >= 0) updateChapterBadges(scIdx);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎬 SHOWCASE CONTROLLER & 1080p RECORDER
+// ════════════════════════════════════════════════════════════════
+let activeTimeouts = [];
+
+function clearAllTimeouts() {
+  activeTimeouts.forEach(t => clearTimeout(t));
+  activeTimeouts = [];
+  if (chordTimer) clearTimeout(chordTimer);
+  if (voiceKeepAliveTimer) clearInterval(voiceKeepAliveTimer);
+}
+
+function startCommercial(record = false) {
+  initAudio();
+  isPlaying = true;
+  isRecording = record;
+  commercialStartTime = performance.now();
+  recordedChunks = [];
+  clearAllTimeouts();
+
+  document.getElementById('btnPlay').disabled = true;
+  document.getElementById('btnRecord').disabled = true;
+
+  playAmbientMusic();
+
+  // Schedule all 8 scene voiceovers
+  SCENES.forEach((sc, idx) => {
+    const handle = setTimeout(() => {
+      if (isPlaying) speakSceneSegment(idx);
+    }, sc.startMs);
+    activeTimeouts.push(handle);
+  });
+
+  if (record) {
+    document.getElementById('timerDisplay').textContent = '🔴 RECORDING 58-SECOND FULL HD AD...';
+    const stream = canvas.captureStream(30);
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm'
+    });
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+    mediaRecorder.onstop = exportVideoFile;
+    mediaRecorder.start();
+  }
+
+  function loop(now) {
+    const elapsed = now - commercialStartTime;
+    renderFrame(elapsed);
+
+    const pct = Math.min(100, (elapsed / TOTAL_DURATION) * 100);
+    document.getElementById('progFill').style.width = pct + '%';
+
+    const sec = Math.floor(elapsed / 1000);
+    const mStr = String(Math.floor(sec / 60)).padStart(2, '0');
+    const sStr = String(sec % 60).padStart(2, '0');
+    if (!isRecording) {
+      document.getElementById('timerDisplay').textContent = `${mStr}:${sStr} / 00:58 • Commercial Playing`;
+    }
+
+    if (elapsed < TOTAL_DURATION) {
+      animFrame = requestAnimationFrame(loop);
+    } else {
+      endCommercial();
+    }
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+function endCommercial() {
+  isPlaying = false;
+  clearAllTimeouts();
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+  document.getElementById('btnPlay').disabled = false;
+  document.getElementById('btnRecord').disabled = false;
+
+  if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  } else {
+    document.getElementById('timerDisplay').textContent = '✅ 58s Storyboard Commercial Finished! Click "Record & Download" to save HD file.';
+  }
+}
+
+function exportVideoFile() {
+  const blob = new Blob(recordedChunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'GG_WINS_Official_58s_Gaming_Presenter_Ad_1080p.webm';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  document.getElementById('timerDisplay').innerHTML = '🎉 <b>OFFICIAL 58s GAMING PRESENTER AD DOWNLOADED!</b> Ready for YouTube, Instagram & Ads!';
+}
+
+// Initial draw static frame
+window.addEventListener('load', () => {
+  renderFrame(0);
+});
+</script>
+</body>
+</html>

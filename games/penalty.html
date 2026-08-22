@@ -1,0 +1,763 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GG Penalty Shootout – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<script src="../security-guard.js"></script>
+<style>
+/* Football Pitch Arena */
+.penalty-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  gap: 10px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 30%, #166534 0%, #14532d 50%, #052e16 100%);
+  user-select: none;
+}
+
+/* Multiplier Streak Ladder */
+.ladder-bar {
+  display: flex;
+  gap: 6px;
+  width: min(540px, 94vw);
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: 14px;
+  padding: 6px 10px;
+  justify-content: space-between;
+  backdrop-filter: blur(8px);
+}
+.ladder-step {
+  flex: 1;
+  text-align: center;
+  padding: 6px 2px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.ladder-step.active {
+  background: linear-gradient(135deg, #00e676, #00b0ff);
+  color: #000;
+  border-color: #00e676;
+  transform: scale(1.08);
+  box-shadow: 0 0 16px rgba(0,230,118,0.7);
+  font-weight: 900;
+}
+.ladder-step.cleared {
+  background: rgba(0,230,118,0.2);
+  color: #00e676;
+  border-color: rgba(0,230,118,0.4);
+}
+
+/* Pitch & Goal Area */
+.pitch-container {
+  width: min(540px, 94vw);
+  height: 280px;
+  background: linear-gradient(to bottom, #15803d 0%, #166534 60%, #14532d 100%);
+  border: 4px solid #ffffff;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6), inset 0 0 50px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pitch-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(0,0,0,0.08) 35px, rgba(0,0,0,0.08) 70px);
+  pointer-events: none;
+}
+
+/* Pitch markings */
+.penalty-box-arc {
+  position: absolute;
+  top: 125px;
+  width: 140px;
+  height: 55px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top: none;
+  border-radius: 0 0 70px 70px;
+  pointer-events: none;
+}
+.penalty-spot {
+  position: absolute;
+  bottom: 40px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+/* Goal Post Net */
+.goal-frame {
+  position: absolute;
+  top: 15px;
+  width: 72%;
+  height: 125px;
+  border: 5px solid #ffffff;
+  border-bottom: none;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.08), rgba(255,255,255,0.08) 8px, transparent 8px, transparent 16px),
+              repeating-linear-gradient(-45deg, rgba(255,255,255,0.08), rgba(255,255,255,0.08) 8px, transparent 8px, transparent 16px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  border-radius: 6px 6px 0 0;
+  pointer-events: none;
+}
+
+/* Aim Targets */
+.aim-grid {
+  position: absolute;
+  top: 18px;
+  width: 70%;
+  height: 118px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  z-index: 15;
+}
+.aim-btn {
+  border: 2px dashed rgba(255,215,0,0.6);
+  border-radius: 8px;
+  background: rgba(255,215,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.aim-btn:hover:not(:disabled) {
+  background: rgba(255,215,0,0.25);
+  border-style: solid;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255,215,0,0.7);
+}
+.aim-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.4);
+}
+
+/* Goalkeeper */
+.gk-character {
+  position: absolute;
+  top: 55px;
+  font-size: 42px;
+  z-index: 12;
+  transition: all 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+}
+.gk-character.dive-tl { transform: translate(-80px, -25px) rotate(-35deg) scale(1.1); }
+.gk-character.dive-tm { transform: translate(0px, -30px) scale(1.15); }
+.gk-character.dive-tr { transform: translate(80px, -25px) rotate(35deg) scale(1.1); }
+.gk-character.dive-bl { transform: translate(-85px, 20px) rotate(-45deg) scale(1.1); }
+.gk-character.dive-bm { transform: translate(0px, 15px) scale(1.05); }
+.gk-character.dive-br { transform: translate(85px, 20px) rotate(45deg) scale(1.1); }
+
+/* Ball */
+.ball-character {
+  position: absolute;
+  bottom: 34px;
+  font-size: 26px;
+  z-index: 20;
+  transition: all 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.7));
+}
+.ball-character.kick-tl { transform: translate(-80px, -185px) scale(0.65) rotate(720deg); }
+.ball-character.kick-tm { transform: translate(0px, -190px) scale(0.65) rotate(720deg); }
+.ball-character.kick-tr { transform: translate(80px, -185px) scale(0.65) rotate(720deg); }
+.ball-character.kick-bl { transform: translate(-80px, -145px) scale(0.68) rotate(720deg); }
+.ball-character.kick-bm { transform: translate(0px, -145px) scale(0.68) rotate(720deg); }
+.ball-character.kick-br { transform: translate(80px, -145px) scale(0.68) rotate(720deg); }
+
+/* Goal Popup Toast */
+.goal-banner-toast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.5);
+  opacity: 0;
+  pointer-events: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  padding: 12px 24px;
+  border-radius: 14px;
+  color: #fff;
+  z-index: 30;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.goal-banner-toast.show {
+  transform: translate(-50%, -50%) scale(1.1);
+  opacity: 1;
+}
+
+/* Result Banner */
+.result-banner {
+  display: none;
+  width: min(540px, 94vw);
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  text-align: center;
+  font-size: 15px;
+  animation: bannerSlide 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.result-banner.win {
+  display: block;
+  background: linear-gradient(135deg, rgba(0,230,118,0.25), rgba(0,180,216,0.2));
+  border: 2px solid #00e676;
+  color: #00e676;
+  box-shadow: 0 0 20px rgba(0,230,118,0.4);
+}
+.result-banner.lose {
+  display: block;
+  background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(185,28,28,0.2));
+  border: 2px solid #ef4444;
+  color: #ef4444;
+  box-shadow: 0 0 20px rgba(239,68,68,0.4);
+}
+
+/* Action bar for Play Again */
+.round-action-bar {
+  display: flex;
+  gap: 8px;
+  width: min(540px, 94vw);
+}
+.btn-action-main {
+  flex: 1.2;
+  padding: 12px;
+  background: linear-gradient(135deg, #00e676, #00b0ff);
+  border: none;
+  border-radius: 12px;
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,230,118,0.4);
+  transition: all 0.2s;
+}
+.btn-action-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,230,118,0.6);
+}
+.btn-action-2x {
+  flex: 1;
+  padding: 12px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  border-radius: 12px;
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-action-2x:hover {
+  transform: translateY(-2px);
+}
+
+/* Chip Selector Row */
+.chip-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 2px;
+}
+.casino-chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  transition: all 0.2s;
+}
+.casino-chip:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 15px rgba(255,215,0,0.5);
+}
+.casino-chip.c10 { background: radial-gradient(circle, #3b82f6, #1d4ed8); }
+.casino-chip.c50 { background: radial-gradient(circle, #ef4444, #b91c1c); }
+.casino-chip.c100 { background: radial-gradient(circle, #10b981, #047857); }
+.casino-chip.c500 { background: radial-gradient(circle, #8b5cf6, #6d28d9); }
+.casino-chip.c1000 { background: radial-gradient(circle, #f59e0b, #b45309); color: #000; border-color: #ffd700; }
+
+#penalty-confetti {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 50;
+}
+</style>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">⚽ Penalty Shootout</div>
+  </div>
+  <div class="gnav-game-name">GG Penalty Shootout</div>
+  <span class="gnav-game-badge" style="background:#16a34a;color:#fff">SOCCER</span>
+  <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area penalty-area">
+    <canvas id="penalty-confetti"></canvas>
+
+    <!-- Ladder -->
+    <div class="ladder-bar" id="ladder-bar">
+      <div class="ladder-step" id="step-0">1.60×</div>
+      <div class="ladder-step" id="step-1">2.80×</div>
+      <div class="ladder-step" id="step-2">5.20×</div>
+      <div class="ladder-step" id="step-3">9.80×</div>
+      <div class="ladder-step" id="step-4">18.50× 🏆</div>
+    </div>
+
+    <!-- Result Banner -->
+    <div id="stage-result-banner" class="result-banner"></div>
+
+    <!-- Pitch Stage -->
+    <div class="pitch-container" id="pitch-box">
+      <div class="goal-frame"></div>
+      <div class="penalty-box-arc"></div>
+      <div class="penalty-spot"></div>
+
+      <!-- 6 Aim targets -->
+      <div class="aim-grid">
+        <button class="aim-btn" id="aim-tl" onclick="shootPenalty('tl')">🎯 TL</button>
+        <button class="aim-btn" id="aim-tm" onclick="shootPenalty('tm')">🎯 TOP</button>
+        <button class="aim-btn" id="aim-tr" onclick="shootPenalty('tr')">🎯 TR</button>
+        <button class="aim-btn" id="aim-bl" onclick="shootPenalty('bl')">🎯 BL</button>
+        <button class="aim-btn" id="aim-bm" onclick="shootPenalty('bm')">🎯 LOW</button>
+        <button class="aim-btn" id="aim-br" onclick="shootPenalty('br')">🎯 BR</button>
+      </div>
+
+      <div class="gk-character" id="gk-sprite">🧤</div>
+      <div class="ball-character" id="ball-sprite">⚽</div>
+      <div class="goal-banner-toast" id="goal-banner">⚽ GOOOAL!</div>
+    </div>
+
+    <!-- Quick Action Controls for Instant Play Again -->
+    <div class="round-action-bar" id="round-action-bar">
+      <button class="btn-action-main" id="btn-main-shoot" onclick="startShootout()">⚽ SHOOT / PLAY (₹<span id="lbl-bet-val">100</span>)</button>
+      
+    </div>
+
+    <!-- Chip Presets -->
+    <div class="chip-row">
+      <div class="casino-chip c10" onclick="addChip(10)">₹10</div>
+      <div class="casino-chip c50" onclick="addChip(50)">₹50</div>
+      <div class="casino-chip c100" onclick="addChip(100)">₹100</div>
+      <div class="casino-chip c500" onclick="addChip(500)">₹500</div>
+      <div class="casino-chip c1000" onclick="addChip(1000)">₹1k</div>
+    </div>
+
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;color:#94a3b8;text-align:center" id="penalty-status">
+      Select your bet amount and tap <strong>Start Shootout</strong> to begin!
+    </div>
+
+    <div class="copyright-footer">
+      © 2026 GG Wins. Proprietary Algorithm &amp; Code Protected. Unauthorized Copying Prohibited.
+    </div>
+  </div>
+
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="bet-label">Bet Amount</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amt" type="number" value="100.00" min="1" step="10" oninput="updateBetLabels()">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section" style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn-bet" id="btn-shoot-start" onclick="startShootout()">⚽ Start Shootout</button>
+      <button class="btn-bet danger" id="btn-cashout" onclick="cashOutPenalty()" style="display:none;background:linear-gradient(135deg,#ff9800,#f57c00)">💰 Cash Out (₹0)</button>
+      
+      
+      
+    </div>
+
+    <div class="bet-section">
+      <div id="result-container"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Goals</div>
+        <div class="stat-box-val green" id="stat-goals">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Saved</div>
+        <div class="stat-box-val red" id="stat-saved">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script src="../auth-guard.js"></script>
+<script>
+updateAllWalletDisplays();
+
+function playSynth(type) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    if (type === 'kick') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(30, now + 0.12);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.12);
+    } else if (type === 'goal') {
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, i)=>{
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.setValueAtTime(freq, now + i*0.06);
+        gain.gain.setValueAtTime(0.2, now + i*0.06);
+        gain.gain.linearRampToValueAtTime(0.01, now + i*0.06 + 0.18);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(now + i*0.06); osc.stop(now + i*0.06 + 0.18);
+      });
+    } else if (type === 'saved') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.linearRampToValueAtTime(70, now + 0.25);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.25);
+    } else if (type === 'chip') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(800, now);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.05);
+    }
+  } catch(e) {}
+}
+
+const MULTIPLIERS = [1.60, 2.80, 5.20, 9.80, 18.50];
+const SPOTS = ['tl', 'tm', 'tr', 'bl', 'bm', 'br'];
+
+let inRound = false;
+let currentStreak = 0;
+let currentBet = 100;
+let lastBet = 100;
+let isAnimating = false;
+let totalProfit = 0, goals = 0, saved = 0;
+
+function updateBetLabels(){
+  const b = parseFloat(document.getElementById('bet-amt').value) || 100;
+  document.getElementById('lbl-bet-val').textContent = b.toFixed(0);
+  document.getElementById('lbl-bet-2x').textContent = (b*2).toFixed(0);
+}
+
+function halveBet(){ const el=document.getElementById('bet-amt'); el.value = Math.max(1, (parseFloat(el.value)/2)).toFixed(2); updateBetLabels(); }
+function doubleBet(){ const el=document.getElementById('bet-amt'); el.value = (parseFloat(el.value)*2).toFixed(2); updateBetLabels(); }
+function maxBet(){ const el=document.getElementById('bet-amt'); el.value = Math.floor(getBalance()).toFixed(2); updateBetLabels(); }
+
+function addChip(amount){
+  if(inRound) return;
+  const el = document.getElementById('bet-amt');
+  el.value = (parseFloat(el.value || 0) + amount).toFixed(2);
+  updateBetLabels();
+  playSynth('chip');
+}
+
+updateBetLabels();
+
+function updateLadderUI(){
+  for(let i=0; i<5; i++){
+    const stepEl = document.getElementById(`step-${i}`);
+    stepEl.className = 'ladder-step';
+    if(i < currentStreak) stepEl.classList.add('cleared');
+    else if(i === currentStreak && inRound) stepEl.classList.add('active');
+  }
+}
+
+function setTargetsDisabled(disabled){
+  SPOTS.forEach(s=>{
+    const el = document.getElementById(`aim-${s}`);
+    if(el) el.disabled = disabled;
+  });
+}
+
+
+
+function startShootout(){
+  if(!requireAuth()) return;
+  if(inRound) return;
+
+  const bet = parseFloat(document.getElementById('bet-amt').value) || 100;
+  if(bet > getBalance()){ showToast('Insufficient balance'); return; }
+
+  lastBet = bet;
+  currentBet = bet;
+  currentStreak = 0;
+  setBalance(getBalance() - bet);
+
+  inRound = true;
+  isAnimating = false;
+  resetPitchVisuals();
+  updateLadderUI();
+
+  document.getElementById('stage-result-banner').style.display = 'none';
+  document.getElementById('bet-amt').disabled = true;
+  document.getElementById('btn-main-shoot').disabled = true;
+  
+  document.getElementById('btn-shoot-start').style.display = 'none';
+  
+  const coBtn = document.getElementById('btn-cashout');
+  coBtn.style.display = 'block';
+  coBtn.disabled = true;
+  coBtn.textContent = '💰 Cash Out (₹0)';
+
+  setTargetsDisabled(false);
+  document.getElementById('penalty-status').innerHTML = '⚽ <strong>Aim and Shoot!</strong> Pick any target in the goal.';
+  document.getElementById('penalty-status').style.color = '#00e676';
+}
+
+function shootPenalty(targetSpot){
+  if(!requireAuth()) return;
+  if(!inRound || isAnimating) return;
+
+  isAnimating = true;
+  setTargetsDisabled(true);
+
+  // 68% chance goal
+  const isGoal = Math.random() < 0.68;
+  
+  let gkVendorSpot = targetSpot;
+  if(isGoal){
+    const otherSpots = SPOTS.filter(s=>s!==targetSpot);
+    gkVendorSpot = otherSpots[Math.floor(Math.random()*otherSpots.length)];
+  }
+
+  const gk = document.getElementById('gk-sprite');
+  gk.className = `gk-character dive-${gkVendorSpot}`;
+
+  const ball = document.getElementById('ball-sprite');
+  ball.className = `ball-character kick-${targetSpot}`;
+
+  playSynth('kick');
+
+  setTimeout(()=>{
+    if(isGoal){
+      currentStreak++;
+      goals++;
+      document.getElementById('stat-goals').textContent = goals;
+      playSynth('goal');
+
+      const mult = MULTIPLIERS[currentStreak-1];
+      const winVal = currentBet * mult;
+
+      const banner = document.getElementById('goal-banner');
+      banner.textContent = currentStreak===5 ? '🏆 SUPER JACKPOT 18.50×!' : `⚽ GOAL! ${mult}×`;
+      banner.style.background = 'linear-gradient(135deg,#ffd700,#ff8c00)';
+      banner.classList.add('show');
+      setTimeout(()=>banner.classList.remove('show'), 800);
+
+      updateLadderUI();
+
+      const coBtn = document.getElementById('btn-cashout');
+      coBtn.disabled = false;
+      coBtn.textContent = `💰 Cash Out ₹${winVal.toFixed(2)} (${mult}×)`;
+
+      if(currentStreak === 5){
+        launchPenaltyConfetti();
+        cashOutPenalty();
+      } else {
+        document.getElementById('penalty-status').innerHTML = `🔥 <strong>Goal ${currentStreak} Scored!</strong> Pick next target or Cash Out!`;
+        setTimeout(()=>{
+          resetPitchVisuals();
+          setTargetsDisabled(false);
+          isAnimating = false;
+        }, 600);
+      }
+    } else {
+      saved++;
+      document.getElementById('stat-saved').textContent = saved;
+      playSynth('saved');
+
+      const banner = document.getElementById('goal-banner');
+      banner.textContent = '🧤 SAVED BY KEEPER!';
+      banner.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
+      banner.classList.add('show');
+      setTimeout(()=>{
+        banner.classList.remove('show');
+      }, 1000);
+
+      endShootout(false);
+    }
+  }, 480);
+}
+
+function resetPitchVisuals(){
+  const gk = document.getElementById('gk-sprite');
+  const ball = document.getElementById('ball-sprite');
+  gk.className = 'gk-character';
+  ball.className = 'ball-character';
+}
+
+function cashOutPenalty(){
+  if(!inRound) return;
+  const mult = currentStreak > 0 ? MULTIPLIERS[currentStreak-1] : 0;
+  const payout = currentBet * mult;
+  endShootout(true, payout);
+}
+
+function endShootout(won, payoutAmt = 0){
+  inRound = false;
+  isAnimating = false;
+  setTargetsDisabled(true);
+
+  const banner = document.getElementById('stage-result-banner');
+  const res = document.getElementById('result-container');
+
+  if(won && payoutAmt > 0){
+    setBalance(getBalance() + payoutAmt);
+    totalProfit += (payoutAmt - currentBet);
+    flashBal('flash-win');
+    launchPenaltyConfetti();
+    if(typeof playGameSound==='function') playGameSound('win');
+    if(typeof trackGameWager==='function') trackGameWager('GG Penalty', currentBet, payoutAmt, true);
+    
+    banner.className = 'result-banner win';
+    banner.innerHTML = `🎉 <strong>CASHED OUT +₹${payoutAmt.toFixed(2)} (${(payoutAmt/currentBet).toFixed(2)}×)!</strong> Scored ${currentStreak} Goals in a row!`;
+    res.innerHTML = `<div class="result-box win"><div class="result-box-title">🎉 CASHED OUT (${(payoutAmt/currentBet).toFixed(2)}×)</div><div class="result-box-val">+₹${payoutAmt.toFixed(2)}</div></div>`;
+  } else {
+    totalProfit -= currentBet;
+    flashBal('flash-lose');
+    if(typeof playGameSound==='function') playGameSound('lose');
+    if(typeof trackGameWager==='function') trackGameWager('GG Penalty', currentBet, 0, false);
+    
+    banner.className = 'result-banner lose';
+    banner.innerHTML = `💀 <strong>SHOT BLOCKED! YOU LOST -₹${currentBet.toFixed(2)}!</strong> Goalkeeper made the save.`;
+    res.innerHTML = `<div class="result-box lose"><div class="result-box-title">💀 BLOCKED BY GOALIE!</div><div class="result-box-val">-₹${currentBet.toFixed(2)}</div></div>`;
+  }
+
+  const pEl = document.getElementById('stat-profit');
+  pEl.textContent = (totalProfit>=0?'+':'')+' ₹'+totalProfit.toFixed(2);
+  pEl.className = 'stat-box-val '+(totalProfit>=0?'green':'red');
+
+  // Reactivate buttons for instant 1-click play again
+  document.getElementById('bet-amt').disabled = false;
+  document.getElementById('btn-main-shoot').disabled = false;
+  
+  document.getElementById('btn-shoot-start').style.display = 'block';
+  document.getElementById('btn-shoot-start').textContent = '⚽ Shoot / Bet Again';
+  document.getElementById('btn-cashout').style.display = 'none';
+
+  document.getElementById('btn-main-shoot').innerHTML = `🔁 SHOOT AGAIN (₹<span id="lbl-bet-val">${currentBet.toFixed(0)}</span>)`;
+  document.getElementById('penalty-status').innerHTML = 'Round ended. Tap <strong>SHOOT AGAIN</strong> to start next round!';
+  document.getElementById('penalty-status').style.color = '#94a3b8';
+
+  setTimeout(resetPitchVisuals, 800);
+}
+
+function launchPenaltyConfetti(){
+  const canvas = document.getElementById('penalty-confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width  = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+  const particles = [];
+  const colors = ['#00e676','#ffd700','#ffffff','#38bdf8'];
+  for(let i=0;i<80;i++){
+    particles.push({
+      x:canvas.width/2, y:canvas.height/2,
+      vx:(Math.random()-0.5)*14, vy:(Math.random()-0.8)*15,
+      size:Math.random()*7+3, color:colors[Math.floor(Math.random()*colors.length)],
+      alpha:1
+    });
+  }
+  function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.alpha-=0.015;
+      if(p.alpha>0){
+        alive=true;
+        ctx.fillStyle=p.color;
+        ctx.globalAlpha=Math.max(0,p.alpha);
+        ctx.fillRect(p.x,p.y,p.size,p.size);
+      }
+    });
+    if(alive) requestAnimationFrame(render);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  render();
+}
+</script>
+</body>
+</html>
+

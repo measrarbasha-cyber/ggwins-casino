@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Teen Patti 3D – 3-Card Indian Poker – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+/* ── 3D TEEN PATTI ARENA ── */
+.tp-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 50%, #0d1b2a 0%, #050a10 100%);
+}
+
+.table-felt-3d {
+  padding: 10px;
+  background: linear-gradient(145deg, #1b263b, #0d1522);
+  border-radius: 24px;
+  border: 3.5px solid #ffd700;
+  box-shadow: 0 0 50px rgba(255,215,0,0.35), 0 20px 45px rgba(0,0,0,0.85);
+  position: relative;
+  perspective: 1200px;
+  width: min(520px, 94vw);
+}
+
+.felt-board {
+  background: radial-gradient(circle at 50% 50%, #7f1d1d 0%, #450a0a 75%, #1c0303 100%);
+  border-radius: 18px;
+  border: 2px solid rgba(255,215,0,0.45);
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 380px;
+  transform-style: preserve-3d;
+  transform: rotateX(14deg);
+  transition: transform 0.4s ease;
+  position: relative;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.85);
+}
+.felt-board:hover {
+  transform: rotateX(8deg);
+}
+
+/* Center Pot Station */
+.pot-center {
+  background: rgba(0,0,0,0.55);
+  border: 1.5px solid #ffd700;
+  border-radius: 14px;
+  padding: 6px 14px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255,215,0,0.3);
+  margin: 10px 0;
+}
+.pot-label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+.pot-val { font-size: 18px; font-weight: 900; color: #00e676; font-family: 'Space Grotesk', sans-serif; }
+
+/* Player Positions */
+.tp-seats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  width: 100%;
+  align-items: center;
+}
+.tp-seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.player-tag {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  background: rgba(0,0,0,0.6);
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #e2e8f0;
+}
+.player-tag.active-turn {
+  border-color: #00e676;
+  color: #00e676;
+  box-shadow: 0 0 10px rgba(0,230,118,0.5);
+  animation: pulseTurn 1s infinite alternate;
+}
+@keyframes pulseTurn {
+  0% { transform: scale(0.96); }
+  100% { transform: scale(1.04); }
+}
+
+/* Cards Row */
+.cards-trio {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+/* 3D Playing Cards */
+.card-3d {
+  width: 42px;
+  height: 60px;
+  background: #ffffff;
+  border-radius: 5px;
+  border: 1.5px solid #d4af37;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  position: relative;
+  user-select: none;
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-style: preserve-3d;
+}
+.card-3d.red { color: #dc2626; }
+.card-3d.black { color: #0f172a; }
+.card-top { font-size: 9.5px; line-height: 1; text-align: left; }
+.card-center { font-size: 15px; line-height: 1; text-align: center; }
+.card-bottom { font-size: 9.5px; line-height: 1; text-align: right; transform: rotate(180deg); }
+
+.card-back {
+  background: linear-gradient(135deg, #1e3a8a, #0f172a);
+  border: 1.5px solid #ffd700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  font-size: 14px;
+}
+
+/* Action Controls */
+.tp-action-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+.tp-act-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  padding: 8px 4px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tp-act-btn:hover:not(:disabled) {
+  border-color: #ffd700;
+  background: rgba(255,215,0,0.15);
+}
+.tp-act-btn.chaal { border-color: #00e676; color: #00e676; }
+.tp-act-btn.pack  { border-color: #ef4444; color: #ef4444; }
+.tp-act-btn.show  { border-color: #ffd700; color: #ffd700; }
+.tp-act-btn.see   { border-color: #38bdf8; color: #38bdf8; }
+
+#tp-confetti {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 60;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">👑 Teen Patti 3D</div>
+  </div>
+  <div class="gnav-game-name">Teen Patti 3D</div>
+  <span class="gnav-game-badge" style="background:#ffd700;color:#000">3D ORIGINAL</span>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area tp-area">
+    <canvas id="tp-confetti"></canvas>
+
+    <div class="table-felt-3d">
+      <div class="felt-board">
+        <!-- Top Bot (Rahul_Pro) -->
+        <div class="tp-seat" id="seat-bot2">
+          <div class="player-tag" id="tag-bot2">⚔️ Rahul_Pro (₹50)</div>
+          <div class="cards-trio" id="cards-bot2">
+            <div class="card-3d card-back">🎴</div>
+            <div class="card-3d card-back">🎴</div>
+            <div class="card-3d card-back">🎴</div>
+          </div>
+        </div>
+
+        <!-- Middle Row: Left Bot, Pot Center, Right Bot -->
+        <div class="tp-seats-grid">
+          <!-- Left Bot (Vikram_King) -->
+          <div class="tp-seat" id="seat-bot1">
+            <div class="player-tag" id="tag-bot1">🦁 Vikram_King (₹50)</div>
+            <div class="cards-trio" id="cards-bot1">
+              <div class="card-3d card-back">🎴</div>
+              <div class="card-3d card-back">🎴</div>
+              <div class="card-3d card-back">🎴</div>
+            </div>
+          </div>
+
+          <!-- Pot Center -->
+          <div class="pot-center">
+            <div class="pot-label">🏆 TOTAL POT</div>
+            <div class="pot-val" id="pot-amount">₹200</div>
+          </div>
+
+          <!-- Right Bot (Priya_Queen) -->
+          <div class="tp-seat" id="seat-bot3">
+            <div class="player-tag" id="tag-bot3">💎 Priya_Queen (₹50)</div>
+            <div class="cards-trio" id="cards-bot3">
+              <div class="card-3d card-back">🎴</div>
+              <div class="card-3d card-back">🎴</div>
+              <div class="card-3d card-back">🎴</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: You (Player 👑) -->
+        <div class="tp-seat" id="seat-player">
+          <div class="cards-trio" id="cards-player">
+            <div class="card-3d card-back">🎴</div>
+            <div class="card-3d card-back">🎴</div>
+            <div class="card-3d card-back">🎴</div>
+          </div>
+          <div class="player-tag active-turn" id="tag-player">👑 You (Player) • <span id="hand-rank-badge">Blind</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BETTING CONTROLS -->
+  <div class="bet-panel">
+    <!-- Boot Amount in Glowing Cyber Box -->
+    <div class="bet-section" style="flex:1 1 180px">
+      <div class="bet-amount-box">
+        <div class="bet-label">Boot Stake (₹)</div>
+        <div class="quick-chip-row">
+          <button class="chip-btn c-50" onclick="setBootAmount(50)">₹50</button>
+          <button class="chip-btn c-100" onclick="setBootAmount(100)">₹100</button>
+          <button class="chip-btn c-500" onclick="setBootAmount(500)">₹500</button>
+          <button class="chip-btn c-1000" onclick="setBootAmount(1000)">₹1k</button>
+          <button class="chip-btn c-2x" onclick="doubleBootAmount()">2X</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="bet-section" style="flex:1 1 200px">
+      <div class="bet-label" id="actions-label">Actions (Boot: ₹50)</div>
+      <div class="tp-action-buttons">
+        <button class="tp-act-btn see" id="btn-see" onclick="seePlayerCards()">👁️ See Cards</button>
+        <button class="tp-act-btn chaal" id="btn-chaal" onclick="playChaal()">⚡ Chaal (₹50)</button>
+        <button class="tp-act-btn show" id="btn-show" onclick="showCards()">🏆 Show</button>
+        <button class="tp-act-btn pack" id="btn-pack" onclick="packHand()">✕ Pack</button>
+      </div>
+    </div>
+
+    <!-- Start Hand Button -->
+    <div class="bet-section" style="flex:1 1 130px">
+      <button class="btn-bet" id="btn-deal-hand" onclick="startNewHand()">
+        🃏 Deal Hand (₹50)
+      </button>
+      <div id="result-container" style="margin-top:2px"></div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+
+    <div class="copyright-footer">
+      © 2026 GG Wins. 3D Teen Patti RNG Certified.
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script>
+/* ── TEEN PATTI ENGINE ── */
+const SUITS = ['♠', '♥', '♦', '♣'];
+const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+const RANK_VALUES = { '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13, 'A':14 };
+
+let bootAmount = 50;
+
+function setBootAmount(amt) {
+  if (gameActive) return;
+  bootAmount = amt;
+  document.getElementById('btn-deal-hand').textContent = `🃏 Deal Hand (₹${amt})`;
+  document.getElementById('actions-label').textContent = `Actions (Boot: ₹${amt})`;
+}
+function doubleBootAmount() {
+  if (gameActive) return;
+  setBootAmount(bootAmount * 1.70);
+}
+let currentPot = 0;
+let gameActive = false;
+let isSeen = false;
+let statsProfit = 0, statsWins = 0, statsLosses = 0;
+
+let playerHand = [], bot1Hand = [], bot2Hand = [], bot3Hand = [];
+let activePlayers = { player: true, bot1: true, bot2: true, bot3: true };
+
+function createDeck() {
+  const deck = [];
+  for (const s of SUITS) {
+    for (const r of RANKS) {
+      deck.push({ rank: r, suit: s, val: RANK_VALUES[r], color: (s === '♥' || s === '♦') ? 'red' : 'black' });
+    }
+  }
+  return deck.sort(() => Math.random() - 0.5);
+}
+
+function evaluateHand(cards) {
+  const sorted = [...cards].sort((a, b) => b.val - a.val);
+  const [c1, c2, c3] = sorted;
+
+  const isFlush = (c1.suit === c2.suit && c2.suit === c3.suit);
+  const isStraight = (c1.val - c2.val === 1 && c2.val - c3.val === 1) || (c1.val === 14 && c2.val === 3 && c3.val === 2);
+  const isTrio = (c1.val === c2.val && c2.val === c3.val);
+  const isPair = (c1.val === c2.val || c2.val === c3.val || c1.val === c3.val);
+
+  if (isTrio) return { score: 600000 + c1.val, name: `👑 Trail / Trio (${c1.rank}'s)` };
+  if (isStraight && isFlush) return { score: 500000 + c1.val, name: `✨ Pure Sequence (${c1.rank} High)` };
+  if (isStraight) return { score: 400000 + c1.val, name: `⚡ Sequence (${c1.rank} High)` };
+  if (isFlush) return { score: 300000 + c1.val, name: `💎 Color / Flush (${c1.rank} High)` };
+  if (isPair) {
+    const pairVal = (c1.val === c2.val) ? c1.val : c2.val;
+    return { score: 200000 + pairVal, name: `⚔️ Pair (${pairVal})` };
+  }
+  return { score: 100000 + c1.val, name: `High Card (${c1.rank})` };
+}
+
+function renderCardDOM(card, faceUp = true) {
+  const c = document.createElement('div');
+  if (!faceUp) {
+    c.className = 'card-3d card-back';
+    c.textContent = '🎴';
+    return c;
+  }
+  c.className = `card-3d ${card.color}`;
+  c.innerHTML = `
+    <div class="card-top">${card.rank}<span>${card.suit}</span></div>
+    <div class="card-center">${card.suit}</div>
+    <div class="card-bottom">${card.rank}<span>${card.suit}</span></div>
+  `;
+  return c;
+}
+
+function startNewHand() {
+  if (gameActive) return;
+
+  const currBal = window.getBalance ? window.getBalance() : 50000;
+  if (currBal < bootAmount) {
+    if (typeof showToast === 'function') showToast(`Insufficient balance! Need ₹${bootAmount}.`, 'error');
+    if (typeof openWalletModal === 'function') openWalletModal('deposit');
+    return;
+  }
+
+  // Deduct Boot
+  if (window.adjustBalance) window.adjustBalance(-bootAmount, 'Teen Patti Boot Entry');
+
+  gameActive = true;
+  isSeen = false;
+  currentPot = bootAmount * 4;
+  activePlayers = { player: true, bot1: true, bot2: true, bot3: true };
+
+  document.getElementById('pot-amount').textContent = `₹${currentPot}`;
+  document.getElementById('btn-deal-hand').disabled = true;
+  document.getElementById('btn-deal-hand').textContent = '⚔️ Hand in Progress...';
+  document.getElementById('result-container').innerHTML = '';
+  document.getElementById('hand-rank-badge').textContent = 'Blind';
+
+  const deck = createDeck();
+  playerHand = [deck.pop(), deck.pop(), deck.pop()];
+  bot1Hand   = [deck.pop(), deck.pop(), deck.pop()];
+  bot2Hand   = [deck.pop(), deck.pop(), deck.pop()];
+  bot3Hand   = [deck.pop(), deck.pop(), deck.pop()];
+
+  // Render Face Down Cards
+  ['player', 'bot1', 'bot2', 'bot3'].forEach(who => {
+    const el = document.getElementById(`cards-${who}`);
+    el.innerHTML = '';
+    for (let i = 0; i < 3; i++) el.appendChild(renderCardDOM(null, false));
+  });
+
+  if (typeof showToast === 'function') showToast('Boot placed! Hand dealt. Play Chaal or See Cards.', 'info');
+}
+
+function seePlayerCards() {
+  if (!gameActive || isSeen) return;
+  isSeen = true;
+
+  const el = document.getElementById('cards-player');
+  el.innerHTML = '';
+  playerHand.forEach(c => el.appendChild(renderCardDOM(c, true)));
+
+  const rank = evaluateHand(playerHand);
+  document.getElementById('hand-rank-badge').textContent = rank.name;
+  document.getElementById('btn-see').disabled = true;
+  document.getElementById('btn-chaal').textContent = `⚡ Chaal (₹100)`;
+}
+
+function playChaal() {
+  if (!gameActive) return;
+  const stake = isSeen ? 100 : 50;
+
+  const currBal = window.getBalance ? window.getBalance() : 50000;
+  if (currBal < stake) {
+    if (typeof showToast === 'function') showToast(`Insufficient balance for Chaal (₹${stake})!`, 'error');
+    return;
+  }
+
+  if (window.adjustBalance) window.adjustBalance(-stake, 'Teen Patti Chaal Bet');
+  currentPot += stake * 4;
+  document.getElementById('pot-amount').textContent = `₹${currentPot}`;
+
+  // Bot folding simulation
+  if (Math.random() < 0.25) activePlayers.bot1 = false;
+  if (Math.random() < 0.25) activePlayers.bot2 = false;
+
+  if (typeof showToast === 'function') showToast(`Played Chaal ₹${stake}! Pot increased to ₹${currentPot}.`, 'info');
+}
+
+function showCards() {
+  if (!gameActive) return;
+  revealAllCards();
+}
+
+function packHand() {
+  if (!gameActive) return;
+  activePlayers.player = false;
+  revealAllCards(true);
+}
+
+function revealAllCards(playerFolded = false) {
+  gameActive = false;
+  document.getElementById('btn-deal-hand').disabled = false;
+  document.getElementById('btn-deal-hand').textContent = '🃏 Deal Hand (₹50)';
+
+  // Flip bot cards
+  ['bot1', 'bot2', 'bot3'].forEach(who => {
+    const el = document.getElementById(`cards-${who}`);
+    el.innerHTML = '';
+    const hand = who === 'bot1' ? bot1Hand : who === 'bot2' ? bot2Hand : bot3Hand;
+    hand.forEach(c => el.appendChild(renderCardDOM(c, true)));
+  });
+
+  // Flip player cards if not already seen
+  if (!isSeen) {
+    const el = document.getElementById('cards-player');
+    el.innerHTML = '';
+    playerHand.forEach(c => el.appendChild(renderCardDOM(c, true)));
+  }
+
+  const pEval = evaluateHand(playerHand);
+  const b1Eval = evaluateHand(bot1Hand);
+  const b2Eval = evaluateHand(bot2Hand);
+  const b3Eval = evaluateHand(bot3Hand);
+
+  let winner = 'player';
+  let bestScore = pEval.score;
+
+  if (playerFolded) {
+    winner = 'bot2';
+  } else {
+    if (b1Eval.score > bestScore) { bestScore = b1Eval.score; winner = 'bot1'; }
+    if (b2Eval.score > bestScore) { bestScore = b2Eval.score; winner = 'bot2'; }
+    if (b3Eval.score > bestScore) { bestScore = b3Eval.score; winner = 'bot3'; }
+  }
+
+  const res = document.getElementById('result-container');
+  const isWin = (winner === 'player');
+
+  if (isWin) {
+    statsWins++;
+    const profit = currentPot - bootAmount;
+    statsProfit += profit;
+    if (window.adjustBalance) window.adjustBalance(currentPot, `Teen Patti Win (${pEval.name})`);
+    if (typeof flashBal === 'function') flashBal('flash-win');
+    launchTPConfetti();
+
+    res.innerHTML = `
+      <div class="result-box win">
+        <div class="result-box-title">👑 SHOWDOWN VICTORY! (${pEval.name})</div>
+        <div class="result-box-val">+₹${currentPot.toLocaleString()}</div>
+      </div>
+    `;
+    if (typeof showToast === 'function') showToast(`🎉 You Won the Pot of ₹${currentPot.toLocaleString()}!`, 'success');
+  } else {
+    statsLosses++;
+    statsProfit -= bootAmount;
+    if (typeof flashBal === 'function') flashBal('flash-lose');
+
+    const winnerName = (winner === 'bot1' ? 'Vikram_King' : winner === 'bot2' ? 'Rahul_Pro' : 'Priya_Queen');
+    res.innerHTML = `
+      <div class="result-box lose">
+        <div class="result-box-title">❌ ${winnerName} Won with Higher Hand</div>
+        <div class="result-box-val">-₹${bootAmount.toLocaleString()}</div>
+      </div>
+    `;
+  }
+
+  // 🏆 Tournament Tracking
+  if (typeof window.recordTournamentMatch === 'function') {
+    window.recordTournamentMatch('teenpatti', isWin);
+  }
+
+  // Update Stats
+  document.getElementById('stat-wins').textContent = statsWins;
+  document.getElementById('stat-losses').textContent = statsLosses;
+  const pEl = document.getElementById('stat-profit');
+  pEl.textContent = (statsProfit >= 0 ? '+₹' : '-₹') + Math.abs(statsProfit).toFixed(2);
+  pEl.className = 'stat-box-val ' + (statsProfit >= 0 ? 'green' : 'red');
+}
+
+/* 🎊 CONFETTI */
+function launchTPConfetti() {
+  const canvas = document.getElementById('tp-confetti');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#ffd700', '#00e676', '#ef4444', '#38bdf8'];
+  for (let i = 0; i < 80; i++) {
+    particles.push({
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 16,
+      vy: (Math.random() - 0.8) * 16,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1
+    });
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.45; p.alpha -= 0.015;
+      if (p.alpha > 0) {
+        alive = true;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    });
+    if (alive) requestAnimationFrame(render);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  render();
+}
+</script>
+</body>
+</html>

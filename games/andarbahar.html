@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Andar Bahar 3D – Indian Casino Classic – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+/* ── 3D ANDAR BAHAR TABLE ── */
+.ab-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  overflow: auto;
+  position: relative;
+  background: radial-gradient(ellipse at 50% 50%, #0d1b2a 0%, #050a10 100%);
+}
+
+.table-felt-3d {
+  padding: 12px;
+  background: linear-gradient(145deg, #132438, #0a131f);
+  border-radius: 24px;
+  border: 3.5px solid #ffd700;
+  box-shadow: 0 0 50px rgba(255,215,0,0.35), 0 20px 45px rgba(0,0,0,0.85);
+  position: relative;
+  perspective: 1200px;
+  width: min(520px, 94vw);
+}
+
+.felt-board {
+  background: radial-gradient(circle at 50% 30%, #0f382a 0%, #092219 75%, #05140e 100%);
+  border-radius: 16px;
+  border: 2px solid rgba(255,215,0,0.4);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transform-style: preserve-3d;
+  transform: rotateX(12deg);
+  transition: transform 0.4s ease;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+}
+.felt-board:hover {
+  transform: rotateX(6deg);
+}
+
+/* Joker Card Spotlight */
+.joker-spotlight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(0,0,0,0.35);
+  border-radius: 12px;
+  border: 1px dashed rgba(255,215,0,0.4);
+}
+.joker-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  color: #ffd700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+/* 3D Playing Cards */
+.card-3d {
+  width: 52px;
+  height: 74px;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1.5px solid #d4af37;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  position: relative;
+  user-select: none;
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-style: preserve-3d;
+}
+.card-3d.red { color: #dc2626; }
+.card-3d.black { color: #0f172a; }
+.card-top { font-size: 11px; line-height: 1; text-align: left; }
+.card-center { font-size: 20px; line-height: 1; text-align: center; }
+.card-bottom { font-size: 11px; line-height: 1; text-align: right; transform: rotate(180deg); }
+
+.card-placeholder {
+  width: 52px;
+  height: 74px;
+  border: 2px dashed rgba(255,255,255,0.25);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.3);
+  font-size: 20px;
+}
+
+/* Andar & Bahar Battle Columns */
+.ab-split-zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.ab-zone-box {
+  background: rgba(0,0,0,0.4);
+  border-radius: 12px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 140px;
+  border: 2px solid transparent;
+  transition: all 0.3s;
+}
+.ab-zone-box.andar-box { border-color: rgba(239,68,68,0.5); }
+.ab-zone-box.bahar-box { border-color: rgba(56,189,248,0.5); }
+.ab-zone-box.winner-pulse {
+  animation: winPulse 1s infinite alternate;
+}
+@keyframes winPulse {
+  0% { box-shadow: 0 0 15px #ffd700, inset 0 0 10px #ffd700; border-color: #ffd700; }
+  100% { box-shadow: 0 0 35px #00e676, inset 0 0 25px #00e676; border-color: #00e676; }
+}
+
+.zone-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.zone-multiplier {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffd700;
+  margin-top: 2px;
+}
+
+.cards-stream {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* Flying Card Animation */
+.flying-card {
+  animation: dealCardFly 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes dealCardFly {
+  0% { transform: translateY(-40px) scale(0.6) rotate(-15deg); opacity: 0; }
+  100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Betting Cards Selector */
+.ab-bet-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.ab-bet-btn {
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 10px 8px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.ab-bet-btn.andar-opt:hover, .ab-bet-btn.andar-opt.selected {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.08));
+  box-shadow: 0 0 15px rgba(239,68,68,0.4);
+}
+.ab-bet-btn.bahar-opt:hover, .ab-bet-btn.bahar-opt.selected {
+  border-color: #38bdf8;
+  background: linear-gradient(135deg, rgba(56,189,248,0.25), rgba(56,189,248,0.08));
+  box-shadow: 0 0 15px rgba(56,189,248,0.4);
+}
+
+#ab-confetti {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 60;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <button class="gnav-back" onclick="window.location.href='../index.html'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Lobby
+  </button>
+  <div class="gnav-brand-block">
+    <div class="gnav-logo">GG <span>Wins</span></div>
+    <div class="gnav-game-under-logo">🃏 Andar Bahar 3D</div>
+  </div>
+  <div class="gnav-game-name">Andar Bahar 3D</div>
+  <span class="gnav-game-badge" style="background:#ffd700;color:#000">3D ORIGINAL</span>
+  <div class="gnav-spacer"></div>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area ab-area">
+    <canvas id="ab-confetti"></canvas>
+
+    <div class="table-felt-3d">
+      <div class="felt-board">
+        <!-- Center Joker Card -->
+        <div class="joker-spotlight">
+          <div class="joker-label">👑 JOKER / MATCH CARD 👑</div>
+          <div id="joker-card-slot">
+            <div class="card-placeholder">🎴</div>
+          </div>
+        </div>
+
+        <!-- Left Andar & Right Bahar Stream -->
+        <div class="ab-split-zones">
+          <!-- Andar -->
+          <div class="ab-zone-box andar-box" id="andar-zone">
+            <div class="zone-title" style="color:#ef4444">
+              <span>🔴</span> ANDAR (1.90×)
+            </div>
+            <div class="cards-stream" id="andar-cards"></div>
+          </div>
+
+          <!-- Bahar -->
+          <div class="ab-zone-box bahar-box" id="bahar-zone">
+            <div class="zone-title" style="color:#38bdf8">
+              <span>🔵</span> BAHAR (2.00×)
+            </div>
+            <div class="cards-stream" id="bahar-cards"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BETTING PANEL (BOTTOM QUARTER PORTRAIT, RIGHT LANDSCAPE) -->
+  <div class="bet-panel">
+    <div class="bet-section" style="flex:1 1 180px">
+      <div class="bet-label">Select Bet Side</div>
+      <div class="ab-bet-options">
+        <button class="ab-bet-btn andar-opt selected" onclick="selectSide('andar')" id="btn-side-andar">
+          <span style="font-size:16px">🔴</span>
+          <span style="font-weight:900;color:#ef4444">ANDAR</span>
+          <span style="font-size:11px;color:#ffd700">1.90× Payout</span>
+        </button>
+        <button class="ab-bet-btn bahar-opt" onclick="selectSide('bahar')" id="btn-side-bahar">
+          <span style="font-size:16px">🔵</span>
+          <span style="font-weight:900;color:#38bdf8">BAHAR</span>
+          <span style="font-size:11px;color:#ffd700">2.00× Payout</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Amount Input in Glowing Cyber Box -->
+    <div class="bet-section" style="flex:1 1 150px">
+      <div class="bet-amount-box">
+        <div class="bet-label">Bet Amount (₹)</div>
+        <div class="input-wrap">
+          <span class="input-prefix">₹</span>
+          <input type="number" class="bet-input" id="bet-amount" value="50" min="10" step="10">
+        </div>
+        <div class="quick-chip-row">
+          <button class="chip-btn c-50" onclick="setBet(50)">₹50</button>
+          <button class="chip-btn c-100" onclick="setBet(100)">₹100</button>
+          <button class="chip-btn c-500" onclick="setBet(500)">₹500</button>
+          <button class="chip-btn c-1000" onclick="setBet(1000)">₹1k</button>
+          <button class="chip-btn c-2x" onclick="doubleBet()">2X</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deal Button -->
+    <div class="bet-section" style="flex:1 1 130px">
+      <button class="btn-bet" id="deal-btn" onclick="startAndarBahar()">
+        🃏 Deal Cards
+      </button>
+      <div id="result-container" style="margin-top:2px"></div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+
+    <div class="copyright-footer">
+      © 2026 GG Wins. 3D Andar Bahar RNG Certified.
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script>
+/* ── ANDAR BAHAR ENGINE ── */
+const SUITS = ['♠', '♥', '♦', '♣'];
+const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+let chosenSide = 'andar';
+let isDealing = false;
+let statsProfit = 0, statsWins = 0, statsLosses = 0;
+
+function createDeck() {
+  const deck = [];
+  for (const s of SUITS) {
+    for (const r of RANKS) {
+      deck.push({
+        rank: r,
+        suit: s,
+        color: (s === '♥' || s === '♦') ? 'red' : 'black'
+      });
+    }
+  }
+  return deck.sort(() => Math.random() - 0.5);
+}
+
+function selectSide(side) {
+  if (isDealing) return;
+  chosenSide = side;
+  document.getElementById('btn-side-andar').classList.toggle('selected', side === 'andar');
+  document.getElementById('btn-side-bahar').classList.toggle('selected', side === 'bahar');
+}
+
+function setBet(v) {
+  if (isDealing) return;
+  document.getElementById('bet-amount').value = v;
+}
+function doubleBet() {
+  if (isDealing) return;
+  const el = document.getElementById('bet-amount');
+  el.value = Math.max(10, Math.round((parseFloat(el.value) || 50) * 1.75));
+}
+
+function renderCard(card) {
+  const c = document.createElement('div');
+  c.className = `card-3d flying-card ${card.color}`;
+  c.innerHTML = `
+    <div class="card-top">${card.rank}<span>${card.suit}</span></div>
+    <div class="card-center">${card.suit}</div>
+    <div class="card-bottom">${card.rank}<span>${card.suit}</span></div>
+  `;
+  return c;
+}
+
+function startAndarBahar() {
+  if (isDealing) return;
+  const bet = Math.max(10, parseFloat(document.getElementById('bet-amount').value) || 50);
+
+  // Check Balance
+  const currBal = window.getBalance ? window.getBalance() : 50000;
+  if (currBal < bet) {
+    if (typeof showToast === 'function') showToast(`Insufficient balance! Need ₹${bet}.`, 'error');
+    if (typeof openWalletModal === 'function') openWalletModal('deposit');
+    return;
+  }
+
+  // Deduct Wager
+  if (window.adjustBalance) window.adjustBalance(-bet, `Andar Bahar Bet on ${chosenSide.toUpperCase()}`);
+
+  isDealing = true;
+  document.getElementById('deal-btn').disabled = true;
+  document.getElementById('deal-btn').textContent = '🃏 Dealing...';
+  document.getElementById('result-container').innerHTML = '';
+  document.getElementById('andar-zone').classList.remove('winner-pulse');
+  document.getElementById('bahar-zone').classList.remove('winner-pulse');
+
+  // Clear Slots
+  document.getElementById('andar-cards').innerHTML = '';
+  document.getElementById('bahar-cards').innerHTML = '';
+
+  const deck = createDeck();
+  const joker = deck.pop();
+
+  // Show Joker
+  const jSlot = document.getElementById('joker-card-slot');
+  jSlot.innerHTML = '';
+  jSlot.appendChild(renderCard(joker));
+
+  let currentSide = 'andar';
+  let matched = false;
+
+  function dealNext() {
+    if (matched) return;
+    const card = deck.pop();
+    const targetSlot = document.getElementById(currentSide === 'andar' ? 'andar-cards' : 'bahar-cards');
+    targetSlot.appendChild(renderCard(card));
+
+    if (card.rank === joker.rank) {
+      // MATCH FOUND!
+      matched = true;
+      const winnerSide = currentSide;
+      setTimeout(() => handleGameFinish(winnerSide, bet), 400);
+      return;
+    }
+
+    // Switch side and deal next
+    currentSide = (currentSide === 'andar') ? 'bahar' : 'andar';
+    setTimeout(dealNext, 280); // 280ms dealing interval for clear suspense
+  }
+
+  setTimeout(dealNext, 500);
+}
+
+function handleGameFinish(winnerSide, bet) {
+  isDealing = false;
+  document.getElementById('deal-btn').disabled = false;
+  document.getElementById('deal-btn').textContent = '🃏 Deal Again';
+
+  const isWin = (winnerSide === chosenSide);
+  const mult = (winnerSide === 'andar') ? 1.90 : 2.00;
+  const payout = isWin ? Math.round(bet * mult) : 0;
+  const res = document.getElementById('result-container');
+
+  const winZone = document.getElementById(`${winnerSide}-zone`);
+  if (winZone) winZone.classList.add('winner-pulse');
+
+  if (isWin) {
+    statsWins++;
+    const profit = payout - bet;
+    statsProfit += profit;
+    if (window.adjustBalance) window.adjustBalance(payout, `Andar Bahar Win (${mult}X)`);
+    if (typeof flashBal === 'function') flashBal('flash-win');
+    launchABConfetti();
+
+    res.innerHTML = `
+      <div class="result-box win">
+        <div class="result-box-title">👑 MATCH FOUND ON ${winnerSide.toUpperCase()}!</div>
+        <div class="result-box-val">+₹${payout.toLocaleString()} (${mult}×)</div>
+      </div>
+    `;
+    if (typeof showToast === 'function') showToast(`🎉 You Won ₹${payout.toLocaleString()} on ${winnerSide.toUpperCase()}!`, 'success');
+  } else {
+    statsLosses++;
+    statsProfit -= bet;
+    if (typeof flashBal === 'function') flashBal('flash-lose');
+
+    res.innerHTML = `
+      <div class="result-box lose">
+        <div class="result-box-title">❌ MATCH HIT ON ${winnerSide.toUpperCase()}</div>
+        <div class="result-box-val">-₹${bet.toLocaleString()}</div>
+      </div>
+    `;
+  }
+
+  // 🏆 Track Tournament
+  if (typeof window.recordTournamentMatch === 'function') {
+    window.recordTournamentMatch('andarbahar', isWin);
+  }
+
+  // Update Stats
+  document.getElementById('stat-wins').textContent = statsWins;
+  document.getElementById('stat-losses').textContent = statsLosses;
+  const pEl = document.getElementById('stat-profit');
+  pEl.textContent = (statsProfit >= 0 ? '+₹' : '-₹') + Math.abs(statsProfit).toFixed(2);
+  pEl.className = 'stat-box-val ' + (statsProfit >= 0 ? 'green' : 'red');
+}
+
+/* 🎊 CELEBRATORY CONFETTI */
+function launchABConfetti() {
+  const canvas = document.getElementById('ab-confetti');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#ffd700', '#00e676', '#ef4444', '#38bdf8'];
+  for (let i = 0; i < 80; i++) {
+    particles.push({
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      vx: (Math.random() - 0.5) * 16,
+      vy: (Math.random() - 0.8) * 16,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1
+    });
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.45; p.alpha -= 0.015;
+      if (p.alpha > 0) {
+        alive = true;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    });
+    if (alive) requestAnimationFrame(render);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  render();
+}
+</script>
+</body>
+</html>

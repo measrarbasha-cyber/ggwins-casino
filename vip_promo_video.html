@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GG WINS – 3D Ultra-Cinema 60s Hype Commercial Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=Space+Grotesk:wght@700;800;900&display=swap" rel="stylesheet">
+<!-- Three.js 3D WebGL Engine -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: radial-gradient(circle at 50% 10%, #1a0b33 0%, #080314 60%, #020106 100%);
+  color: #fff;
+  font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  overflow-x: hidden;
+}
+
+.studio-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.studio-title {
+  font-size: 32px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #d946ef 0%, #06b6d4 50%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 25px rgba(217, 70, 239, 0.6));
+}
+.studio-sub {
+  font-size: 13.5px;
+  color: #a5b4fc;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+/* 16:9 Cinema Viewport */
+.cinema-container {
+  position: relative;
+  width: 100%;
+  max-width: 1020px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 0 80px rgba(217, 70, 239, 0.45), 0 0 35px rgba(6, 182, 212, 0.4), 0 30px 70px rgba(0,0,0,0.95);
+  border: 2.5px solid rgba(217, 70, 239, 0.7);
+}
+
+#showcaseCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Offscreen 3D WebGL render target */
+#threeCanvas {
+  display: none;
+}
+
+/* Controls */
+.control-bar {
+  margin-top: 18px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-action {
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.btn-play {
+  background: linear-gradient(135deg, #d946ef, #8b5cf6);
+  color: #fff;
+  box-shadow: 0 4px 25px rgba(217, 70, 239, 0.6);
+}
+.btn-record {
+  background: linear-gradient(135deg, #06b6d4, #10b981);
+  color: #000;
+  box-shadow: 0 4px 25px rgba(6, 182, 212, 0.6);
+}
+.btn-action:hover {
+  transform: translateY(-3px) scale(1.04);
+  filter: brightness(1.25);
+}
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Progress Tracker */
+.progress-container {
+  width: 100%;
+  max-width: 1020px;
+  margin-top: 14px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #d946ef, #06b6d4, #10b981, #ffd700);
+  transition: width 0.08s linear;
+}
+
+.timer-label {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #06b6d4;
+  letter-spacing: 0.5px;
+}
+
+.scene-badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.scene-badge {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.scene-badge.active {
+  background: rgba(217, 70, 239, 0.25);
+  color: #fff;
+  border-color: #d946ef;
+  box-shadow: 0 0 12px rgba(217, 70, 239, 0.4);
+}
+</style>
+</head>
+<body>
+
+<div class="studio-header">
+  <div class="studio-title">✨ GG WINS – 3D ULTRA-CINEMATIC 60s HYPE VIDEO</div>
+  <div class="studio-sub">Real-Time Three.js 3D Physics Engine • Dynamic Camera Flythroughs • High-Energy Voiceover • 1-Click HD Downloader</div>
+</div>
+
+<div class="cinema-container">
+  <canvas id="showcaseCanvas" width="1920" height="1080"></canvas>
+  <canvas id="threeCanvas" width="1920" height="1080"></canvas>
+</div>
+
+<div class="progress-container">
+  <div class="progress-fill" id="progFill"></div>
+</div>
+<div class="timer-label" id="timerDisplay">00:00 / 01:00 • 3D Engine Ready</div>
+
+<div class="scene-badges">
+  <div class="scene-badge active" id="badge-0" onclick="jumpToScene(0)">1. 3D Lobby Intro</div>
+  <div class="scene-badge" id="badge-1" onclick="jumpToScene(12000)">2. 3D 25+ Games & Jet</div>
+  <div class="scene-badge" id="badge-2" onclick="jumpToScene(24000)">3. 3D VIP Royal Club</div>
+  <div class="scene-badge" id="badge-3" onclick="jumpToScene(36000)">4. 3D 30s UPI Cashout</div>
+  <div class="scene-badge" id="badge-4" onclick="jumpToScene(48000)">5. 3D Finale & Bonus</div>
+</div>
+
+<div class="control-bar">
+  <button class="btn-action btn-play" id="btnPlay" onclick="startShowcase(false)">
+    🔥 Play 3D Hype Video
+  </button>
+  <button class="btn-action btn-record" id="btnRecord" onclick="startShowcase(true)">
+    🎥 Record & Download 60s Video (.webm / .mp4)
+  </button>
+  <button class="btn-action" style="background:linear-gradient(135deg,#ec4899,#f43f5e);color:#fff;box-shadow:0 4px 20px rgba(244,63,94,0.5)" onclick="window.location.href='/ai_promo_ad.html'">
+    🤖 Switch to AI Host Ad
+  </button>
+  <button class="btn-action" style="background:linear-gradient(135deg,#10b981,#06b6d4);color:#000;box-shadow:0 4px 20px rgba(16,185,129,0.5)" onclick="window.location.href='/ggwins_official_ad.html'">
+    🎬 Official Storyboard Ad (Boy & Girl)
+  </button>
+  <button class="btn-action" style="background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2)" onclick="window.open('https://ggwins.site','_blank')">
+    🌐 Open ggwins.site
+  </button>
+</div>
+
+<script>
+const masterCanvas = document.getElementById('showcaseCanvas');
+const masterCtx = masterCanvas.getContext('2d');
+const W = 1920;
+const H = 1080;
+
+const threeCanvas = document.getElementById('threeCanvas');
+
+let isPlaying = false;
+let isRecording = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let animFrame = null;
+let showcaseStartTime = 0;
+const TOTAL_DURATION = 60000;
+
+// ════════════════════════════════════════════════════════════════
+// 🌟 THREE.JS 3D WEBGL ENGINE INITIALIZATION
+// ════════════════════════════════════════════════════════════════
+const renderer = new THREE.WebGLRenderer({
+  canvas: threeCanvas,
+  antialias: true,
+  alpha: true,
+  powerPreference: 'high-performance'
+});
+renderer.setSize(W, H);
+renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.25;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x070214, 0.0015);
+
+const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 2000);
+camera.position.set(0, 0, 45);
+
+// 3D Lighting Setup
+const ambLight = new THREE.AmbientLight(0x7c3aed, 0.8);
+scene.add(ambLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+dirLight.position.set(20, 40, 30);
+scene.add(dirLight);
+
+const neonPinkLight = new THREE.PointLight(0xd946ef, 3, 120);
+neonPinkLight.position.set(-25, 15, 20);
+scene.add(neonPinkLight);
+
+const neonCyanLight = new THREE.PointLight(0x06b6d4, 3, 120);
+neonCyanLight.position.set(25, -15, 20);
+scene.add(neonCyanLight);
+
+const goldLight = new THREE.PointLight(0xffd700, 3.5, 120);
+goldLight.position.set(0, 20, 25);
+scene.add(goldLight);
+
+// ── 3D Starfield & Particle Cloud ──
+const particleCount = 700;
+const pGeom = new THREE.BufferGeometry();
+const pPos = new Float32Array(particleCount * 3);
+const pColors = new Float32Array(particleCount * 3);
+const palette = [
+  new THREE.Color(0xd946ef),
+  new THREE.Color(0x06b6d4),
+  new THREE.Color(0x10b981),
+  new THREE.Color(0xffd700),
+  new THREE.Color(0xffffff)
+];
+
+for (let i = 0; i < particleCount; i++) {
+  pPos[i * 3] = (Math.random() - 0.5) * 160;
+  pPos[i * 3 + 1] = (Math.random() - 0.5) * 100;
+  pPos[i * 3 + 2] = (Math.random() - 0.5) * 120;
+  const col = palette[Math.floor(Math.random() * palette.length)];
+  pColors[i * 3] = col.r;
+  pColors[i * 3 + 1] = col.g;
+  pColors[i * 3 + 2] = col.b;
+}
+pGeom.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeom.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+const pMat = new THREE.PointsMaterial({
+  size: 1.2,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.85,
+  blending: THREE.AdditiveBlending
+});
+const particleField = new THREE.Points(pGeom, pMat);
+scene.add(particleField);
+
+// ── 3D Grid Tunnel (Cyberpunk Floor & Ceiling) ──
+const gridHelperBottom = new THREE.GridHelper(160, 40, 0xd946ef, 0x1e1b4b);
+gridHelperBottom.position.y = -22;
+scene.add(gridHelperBottom);
+
+const gridHelperTop = new THREE.GridHelper(160, 40, 0x06b6d4, 0x1e1b4b);
+gridHelperTop.position.y = 22;
+gridHelperTop.rotation.x = Math.PI;
+scene.add(gridHelperTop);
+
+// Group 1: 3D Lobby Hexagons & Rings
+const grpLobby = new THREE.Group();
+const ringGeom = new THREE.TorusGeometry(8, 0.4, 16, 60);
+const ringMat1 = new THREE.MeshStandardMaterial({
+  color: 0xd946ef, emissive: 0xd946ef, emissiveIntensity: 0.8,
+  metalness: 0.9, roughness: 0.1
+});
+const ringMat2 = new THREE.MeshStandardMaterial({
+  color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.8,
+  metalness: 0.9, roughness: 0.1
+});
+const ring1 = new THREE.Mesh(ringGeom, ringMat1);
+const ring2 = new THREE.Mesh(new THREE.TorusGeometry(12, 0.3, 16, 60), ringMat2);
+grpLobby.add(ring1);
+grpLobby.add(ring2);
+
+const hexGeom = new THREE.CylinderGeometry(2.5, 2.5, 0.8, 6);
+const hexMat = new THREE.MeshStandardMaterial({
+  color: 0x1e1b4b, emissive: 0x3b82f6, emissiveIntensity: 0.4,
+  metalness: 0.8, roughness: 0.2
+});
+const hexCubes = [];
+for (let i = 0; i < 6; i++) {
+  const hMesh = new THREE.Mesh(hexGeom, hexMat);
+  const ang = (i / 6) * Math.PI * 2;
+  hMesh.position.set(Math.cos(ang) * 18, Math.sin(ang) * 10, -5 + Math.sin(i) * 6);
+  grpLobby.add(hMesh);
+  hexCubes.push(hMesh);
+}
+scene.add(grpLobby);
+
+// Group 2: 3D Aviator Jet, Gems & Dice
+const grpGames = new THREE.Group();
+
+const jetGrp = new THREE.Group();
+const fuselageGeom = new THREE.ConeGeometry(1.6, 9, 8);
+const jetMat = new THREE.MeshStandardMaterial({
+  color: 0xef4444, emissive: 0x991b1b, emissiveIntensity: 0.5,
+  metalness: 0.8, roughness: 0.2
+});
+const fuselage = new THREE.Mesh(fuselageGeom, jetMat);
+fuselage.rotation.x = Math.PI / 2;
+jetGrp.add(fuselage);
+
+const wingShape = new THREE.Shape();
+wingShape.moveTo(0, 0);
+wingShape.lineTo(7, -3);
+wingShape.lineTo(7, -4.5);
+wingShape.lineTo(0, -2);
+const wingGeom = new THREE.ShapeGeometry(wingShape);
+const wingMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.9, roughness: 0.1, side: THREE.DoubleSide });
+const leftWing = new THREE.Mesh(wingGeom, wingMat);
+leftWing.rotation.x = -Math.PI / 2;
+leftWing.position.set(0, 0, 1);
+const rightWing = leftWing.clone();
+rightWing.scale.x = -1;
+jetGrp.add(leftWing);
+jetGrp.add(rightWing);
+
+const flameGeom = new THREE.ConeGeometry(0.8, 4, 8);
+const flameMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+const flame = new THREE.Mesh(flameGeom, flameMat);
+flame.rotation.x = -Math.PI / 2;
+flame.position.set(0, 0, -5.5);
+jetGrp.add(flame);
+jetGrp.position.set(-14, 2, 0);
+grpGames.add(jetGrp);
+
+const gemGeom = new THREE.OctahedronGeometry(3.5, 0);
+const gemMat = new THREE.MeshStandardMaterial({
+  color: 0x10b981, emissive: 0x059669, emissiveIntensity: 0.6,
+  metalness: 0.9, roughness: 0.1
+});
+const gemMesh = new THREE.Mesh(gemGeom, gemMat);
+gemMesh.position.set(15, 6, 0);
+grpGames.add(gemMesh);
+
+const diceGeom = new THREE.BoxGeometry(4.2, 4.2, 4.2);
+const diceMat = new THREE.MeshStandardMaterial({
+  color: 0xffd700, emissive: 0xb45309, emissiveIntensity: 0.5,
+  metalness: 0.85, roughness: 0.15
+});
+const diceMesh = new THREE.Mesh(diceGeom, diceMat);
+diceMesh.position.set(12, -8, 2);
+grpGames.add(diceMesh);
+
+scene.add(grpGames);
+
+// Group 3: 3D Royal VIP Crown & Bars
+const grpVIP = new THREE.Group();
+const crownGrp = new THREE.Group();
+const crownBaseGeom = new THREE.CylinderGeometry(6, 5.2, 2.5, 24);
+const goldMat = new THREE.MeshStandardMaterial({
+  color: 0xffd700, emissive: 0xd97706, emissiveIntensity: 0.6,
+  metalness: 0.95, roughness: 0.1
+});
+const crownBase = new THREE.Mesh(crownBaseGeom, goldMat);
+crownGrp.add(crownBase);
+
+for (let s = 0; s < 7; s++) {
+  const spikeGeom = new THREE.ConeGeometry(1.2, 4.5, 5);
+  const spike = new THREE.Mesh(spikeGeom, goldMat);
+  const sAng = (s / 7) * Math.PI * 2;
+  spike.position.set(Math.cos(sAng) * 5.8, 3.2, Math.sin(sAng) * 5.8);
+  crownGrp.add(spike);
+
+  const jewelGeom = new THREE.SphereGeometry(0.6, 8, 8);
+  const jewelMat = new THREE.MeshStandardMaterial({
+    color: s % 2 === 0 ? 0xef4444 : 0x06b6d4,
+    emissive: s % 2 === 0 ? 0xef4444 : 0x06b6d4,
+    emissiveIntensity: 0.9, metalness: 0.9, roughness: 0.1
+  });
+  const jewel = new THREE.Mesh(jewelGeom, jewelMat);
+  jewel.position.set(Math.cos(sAng) * 5.8, 5.6, Math.sin(sAng) * 5.8);
+  crownGrp.add(jewel);
+}
+crownGrp.position.set(0, 3, 0);
+grpVIP.add(crownGrp);
+
+const barGeom = new THREE.BoxGeometry(5.5, 1.8, 3);
+const platMat = new THREE.MeshStandardMaterial({
+  color: 0xe2e8f0, emissive: 0x38bdf8, emissiveIntensity: 0.4,
+  metalness: 0.98, roughness: 0.05
+});
+const bar1 = new THREE.Mesh(barGeom, platMat);
+bar1.position.set(-16, -5, -4);
+bar1.rotation.set(0.3, 0.5, 0.2);
+const bar2 = new THREE.Mesh(barGeom, goldMat);
+bar2.position.set(16, -5, -4);
+bar2.rotation.set(-0.3, -0.5, -0.2);
+grpVIP.add(bar1);
+grpVIP.add(bar2);
+
+scene.add(grpVIP);
+
+// Group 4: 3D UPI Coin Fountain
+const grpUPI = new THREE.Group();
+const coinGeom = new THREE.CylinderGeometry(2.8, 2.8, 0.4, 32);
+const coinMat = new THREE.MeshStandardMaterial({
+  color: 0xffd700, emissive: 0xf59e0b, emissiveIntensity: 0.5,
+  metalness: 0.92, roughness: 0.1
+});
+const upiCoins = [];
+for (let c = 0; c < 28; c++) {
+  const cMesh = new THREE.Mesh(coinGeom, coinMat);
+  cMesh.position.set((Math.random() - 0.5) * 50, (Math.random() - 0.5) * 35, (Math.random() - 0.5) * 30);
+  cMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+  cMesh.userData = {
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: (Math.random() - 0.5) * 0.4,
+    vz: (Math.random() - 0.5) * 0.4,
+    rx: (Math.random() - 0.5) * 0.08,
+    ry: (Math.random() - 0.5) * 0.08
+  };
+  grpUPI.add(cMesh);
+  upiCoins.push(cMesh);
+}
+
+const shieldGeom = new THREE.TorusGeometry(8, 0.6, 16, 6);
+const shieldMat = new THREE.MeshStandardMaterial({
+  color: 0x10b981, emissive: 0x10b981, emissiveIntensity: 0.8,
+  metalness: 0.8, roughness: 0.2
+});
+const shieldMesh = new THREE.Mesh(shieldGeom, shieldMat);
+shieldMesh.position.set(0, 0, -2);
+grpUPI.add(shieldMesh);
+
+scene.add(grpUPI);
+
+// Group 5: 3D Grand Finale Monolith
+const grpFinale = new THREE.Group();
+const trophyGeom = new THREE.DodecahedronGeometry(6, 0);
+const finaleMat = new THREE.MeshStandardMaterial({
+  color: 0xd946ef, emissive: 0xd946ef, emissiveIntensity: 0.7,
+  metalness: 0.9, roughness: 0.1
+});
+const finaleTrophy = new THREE.Mesh(trophyGeom, finaleMat);
+grpFinale.add(finaleTrophy);
+
+const finaleRings = [];
+for (let r = 0; r < 3; r++) {
+  const fRing = new THREE.Mesh(
+    new THREE.TorusGeometry(9 + r * 3.5, 0.35, 16, 64),
+    new THREE.MeshStandardMaterial({
+      color: r === 0 ? 0xffd700 : r === 1 ? 0x06b6d4 : 0x10b981,
+      emissive: r === 0 ? 0xffd700 : r === 1 ? 0x06b6d4 : 0x10b981,
+      emissiveIntensity: 0.8, metalness: 0.9, roughness: 0.1
+    })
+  );
+  grpFinale.add(fRing);
+  finaleRings.push(fRing);
+}
+scene.add(grpFinale);
+
+// ════════════════════════════════════════════════════════════════
+// 🎵 PROCEDURAL AUDIO SYNTHESIZER
+// ════════════════════════════════════════════════════════════════
+let audioCtx = null;
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSubBassDrop(delayMs = 0) {
+  if (!audioCtx) return;
+  setTimeout(() => {
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 1.2);
+      gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.2);
+    } catch(e){}
+  }, delayMs);
+}
+
+function playCyberSynth(freq = 440, type = 'sawtooth', dur = 0.35, vol = 0.35, delayMs = 0) {
+  if (!audioCtx) return;
+  setTimeout(() => {
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    } catch(e){}
+  }, delayMs);
+}
+
+function playCoinChime(delayMs = 0) {
+  if (!audioCtx) return;
+  setTimeout(() => {
+    try {
+      [880, 1320, 1760, 2200].forEach((f, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, audioCtx.currentTime + i * 0.08);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.08 + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + i * 0.08);
+        osc.stop(audioCtx.currentTime + i * 0.08 + 0.3);
+      });
+    } catch(e){}
+  }, delayMs);
+}
+
+let energeticFemaleVoice = null;
+function loadVoices() {
+  if ('speechSynthesis' in window) {
+    const voices = window.speechSynthesis.getVoices();
+    energeticFemaleVoice = voices.find(v => (
+      v.name.includes('Google UK English Female') ||
+      v.name.includes('Samantha') ||
+      v.name.includes('Zira') ||
+      v.name.includes('Victoria') ||
+      v.name.includes('Karen') ||
+      v.name.includes('Female')
+    )) || voices[0];
+  }
+}
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+  loadVoices();
+}
+
+function speakHypeFemale(text, delayMs) {
+  setTimeout(() => {
+    if ('speechSynthesis' in window && isPlaying) {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      if (energeticFemaleVoice) utter.voice = energeticFemaleVoice;
+      utter.rate = 1.15;
+      utter.pitch = 1.30;
+      utter.volume = 1.0;
+      window.speechSynthesis.speak(utter);
+    }
+  }, delayMs);
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎥 CINEMATIC 3D + 2D RENDER PIPELINE
+// ════════════════════════════════════════════════════════════════
+function update3DScene(t) {
+  const sec = t / 1000;
+
+  particleField.rotation.y = sec * 0.08;
+  particleField.rotation.x = Math.sin(sec * 0.1) * 0.1;
+
+  gridHelperBottom.position.z = (sec * 12) % 4;
+  gridHelperTop.position.z = (sec * 12) % 4;
+
+  neonPinkLight.position.x = Math.cos(sec * 1.5) * 30;
+  neonPinkLight.position.y = Math.sin(sec * 1.2) * 20;
+  neonCyanLight.position.x = -Math.cos(sec * 1.5) * 30;
+  neonCyanLight.position.y = -Math.sin(sec * 1.2) * 20;
+
+  grpLobby.visible = t < 13000;
+  grpGames.visible = t >= 11500 && t < 25500;
+  grpVIP.visible = t >= 23500 && t < 37500;
+  grpUPI.visible = t >= 35500 && t < 49500;
+  grpFinale.visible = t >= 47500;
+
+  if (t < 12000) {
+    const p = t / 12000;
+    camera.position.x = Math.sin(sec * 0.8) * 8;
+    camera.position.y = Math.cos(sec * 0.6) * 4;
+    camera.position.z = 45 - p * 12;
+    camera.lookAt(0, 0, 0);
+
+    ring1.rotation.x = sec * 1.2;
+    ring1.rotation.y = sec * 0.8;
+    ring2.rotation.y = -sec * 0.9;
+    ring2.rotation.z = sec * 0.5;
+
+    hexCubes.forEach((h, i) => {
+      h.rotation.x = sec * 1.5 + i;
+      h.rotation.y = sec * 1.2 + i;
+    });
+  }
+  else if (t < 24000) {
+    camera.position.x = Math.sin(sec * 1.2) * 14;
+    camera.position.y = 4 + Math.cos(sec) * 5;
+    camera.position.z = 38;
+    camera.lookAt(0, 0, 0);
+
+    jetGrp.position.y = Math.sin(sec * 3) * 3.5;
+    jetGrp.position.x = -14 + Math.sin(sec * 1.5) * 4;
+    jetGrp.rotation.z = Math.sin(sec * 2.5) * 0.35;
+    jetGrp.rotation.x = Math.cos(sec * 2.5) * 0.2;
+    flame.scale.y = 1.0 + Math.random() * 0.6;
+
+    gemMesh.rotation.x = sec * 2;
+    gemMesh.rotation.y = sec * 2.5;
+    gemMesh.position.y = 6 + Math.sin(sec * 2) * 2;
+
+    diceMesh.rotation.x = sec * 3;
+    diceMesh.rotation.y = sec * 2.2;
+    diceMesh.rotation.z = sec * 1.8;
+    diceMesh.position.y = -8 + Math.cos(sec * 2) * 2;
+  }
+  else if (t < 36000) {
+    camera.position.x = Math.cos(sec * 0.8) * 32;
+    camera.position.y = 6 + Math.sin(sec * 0.5) * 6;
+    camera.position.z = Math.sin(sec * 0.8) * 32;
+    camera.lookAt(0, 2, 0);
+
+    crownGrp.rotation.y = sec * 0.8;
+    crownGrp.position.y = 3 + Math.sin(sec * 1.8) * 1.5;
+
+    bar1.rotation.y = sec * 1.2;
+    bar2.rotation.y = -sec * 1.2;
+  }
+  else if (t < 48000) {
+    camera.position.x = Math.sin(sec * 2) * 4;
+    camera.position.y = Math.cos(sec * 2) * 3;
+    camera.position.z = 32 + Math.sin(sec * 4) * 2;
+    camera.lookAt(0, 0, 0);
+
+    shieldMesh.rotation.z = sec * 1.5;
+    const pulse = 1.0 + Math.sin(sec * 8) * 0.1;
+    shieldMesh.scale.set(pulse, pulse, pulse);
+
+    upiCoins.forEach(c => {
+      c.position.x += c.userData.vx;
+      c.position.y += c.userData.vy;
+      c.position.z += c.userData.vz;
+      c.rotation.x += c.userData.rx;
+      c.rotation.y += c.userData.ry;
+
+      if (c.position.z > 25) c.position.z = -25;
+      if (c.position.x > 25) c.position.x = -25;
+      if (c.position.y > 20) c.position.y = -20;
+    });
+  }
+  else {
+    camera.position.x = Math.sin(sec * 1.5) * 24;
+    camera.position.y = Math.cos(sec * 1.2) * 12;
+    camera.position.z = 35 + Math.sin(sec) * 5;
+    camera.lookAt(0, 0, 0);
+
+    finaleTrophy.rotation.x = sec * 1.8;
+    finaleTrophy.rotation.y = sec * 2.2;
+    const tPulse = 1.0 + Math.sin(sec * 5) * 0.15;
+    finaleTrophy.scale.set(tPulse, tPulse, tPulse);
+
+    finaleRings[0].rotation.x = sec * 2.5;
+    finaleRings[1].rotation.y = sec * 2.0;
+    finaleRings[2].rotation.z = -sec * 1.8;
+  }
+
+  renderer.render(scene, camera);
+}
+
+function renderMotionGraphics(t) {
+  masterCtx.clearRect(0, 0, W, H);
+  masterCtx.drawImage(threeCanvas, 0, 0, W, H);
+
+  const vig = masterCtx.createRadialGradient(W/2, H/2, W*0.35, W/2, H/2, W*0.75);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(3,1,8,0.75)');
+  masterCtx.fillStyle = vig;
+  masterCtx.fillRect(0, 0, W, H);
+
+  const sec = t / 1000;
+  const currentSceneIndex = Math.min(4, Math.floor(t / 12000));
+  updateSceneBadges(currentSceneIndex);
+
+  if (t < 12000) {
+    masterCtx.save();
+    masterCtx.fillStyle = '#ffffff';
+    masterCtx.shadowColor = '#d946ef';
+    masterCtx.shadowBlur = 45;
+    masterCtx.font = '900 88px "Space Grotesk"';
+    masterCtx.textAlign = 'center';
+    masterCtx.fillText('⚡ GG WINS IS LIVE! 🚀', W / 2, 125);
+
+    masterCtx.fillStyle = '#06b6d4';
+    masterCtx.shadowColor = '#06b6d4';
+    masterCtx.shadowBlur = 30;
+    masterCtx.font = '900 36px "Space Grotesk"';
+    masterCtx.fillText('INDIA\'S COOLEST 3D REAL CASH CASINO & ESPORTS HUB', W / 2, 185);
+    masterCtx.restore();
+
+    masterCtx.save();
+    masterCtx.fillStyle = 'rgba(12, 6, 26, 0.72)';
+    masterCtx.strokeStyle = '#d946ef';
+    masterCtx.lineWidth = 3.5;
+    masterCtx.shadowColor = '#d946ef';
+    masterCtx.shadowBlur = 35;
+    masterCtx.fillRect(180, 240, 1560, 720);
+    masterCtx.strokeRect(180, 240, 1560, 720);
+
+    masterCtx.fillStyle = 'rgba(28, 11, 59, 0.85)';
+    masterCtx.fillRect(180, 240, 1560, 90);
+    masterCtx.fillStyle = '#10b981';
+    masterCtx.font = '900 42px "Space Grotesk"';
+    masterCtx.textAlign = 'left';
+    masterCtx.fillText('🔥 3D LIVE GAMING LOBBY', 225, 302);
+
+    const walletBalance = (50000 + Math.floor(Math.sin(sec * 4) * 2500)).toLocaleString('en-IN');
+    masterCtx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+    masterCtx.strokeStyle = '#06b6d4';
+    masterCtx.lineWidth = 2;
+    masterCtx.fillRect(1260, 255, 440, 60);
+    masterCtx.strokeRect(1260, 255, 440, 60);
+    masterCtx.fillStyle = '#ffd700';
+    masterCtx.font = '900 30px "Space Grotesk"';
+    masterCtx.fillText(`💰 WALLET: ₹${walletBalance}.00`, 1285, 298);
+
+    const docks = [
+      { name: '💣 GG MINES', tag: '3D Gems Multipliers', col: '#10b981', ico: '💎', sub: 'Up to 500× Cash' },
+      { name: '🚀 AVIATOR PRO', tag: 'Supersonic 3D Jet', col: '#ef4444', ico: '✈️', sub: 'Dual Real-time Bet' },
+      { name: '🎯 CARROM 3D', tag: 'Real-time PvP 60FPS', col: '#38bdf8', ico: '🔴', sub: 'Instant Matchmaking' },
+      { name: '♠️ CASINO ROYAL', tag: 'Baccarat & Roulette', col: '#d946ef', ico: '👑', sub: 'High Stakes Tables' }
+    ];
+
+    docks.forEach((d, i) => {
+      const bx = 220 + i * 375;
+      const bBounce = Math.sin(sec * 3 + i) * 6;
+
+      masterCtx.save();
+      masterCtx.translate(0, bBounce);
+
+      masterCtx.fillStyle = 'rgba(255,255,255,0.05)';
+      masterCtx.strokeStyle = d.col;
+      masterCtx.lineWidth = 2.5;
+      masterCtx.shadowColor = d.col;
+      masterCtx.shadowBlur = 25;
+      masterCtx.fillRect(bx, 360, 350, 560);
+      masterCtx.strokeRect(bx, 360, 350, 560);
+
+      masterCtx.fillStyle = d.col;
+      masterCtx.font = '900 32px "Space Grotesk"';
+      masterCtx.textAlign = 'center';
+      masterCtx.fillText(d.name, bx + 175, 430);
+
+      masterCtx.font = '78px sans-serif';
+      masterCtx.fillText(d.ico, bx + 175, 570);
+
+      masterCtx.fillStyle = '#ffffff';
+      masterCtx.font = '800 24px "Space Grotesk"';
+      masterCtx.fillText(d.tag, bx + 175, 680);
+
+      masterCtx.fillStyle = '#ffd700';
+      masterCtx.font = '700 20px "Space Grotesk"';
+      masterCtx.fillText(d.sub, bx + 175, 730);
+
+      masterCtx.fillStyle = d.col;
+      masterCtx.fillRect(bx + 35, 810, 280, 65);
+      masterCtx.fillStyle = '#000';
+      masterCtx.font = '900 24px "Space Grotesk"';
+      masterCtx.fillText('PLAY 3D NOW ⚡', bx + 175, 852);
+
+      masterCtx.restore();
+    });
+
+    masterCtx.restore();
+  }
+  else if (t < 24000) {
+    masterCtx.save();
+    masterCtx.fillStyle = '#06b6d4';
+    masterCtx.shadowColor = '#06b6d4';
+    masterCtx.shadowBlur = 40;
+    masterCtx.font = '900 84px "Space Grotesk"';
+    masterCtx.textAlign = 'center';
+    masterCtx.fillText('25+ CRAZY 3D BLOCKBUSTER GAMES 🔥', W / 2, 125);
+
+    masterCtx.fillStyle = '#f472b6';
+    masterCtx.shadowColor = '#f472b6';
+    masterCtx.shadowBlur = 20;
+    masterCtx.font = '800 32px "Space Grotesk"';
+    masterCtx.fillText('100% Provably Fair  •  Supersonic Multipliers  •  Real 3D Physics', W / 2, 185);
+    masterCtx.restore();
+
+    const multVal = (1.00 + ((t - 12000) / 12000) * 88.5).toFixed(2);
+    masterCtx.save();
+    masterCtx.fillStyle = 'rgba(15, 6, 32, 0.85)';
+    masterCtx.strokeStyle = '#ef4444';
+    masterCtx.lineWidth = 3.5;
+    masterCtx.shadowColor = '#ef4444';
+    masterCtx.shadowBlur = 35;
+    masterCtx.fillRect(1350, 240, 420, 210);
+    masterCtx.strokeRect(1350, 240, 420, 210);
+
+    masterCtx.fillStyle = '#ef4444';
+    masterCtx.font = '900 24px "Space Grotesk"';
+    masterCtx.textAlign = 'center';
+    masterCtx.fillText('🚀 AVIATOR 3D MULTIPLIER', 1560, 285);
+
+    masterCtx.fillStyle = '#ffd700';
+    masterCtx.font = '900 76px "Space Grotesk"';
+    masterCtx.fillText(`${multVal}×`, 1560, 385);
+    masterCtx.restore();
+
+    const games = [
+      { n: '💣 GG Mines', sub: '500× Dynamic Gems', c: '#10b981' },
+      { n: '🚀 Aviator Pro', sub: '3D Jet Dual-Flight', c: '#ef4444' },
+      { n: '🎯 Carrom 3D', sub: 'PvP Tournament 60FPS', c: '#38bdf8' },
+      { n: '🐉 Dragon Tower', sub: 'Floor Cash Climber', c: '#f59e0b' },
+      { n: '⚪ Plinko 3D', sub: 'High Drop Multiplier', c: '#a855f7' },
+      { n: '🎴 Royale Baccarat', sub: 'Zero House Fee', c: '#ec4899' }
+    ];
+
+    games.forEach((g, i) => {
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const gx = 180 + col * 370;
+      const gy = 260 + row * 340;
+
+      masterCtx.save();
+      masterCtx.fillStyle = 'rgba(10, 5, 25, 0.78)';
+      masterCtx.strokeStyle = g.c;
+      masterCtx.lineWidth = 3;
+      masterCtx.shadowColor = g.c;
+      masterCtx.shadowBlur = 25;
+      masterCtx.fillRect(gx, gy, 345, 305);
+      masterCtx.strokeRect(gx, gy, 345, 305);
+
+      masterCtx.fillStyle = g.c;
+      masterCtx.font = '900 34px "Space Grotesk"';
+      masterCtx.textAlign = 'center';
+      masterCtx.fillText(g.n, gx + 172, gy + 105);
+
+      masterCtx.fillStyle = '#ffd700';
+      masterCtx.font = '800 24px "Space Grotesk"';
+      masterCtx.fillText(g.sub, gx + 172, gy + 175);
+
+      masterCtx.fillStyle = g.c;
+      masterCtx.fillRect(gx + 35, gy + 220, 275, 55);
+      masterCtx.fillStyle = '#000';
+      masterCtx.font = '900 22px "Space Grotesk"';
+      masterCtx.fillText('INSTANT PLAY ⚡', gx + 172, gy + 256);
+      masterCtx.restore();
+    });
+  }
+  else if (t < 36000) {
+    masterCtx.save();
+    masterCtx.fillStyle = '#ffd700';
+    masterCtx.shadowColor = '#ffd700';
+    masterCtx.shadowBlur = 45;
+    masterCtx.font = '900 86px "Space Grotesk"';
+    masterCtx.textAlign = 'center';
+    masterCtx.fillText('👑 VIP HIGH ROLLER CLUB 👑', W / 2, 125);
+
+    masterCtx.fillStyle = '#a5b4fc';
+    masterCtx.shadowColor = '#a5b4fc';
+    masterCtx.shadowBlur = 20;
+    masterCtx.font = '800 32px "Space Grotesk"';
+    masterCtx.fillText('Personal VIP Concierge  •  Weekly Cashback  •  Exclusive High Stakes Tournaments', W / 2, 185);
+    masterCtx.restore();
+
+    const vipTiers = [
+      { name: 'SILVER VIP', perks: '5% Weekly Cashback\nFast Cashouts\nDedicated Support', col: '#94a3b8', ico: '🥈' },
+      { name: 'GOLD VIP', perks: '10% Cashback\nVIP Dedicated Host\nExclusive Tourneys', col: '#ffd700', ico: '🏆' },
+      { name: 'PLATINUM VIP', perks: '15% Rakeback Bonus\nLuxury Gifts\nPriority 30s UPI', col: '#38bdf8', ico: '💎' },
+      { name: 'DIAMOND ROYAL', perks: '25% Royalty Rake\nUnlimited Instant UPI\nPrivate VIP Lounge', col: '#d946ef', ico: '👑' }
+    ];
+
+    vipTiers.forEach((v, idx) => {
+      const vx = 180 + idx * 395;
+      masterCtx.save();
+      masterCtx.fillStyle = 'rgba(15, 6, 30, 0.82)';
+      masterCtx.strokeStyle = v.col;
+      masterCtx.lineWidth = 3.5;
+      masterCtx.shadowColor = v.col;
+      masterCtx.shadowBlur = 35;
+      masterCtx.fillRect(vx, 250, 370, 710);
+      masterCtx.strokeRect(vx, 250, 370, 710);
+
+      masterCtx.fillStyle = v.col;
+      masterCtx.font = '900 36px "Space Grotesk"';
+      masterCtx.textAlign = 'center';
+      masterCtx.fillText(v.name, vx + 185, 335);
+
+      masterCtx.font = '78px sans-serif';
+      masterCtx.fillText(v.ico, vx + 185, 470);
+
+      masterCtx.fillStyle = '#e2e8f0';
+      masterCtx.font = '800 24px "Space Grotesk"';
+      const lines = v.perks.split('\n');
+      lines.forEach((l, li) => {
+        masterCtx.fillText(l, vx + 185, 595 + li * 52);
+      });
+
+      masterCtx.fillStyle = v.col;
+      masterCtx.fillRect(vx + 35, 835, 300, 70);
+      masterCtx.fillStyle = '#000';
+      masterCtx.font = '900 26px "Space Grotesk"';
+      masterCtx.fillText('JOIN VIP TIER ⚡', vx + 185, 878);
+      masterCtx.restore();
+    });
+  }
+  else if (t < 48000) {
+    masterCtx.save();
+    masterCtx.fillStyle = '#10b981';
+    masterCtx.shadowColor = '#10b981';
+    masterCtx.shadowBlur = 45;
+    masterCtx.font = '900 84px "Space Grotesk"';
+    masterCtx.textAlign = 'center';
+    masterCtx.fillText('⚡ INSTANT 30-SECOND UPI CASHOUTS ⚡', W / 2, 135);
+
+    masterCtx.fillStyle = '#e2e8f0';
+    masterCtx.shadowColor = '#10b981';
+    masterCtx.shadowBlur = 20;
+    masterCtx.font = '800 32px "Space Grotesk"';
+    masterCtx.fillText('Direct Bank Transfer • Google Pay • PhonePe • Paytm • Zero Fee', W / 2, 200);
+    masterCtx.restore();
+
+    masterCtx.save();
+    masterCtx.fillStyle = 'rgba(12, 28, 20, 0.88)';
+    masterCtx.strokeStyle = '#10b981';
+    masterCtx.lineWidth = 4;
+    masterCtx.shadowColor = '#10b981';
+    masterCtx.shadowBlur = 50;
+    masterCtx.fillRect(W/2 - 540, 270, 1080, 530);
+    masterCtx.strokeRect(W/2 - 540, 270, 1080, 530);
+
+    masterCtx.fillStyle = '#ffd700';
+    masterCtx.font = '900 115px "Space Grotesk"';
+    masterCtx.textAlign = 'center';
+    masterCtx.fillText('₹5,00,000.00', W / 2, 435);
+
+    masterCtx.fillStyle = '#10b981';
+    masterCtx.font = '900 40px "Space Grotesk"';
+    masterCtx.fillText('✓ INSTANT UPI WITHDRAWAL COMPLETED', W / 2, 525);
+
+    masterCtx.fillStyle = '#a5b4fc';
+    masterCtx.font = '800 26px "Space Grotesk"';
+    masterCtx.fillText('Direct Credit to Bank Account • 256-Bit Bank Grade Security', W / 2, 600);
+
+    masterCtx.fillStyle = '#ffffff';
+    masterCtx.font = '900 38px "Space Grotesk"';
+    masterCtx.fillText('⚡ GPay  •  PhonePe  •  Paytm  •  IMPS  •  Crypto USDT', W / 2, 705);
+    masterCtx.restore();
+  }
+  else {
+    const pulse = 1.0 + Math.sin(t * 0.008) * 0.04;
+
+    masterCtx.save();
+    masterCtx.translate(W / 2, H / 2);
+    masterCtx.scale(pulse, pulse);
+
+    masterCtx.fillStyle = '#ffd700';
+    masterCtx.shadowColor = '#ffd700';
+    masterCtx.shadowBlur = 55;
+    masterCtx.font = '900 105px "Space Grotesk"';
+    masterCtx.textAlign = 'center';
+    masterCtx.fillText('READY TO WIN BIG?! 💰', 0, -100);
+
+    masterCtx.fillStyle = '#d946ef';
+    masterCtx.shadowColor = '#d946ef';
+    masterCtx.shadowBlur = 50;
+    masterCtx.font = '900 96px "Space Grotesk"';
+    masterCtx.fillText('👉 ggwins.site 👈', 0, 30);
+
+    masterCtx.fillStyle = '#10b981';
+    masterCtx.shadowColor = '#10b981';
+    masterCtx.shadowBlur = 30;
+    masterCtx.font = '900 44px "Space Grotesk"';
+    masterCtx.fillText('CLAIM ₹10,000 FREE DEMO BONUS RIGHT NOW!', 0, 135);
+
+    masterCtx.fillStyle = '#38bdf8';
+    masterCtx.font = '800 32px "Space Grotesk"';
+    masterCtx.fillText('⚡ 25+ 3D Games  •  👑 VIP Club  •  💳 30-Sec Payouts', 0, 210);
+
+    masterCtx.restore();
+  }
+}
+
+function updateSceneBadges(activeIndex) {
+  for (let i = 0; i < 5; i++) {
+    const b = document.getElementById(`badge-${i}`);
+    if (b) {
+      if (i === activeIndex) b.classList.add('active');
+      else b.classList.remove('active');
+    }
+  }
+}
+
+function jumpToScene(ms) {
+  if (isPlaying) {
+    showcaseStartTime = performance.now() - ms;
+  } else {
+    update3DScene(ms);
+    renderMotionGraphics(ms);
+    updateSceneBadges(Math.min(4, Math.floor(ms / 12000)));
+  }
+}
+
+function startShowcase(record = false) {
+  initAudio();
+  isPlaying = true;
+  isRecording = record;
+  showcaseStartTime = performance.now();
+  recordedChunks = [];
+
+  document.getElementById('btnPlay').disabled = true;
+  document.getElementById('btnRecord').disabled = true;
+
+  playSubBassDrop(0);
+  playCyberSynth(520, 'sawtooth', 0.4, 0.4, 100);
+  speakHypeFemale("Hey gamers! Welcome to GG Wins, the most electrifying real cash 3D gaming arena! Check out our futuristic lobby built for maximum thrill!", 150);
+
+  setTimeout(() => {
+    if (!isPlaying) return;
+    playSubBassDrop(0);
+    playCyberSynth(640, 'sawtooth', 0.4, 0.4, 100);
+    speakHypeFemale("Get ready for over twenty-five blockbuster games! From dynamic gems in GG Mines, supersonic multipliers in Aviator Pro, to intense Carrom 3D battles, Dragon Tower, and live casino tables!", 400);
+  }, 12000);
+
+  setTimeout(() => {
+    if (!isPlaying) return;
+    playSubBassDrop(0);
+    playCyberSynth(580, 'sine', 0.4, 0.4, 100);
+    speakHypeFemale("Level up into our VIP High Roller Club! Climb through Silver, Gold, Platinum, and Diamond Royal tiers to grab massive weekly cashback, exclusive tournaments, and your own dedicated VIP host!", 400);
+  }, 24000);
+
+  setTimeout(() => {
+    if (!isPlaying) return;
+    playSubBassDrop(0);
+    playCyberSynth(720, 'sawtooth', 0.4, 0.4, 100);
+    playCoinChime(300);
+    speakHypeFemale("Cash out in thirty seconds! Instant direct bank transfers via Google Pay, PhonePe, and Paytm with zero commission and bank-grade security!", 400);
+  }, 36000);
+
+  setTimeout(() => {
+    if (!isPlaying) return;
+    playSubBassDrop(0);
+    playCyberSynth(880, 'sawtooth', 0.6, 0.5, 100);
+    speakHypeFemale("What are you waiting for? Head over to ggwins.site right now, grab your ten-thousand rupee free welcome bonus, and start winning today!", 400);
+  }, 48000);
+
+  if (record) {
+    document.getElementById('timerDisplay').textContent = '🔴 RECORDING 60-SECOND 3D FULL HD HYPE VIDEO...';
+    const stream = masterCanvas.captureStream(30);
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm'
+    });
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+    mediaRecorder.onstop = exportVideoFile;
+    mediaRecorder.start();
+  }
+
+  function loop(now) {
+    const elapsed = now - showcaseStartTime;
+    update3DScene(elapsed);
+    renderMotionGraphics(elapsed);
+
+    const pct = Math.min(100, (elapsed / TOTAL_DURATION) * 100);
+    document.getElementById('progFill').style.width = pct + '%';
+
+    const sec = Math.floor(elapsed / 1000);
+    const mStr = String(Math.floor(sec / 60)).padStart(2, '0');
+    const sStr = String(sec % 60).padStart(2, '0');
+    if (!isRecording) {
+      document.getElementById('timerDisplay').textContent = `${mStr}:${sStr} / 01:00 • 3D Hype Video Playing`;
+    }
+
+    if (elapsed < TOTAL_DURATION) {
+      animFrame = requestAnimationFrame(loop);
+    } else {
+      endShowcase();
+    }
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+function endShowcase() {
+  isPlaying = false;
+  document.getElementById('btnPlay').disabled = false;
+  document.getElementById('btnRecord').disabled = false;
+
+  if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  } else {
+    document.getElementById('timerDisplay').textContent = '✅ 60-Second 3D Hype Video Finished! Click "Record & Download" to save HD file.';
+  }
+}
+
+function exportVideoFile() {
+  const blob = new Blob(recordedChunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'GG_WINS_60s_3D_Ultra_Cinema_Commercial_1080p.webm';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  document.getElementById('timerDisplay').innerHTML = '🎉 <b>60-SECOND 3D HYPE VIDEO DOWNLOADED!</b> Ready for TikTok, Reels & YouTube Shorts!';
+}
+
+window.addEventListener('load', () => {
+  update3DScene(15000);
+  renderMotionGraphics(15000);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <title>GG Wins – Host & Admin Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --bg-card: #111827;
+      --bg-card-hover: #172033;
+      --border: rgba(255, 255, 255, 0.09);
+      --green: #00e676;
+      --green-glow: rgba(0, 230, 118, 0.2);
+      --red: #ef4444;
+      --blue: #38bdf8;
+      --gold: #f59e0b;
+      --purple: #8b5cf6;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .topbar {
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo-area { display: flex; align-items: center; gap: 10px; }
+    .logo-badge {
+      background: linear-gradient(135deg, #00e676, #00b0ff);
+      color: #000;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 900;
+      font-size: 14px;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .topbar h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .top-nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(0,0,0,0.3);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .nav-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      border-radius: 7px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .nav-tab-btn.active {
+      background: var(--green);
+      color: #000;
+      box-shadow: 0 0 16px rgba(0, 230, 118, 0.35);
+    }
+    .nav-tab-btn.active.wth-tab {
+      background: #38bdf8;
+      color: #000;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+    }
+    .badge-tab-count {
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.3);
+      color: currentColor;
+    }
+    .nav-tab-btn.active .badge-tab-count { background: #000; color: #fff; }
+
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green);
+      background: rgba(0, 230, 118, 0.1);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      padding: 5px 10px;
+      border-radius: 20px;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+    .btn {
+      background: var(--bg-card-hover);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+
+    .main-container {
+      flex: 1;
+      max-width: 1320px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: var(--card-accent, var(--green));
+    }
+    .stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-val { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 800; color: var(--text); }
+    
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .badge-count {
+      background: var(--green);
+      color: #000;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .filter-tabs { display: flex; gap: 6px; }
+    .filter-tab {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-tab.active { background: var(--green); color: #000; border-color: var(--green); }
+
+    .table-container {
+      overflow-x: auto;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: rgba(255, 255, 255, 0.02);
+      padding: 12px 18px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 14px 18px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    .tx-id { font-family: monospace; font-weight: 700; color: var(--blue); }
+    .tx-amount { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 15px; }
+    .tx-amount.inr { color: var(--green); }
+    .tx-amount.usdt { color: #26a17b; }
+    .tx-amount.wth { color: #f87171; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .status-pending { background: rgba(245, 158, 11, 0.15); color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-completed { background: rgba(0, 230, 118, 0.15); color: var(--green); border: 1px solid rgba(0, 230, 118, 0.3); }
+    .status-rejected { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .bank-info-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 240px;
+    }
+    .bank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    .bank-lbl { color: var(--text-muted); font-size: 11px; font-weight: 600; }
+    .bank-val { font-family: monospace; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+    .btn-copy-mini {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 4px;
+      font-size: 10px;
+      padding: 1px 5px;
+      cursor: pointer;
+    }
+    .btn-copy-mini:hover { background: var(--blue); color: #000; }
+
+    .action-group { display: flex; gap: 8px; }
+    .btn-approve {
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-approve:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-reject {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--red);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-reject:hover { background: var(--red); color: #fff; }
+
+    .empty-state {
+      padding: 48px 20px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-icon { font-size: 42px; margin-bottom: 12px; opacity: 0.6; }
+
+    .tab-section { display: none; }
+    .tab-section.active { display: flex; flex-direction: column; gap: 24px; }
+
+    @media (max-width: 900px) {
+      .topbar { flex-direction: column; gap: 12px; align-items: stretch; padding: 12px 14px; }
+      .top-nav-tabs { justify-content: center; }
+      .topbar-actions { justify-content: space-between; }
+      .main-container { padding: 16px 10px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      th, td { padding: 10px 10px; font-size: 12px; }
+      .action-group { flex-direction: column; gap: 4px; }
+    }
+  
+    .nav-tab-btn.vip-tab:hover {
+      border-color: #ffd700;
+      color: #ffd700;
+    }
+    .nav-tab-btn.vip-tab.active {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      border-color: #ffd700;
+      box-shadow: 0 0 16px rgba(255, 215, 0, 0.4);
+    }
+    .btn-approve-vip {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      border: none;
+      font-weight: 800;
+      font-size: 12px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+      transition: all 0.2s;
+    }
+    .btn-approve-vip:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    }
+
+</style>
+</head>
+<body>
+  <!-- ── 🔐 ADMIN TERMINAL SECURITY LOCK SCREEN ── -->
+  <div id="admin-lock-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:radial-gradient(ellipse at center,#111827 0%,#030712 100%);z-index:9999999;display:flex;align-items:center;justify-content:center;padding:16px">
+    <div style="max-width:420px;width:100%;background:rgba(17,24,39,0.92);border:1.5px solid rgba(239,68,68,0.4);border-radius:18px;padding:32px 28px;box-shadow:0 25px 70px rgba(0,0,0,0.8),0 0 35px rgba(239,68,68,0.25);backdrop-filter:blur(20px);text-align:center">
+      
+      <div style="width:64px;height:64px;margin:0 auto 16px;background:rgba(239,68,68,0.12);border:1.5px solid #ef4444;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 20px rgba(239,68,68,0.3)">
+        🛡️
+      </div>
+
+      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:900;color:#fff;letter-spacing:-0.02em;margin-bottom:6px">
+        Admin Terminal Security
+      </h2>
+      <p style="font-size:12.5px;color:#94a3b8;margin-bottom:20px;line-height:1.4">
+        Restricted Access Gateway. Authenticate with authorized Master Admin credentials to enter.
+      </p>
+
+      <div id="admin-lock-error" style="display:none;background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;border-radius:10px;padding:10px;font-size:12px;font-weight:700;margin-bottom:16px;text-align:center">
+        ⚠️ Access Denied: Invalid Admin Username or Master Passkey.
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;text-align:left">
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:800;color:#cbd5e1;margin-bottom:5px;letter-spacing:0.5px">ADMIN USERNAME</label>
+          <input type="text" id="admin-lock-user" placeholder="Enter Admin Username" style="width:100%;background:#0b0f19;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;padding:12px 14px;font-size:14px;font-weight:700;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'" onkeydown="if(event.key==='Enter') submitAdminLogin()" />
+        </div>
+
+        <div>
+          <label style="display:block;font-size:11.5px;font-weight:800;color:#cbd5e1;margin-bottom:5px;letter-spacing:0.5px">MASTER PASSKEY</label>
+          <input type="password" id="admin-lock-pass" placeholder="Enter Master Passkey" style="width:100%;background:#0b0f19;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;padding:12px 14px;font-size:14px;font-weight:700;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'" onkeydown="if(event.key==='Enter') submitAdminLogin()" />
+        </div>
+
+        <button onclick="submitAdminLogin()" style="margin-top:8px;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;border-radius:10px;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:900;padding:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 20px rgba(239,68,68,0.4);transition:all 0.2s" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
+          <span>🔓</span> Unlock Admin Terminal
+        </button>
+      </div>
+
+      <div style="margin-top:20px;font-size:11px;color:#64748b">
+        🔒 Encrypted Session Guard • GG WINS Host Systems
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 🖥️ MAIN ADMIN APP CONTAINER (PROTECTED) ── -->
+  <div id="admin-main-wrapper" style="display:none;flex-direction:column;min-height:100vh">
+    <header class="topbar">
+      <div class="logo-area">
+        <span class="logo-badge">GG</span>
+        <h1>Admin Terminal</h1>
+      </div>
+
+      <!-- Main Section Switcher Tabs -->
+      <div class="top-nav-tabs">
+        <button class="nav-tab-btn active" id="tab-btn-deposits" onclick="switchMainTab('deposits')">
+          <span>📥 Deposits</span>
+          <span class="badge-tab-count" id="nav-dep-badge">0</span>
+        </button>
+        <button class="nav-tab-btn wth-tab" id="tab-btn-withdrawals" onclick="switchMainTab('withdrawals')">
+          <span>📤 Withdrawals</span>
+          <span class="badge-tab-count" id="nav-wth-badge">0</span>
+        </button>
+        <button class="nav-tab-btn vip-tab" id="tab-btn-vip" onclick="switchMainTab('vip')">
+          <span>👑 VIP Club</span>
+          <span class="badge-tab-count" id="nav-vip-badge" style="background:#ffd700;color:#000">0</span>
+        </button>
+      </div>
+
+      <div class="topbar-actions">
+        <div class="live-indicator">
+          <span class="pulse-dot"></span>
+          <span id="conn-status">LIVE SYNC</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="active-admin-badge" style="background:rgba(0,230,118,0.15);border:1px solid #00e676;color:#00e676;font-size:11px;font-weight:900;padding:5px 10px;border-radius:8px;font-family:'Space Grotesk',sans-serif">
+            👤 Admin
+          </span>
+          <button class="btn" style="color:#ef4444;border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1)" onclick="logoutAdmin()" title="Lock Admin Terminal">
+            <span>🔒</span> Logout
+          </button>
+        </div>
+        <button class="btn" id="refresh-btn" title="Refresh list">
+          <span>🔄</span> Refresh
+        </button>
+        <button class="btn" style="color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="clearAllData()" title="Clear old/test records">
+          <span>🗑️</span> Reset
+        </button>
+        <a href="/" class="btn" target="_blank" title="Open User Website">
+          <span>🎮</span> User Site
+        </a>
+      </div>
+    </header>
+
+    <main class="main-container">
+
+    <!-- =============================================
+         SECTION 1: DEPOSITS APPROVAL
+         ============================================= -->
+    <div class="tab-section active" id="section-deposits">
+      <section class="stats-grid">
+        <div class="stat-card" style="--card-accent: var(--gold)">
+          <span class="stat-label">Pending Deposits</span>
+          <span class="stat-val" id="stat-pending-count">0</span>
+        </div>
+        <div class="stat-card" style="--card-accent: var(--green)">
+          <span class="stat-label">Total Real INR Deposited</span>
+          <span class="stat-val" id="stat-real-total">₹0.00</span>
+        </div>
+        <div class="stat-card" style="--card-accent: var(--blue)">
+          <span class="stat-label">Total USDT Deposited</span>
+          <span class="stat-val" id="stat-usdt-total">0.00 ₮</span>
+        </div>
+        <div class="stat-card" style="--card-accent: var(--purple)">
+          <span class="stat-label">Total Deposit Requests</span>
+          <span class="stat-val" id="stat-total-count">0</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📥 Incoming Deposit Requests</span>
+            <span class="badge-count" id="pending-badge">0 PENDING</span>
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all" onclick="setDepositFilter('all', this)">All</button>
+            <button class="filter-tab" data-filter="Pending" onclick="setDepositFilter('Pending', this)">Pending</button>
+            <button class="filter-tab" data-filter="Completed" onclick="setDepositFilter('Completed', this)">Completed</button>
+            <button class="filter-tab" data-filter="Rejected" onclick="setDepositFilter('Rejected', this)">Rejected</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>User / Sender</th>
+                <th>Account</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>UTR Number</th>
+                <th>Date & Time</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="deposits-tbody">
+              <tr>
+                <td colspan="9" class="empty-state">
+                  <div class="empty-icon">⏳</div>
+                  <p>Connecting &amp; loading payment requests...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- =============================================
+         SECTION 2: WITHDRAWALS APPROVAL & BANK DETAILS
+         ============================================= -->
+    <div class="tab-section" id="section-withdrawals">
+      <section class="stats-grid">
+        <div class="stat-card" style="--card-accent: #f87171">
+          <span class="stat-label">Pending Withdrawals</span>
+          <span class="stat-val" id="stat-wth-pending-count" style="color:#f87171">0</span>
+        </div>
+        <div class="stat-card" style="--card-accent: var(--green)">
+          <span class="stat-label">Total INR Paid Out</span>
+          <span class="stat-val" id="stat-wth-paid-inr">₹0.00</span>
+        </div>
+        <div class="stat-card" style="--card-accent: var(--blue)">
+          <span class="stat-label">Total USDT Paid Out</span>
+          <span class="stat-val" id="stat-wth-paid-usdt">0.00 ₮</span>
+        </div>
+        <div class="stat-card" style="--card-accent: var(--purple)">
+          <span class="stat-label">Total Withdrawal Requests</span>
+          <span class="stat-val" id="stat-wth-total-count">0</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📤 Incoming Withdrawal Payout Requests</span>
+            <span class="badge-count" id="pending-wth-badge" style="background:#38bdf8;color:#000">0 PENDING</span>
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all" onclick="setWithdrawFilter('all', this)">All</button>
+            <button class="filter-tab" data-filter="Pending" onclick="setWithdrawFilter('Pending', this)">Pending</button>
+            <button class="filter-tab" data-filter="Completed" onclick="setWithdrawFilter('Completed', this)">Paid / Approved</button>
+            <button class="filter-tab" data-filter="Rejected" onclick="setWithdrawFilter('Rejected', this)">Rejected</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Beneficiary Name</th>
+                <th>Requested Amount</th>
+                <th>Banking / Crypto Details</th>
+                <th>Aadhaar / Mobile</th>
+                <th>Method</th>
+                <th>Date & Time</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="withdrawals-tbody">
+              <tr>
+                <td colspan="9" class="empty-state">
+                  <div class="empty-icon">⏳</div>
+                  <p>Connecting &amp; loading withdrawal requests...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+  
+    <!-- =============================================
+         SECTION 3: VIP CLUB UPGRADE REQUESTS
+         ============================================= -->
+    <div class="tab-section" id="section-vip">
+      <section class="stats-grid">
+        <div class="stat-card" style="--card-accent: #ffd700">
+          <span class="stat-label">Pending VIP Upgrades</span>
+          <span class="stat-val" id="stat-vip-pending-count" style="color:#ffd700">0</span>
+        </div>
+        <div class="stat-card" style="--card-accent: var(--green)">
+          <span class="stat-label">Approved VIP Members</span>
+          <span class="stat-val" id="stat-vip-approved-count">0</span>
+        </div>
+        <div class="stat-card" style="--card-accent: var(--gold)">
+          <span class="stat-label">Total VIP Revenue</span>
+          <span class="stat-val" id="stat-vip-revenue">₹0.00</span>
+        </div>
+        <div class="stat-card" style="--card-accent: var(--purple)">
+          <span class="stat-label">Total VIP Applications</span>
+          <span class="stat-val" id="stat-vip-total-count">0</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>👑 Incoming VIP Club Upgrade Applications</span>
+            <span class="badge-count" id="pending-vip-badge" style="background:#ffd700;color:#000">0 PENDING</span>
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all" onclick="setVipFilter('all', this)">All</button>
+            <button class="filter-tab" data-filter="Pending" onclick="setVipFilter('Pending', this)">Pending</button>
+            <button class="filter-tab" data-filter="Completed" onclick="setVipFilter('Completed', this)">Approved VIPs</button>
+            <button class="filter-tab" data-filter="Rejected" onclick="setVipFilter('Rejected', this)">Rejected</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Order Number</th>
+                <th>Player / Username</th>
+                <th>Requested VIP Tier</th>
+                <th>Activation Fee</th>
+                <th>Payment Method</th>
+                <th>12-digit UTR</th>
+                <th>Date &amp; Time</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="vip-tbody">
+              <tr>
+                <td colspan="9" class="empty-state">
+                  <div class="empty-icon">👑</div>
+                  <p>No VIP requests currently pending.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+  </main>
+  </div>
+
+  <script src="host.js"></script>
+</body>
+</html>
