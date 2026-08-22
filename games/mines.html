@@ -316,7 +316,7 @@ const mcGrid = document.getElementById('mine-count-grid');
   mcGrid.appendChild(btn);
 });
 
-// 🎯 DYNAMIC PROBABILITY, STREAK TRACKER & ADAPTIVE HOUSE EDGE ENGINE
+// 🎯 DYNAMIC PROBABILITY & ANTI-WIN-STREAK HOUSE EDGE ENGINE
 function getGameWinStreak() {
   return parseInt(localStorage.getItem('ggwins_win_streak_mines') || '0');
 }
@@ -328,62 +328,26 @@ function resetGameWinStreak() {
   localStorage.setItem('ggwins_win_streak_mines', '0');
 }
 
-function getGameLoseStreak() {
-  return parseInt(localStorage.getItem('ggwins_lose_streak_mines') || '0');
-}
-function incrementGameLoseStreak() {
-  const cur = getGameLoseStreak();
-  localStorage.setItem('ggwins_lose_streak_mines', (cur + 1).toString());
-}
-function resetGameLoseStreak() {
-  localStorage.setItem('ggwins_lose_streak_mines', '0');
-}
-
-function getPostRecoveryFlag() {
-  return localStorage.getItem('ggwins_post_recovery_win_mines') === 'true';
-}
-function setPostRecoveryFlag(val) {
-  localStorage.setItem('ggwins_post_recovery_win_mines', val ? 'true' : 'false');
-}
-
 function getDynamicLoseChance(currentMines) {
-  const loseStreak = getGameLoseStreak();
-  const isPostRecovery = getPostRecoveryFlag();
   const winStreak = getGameWinStreak();
-
-  // 1. 🔄 LOSS RECOVERY RULE: If user loses 9+ games in a row, boost winning probability (85% win / 15% loss)
-  if (loseStreak >= 9) {
-    return 0.15; // 85% Winning chance
-  }
-
-  // 2. 📉 POST-RECOVERY RULE: After user has won one recovery game, reduce winning chance by 75% (25% win / 75% loss)
-  if (isPostRecovery) {
-    return 0.75; // 75% Losing chance (Winning chance reduced to 25%)
-  }
-
-  // 3. 🎯 75% WINNING PROBABILITY FOR MINES 1, 2, 3, 4, 5, 6, 7, 8
-  if (currentMines >= 1 && currentMines <= 8) {
-    // Base: 75% Winning Probability / 25% Losing Probability
-    let loseChance = 0.25;
+  
+  if (currentMines <= 10) {
+    // Base: 60% Winning Probability / 40% Losing Probability
+    let loseChance = 0.40;
     
-    // Anti-streak escalation on consecutive wins
+    // Adaptive anti-streak: If the user keeps on winning consecutive rounds, increase losing probability
     if (winStreak === 1) {
-      loseChance = 0.38; // 62% Win / 38% Loss
+      loseChance = 0.52; // 48% Win / 52% Loss
     } else if (winStreak === 2) {
-      loseChance = 0.55; // 45% Win / 55% Loss
+      loseChance = 0.65; // 35% Win / 65% Loss
     } else if (winStreak === 3) {
-      loseChance = 0.72; // 28% Win / 72% Loss
+      loseChance = 0.78; // 22% Win / 78% Loss
     } else if (winStreak >= 4) {
-      loseChance = 0.88; // 12% Win / 88% Loss
+      loseChance = 0.90; // 10% Win / 90% Loss
     }
     return loseChance;
-  } else if (currentMines <= 10) {
-    // For 10 mines: 55% Win / 45% Loss
-    let loseChance = 0.45;
-    if (winStreak >= 1) loseChance = Math.min(0.90, 0.45 + winStreak * 0.12);
-    return loseChance;
   } else {
-    // Mines > 10 (High Risk Mode: 12-24 mines)
+    // Mines > 10 (High Risk Mode)
     let loseChance = 0.75;
     if (currentMines >= 15) loseChance = 0.92;
     if (currentMines >= 20) loseChance = 0.98;
@@ -443,31 +407,14 @@ function clickTile(idx, tile){
   picksInRound++;
 
   let hitMine = false;
-  const maxSafeGems = TOTAL - mineCount;
+  const loseChance = getDynamicLoseChance(mineCount);
 
-  // 🛑 RULE: NEVER ALLOW PLAYER TO FIND ALL GEMS (Trigger unavoidable mine on the last attempts)
-  if (picksInRound >= maxSafeGems) {
+  // Apply probability on pick
+  if (Math.random() < loseChance) {
     hitMine = true;
+    minePositions.add(idx);
   } else {
-    const loseChance = getDynamicLoseChance(mineCount);
-    if (Math.random() < loseChance) {
-      hitMine = true;
-    } else {
-      hitMine = false;
-    }
-  }
-
-  // Ensure mine positions strictly match mineCount without adding extra mines
-  if (hitMine) {
-    if (!minePositions.has(idx)) {
-      // Clean swap: Remove an unrevealed mine so minePositions.size ALWAYS strictly equals mineCount!
-      const unrevMines = Array.from(minePositions).filter(m => !revealed.has(m) && m !== idx);
-      if (unrevMines.length > 0) {
-        minePositions.delete(unrevMines[0]);
-      }
-      minePositions.add(idx);
-    }
-  } else {
+    hitMine = false;
     if (minePositions.has(idx)) {
       minePositions.delete(idx);
       // Relocate mine to an unrevealed tile
@@ -602,9 +549,7 @@ function endGame(won, cashed = false){
   document.querySelectorAll('.mc-btn').forEach(b => b.style.opacity = '');
 
   if(!won){
-    incrementGameLoseStreak();
     resetGameWinStreak();
-    setPostRecoveryFlag(false);
     totalProfit -= betAmount;
     losses++;
     const mult = calcMult(TOTAL, mineCount, gemsFound);
@@ -614,12 +559,6 @@ function endGame(won, cashed = false){
     if(typeof trackGameWager === 'function') trackGameWager('GG Mines', betAmount, 0, false);
   } else if(!cashed){
     // Auto win (all gems found)
-    if (getGameLoseStreak() >= 9) {
-      setPostRecoveryFlag(true);
-    } else {
-      setPostRecoveryFlag(false);
-    }
-    resetGameLoseStreak();
     incrementGameWinStreak();
     const mult = calcMult(TOTAL, mineCount, gemsFound);
     const payout = betAmount * mult;
@@ -632,12 +571,6 @@ function endGame(won, cashed = false){
     if(typeof trackGameWager === 'function') trackGameWager('GG Mines', betAmount, payout, true);
   } else {
     // Cashed out with win
-    if (getGameLoseStreak() >= 9) {
-      setPostRecoveryFlag(true);
-    } else {
-      setPostRecoveryFlag(false);
-    }
-    resetGameLoseStreak();
     incrementGameWinStreak();
     if(typeof flashBal === 'function') flashBal('flash-win');
   }

@@ -67,23 +67,33 @@
 
   // ── INITIAL STORAGE SETUP ────────────────────────────────────
   function initWalletStorage() {
+    const rawV2 = localStorage.getItem('ggwins_wallets_v2');
+    const rawV1 = localStorage.getItem('ggwins_wallets');
     let wallets = null;
     try {
-      const rawV2 = localStorage.getItem('ggwins_wallets_v2');
-      const rawV1 = localStorage.getItem('ggwins_wallets');
       wallets = JSON.parse(rawV2 || rawV1);
     } catch(e){}
 
-    if (!wallets || typeof wallets !== 'object') {
+    const txs = JSON.parse(localStorage.getItem('ggwins_transactions') || '[]');
+    const hasApprovedDeposit = txs.some(t => t.type === 'deposit' && (t.status === 'Completed' || t.status === 'Approved') && t.wallet === 'real');
+
+    if (!wallets) {
       wallets = {
         demo: 10000.00,
         real: 0.00,
         usdt: 0.00
       };
     } else {
-      wallets.demo = typeof wallets.demo === 'number' && !isNaN(wallets.demo) ? wallets.demo : 10000.00;
-      wallets.real = typeof wallets.real === 'number' && !isNaN(wallets.real) ? Math.max(0, wallets.real) : 0.00;
-      wallets.usdt = typeof wallets.usdt === 'number' && !isNaN(wallets.usdt) ? Math.max(0, wallets.usdt) : 0.00;
+      // Enforce 0rs default for real and USDT unless legitimately approved
+      if (wallets.real === 25000 || (!hasApprovedDeposit && wallets.real > 0 && !localStorage.getItem('ggwins_session'))) {
+        wallets.real = 0.00;
+      }
+      if (wallets.usdt === 500) {
+        wallets.usdt = 0.00;
+      }
+      if (typeof wallets.demo !== 'number' || isNaN(wallets.demo)) {
+        wallets.demo = 10000.00;
+      }
     }
     localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
     localStorage.setItem('ggwins_wallets', JSON.stringify(wallets));
@@ -224,52 +234,6 @@
     });
   };
 
-  // ── 🔄 REAL-TIME SERVER BALANCE SYNCHRONIZER ──
-  window.syncWalletWithServer = async function() {
-    try {
-      const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
-      const userId = session.id || localStorage.getItem('ggwins_user_id') || '';
-      const username = session.username || '';
-      
-      if (!userId && !username) return;
-
-      const res = await fetch(`/api/user-status?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(username)}`, {
-        cache: 'no-store'
-      });
-      if (!res.ok) return;
-
-      const data = await res.json();
-      if (data && data.success && data.wallets) {
-        const localWallets = getWallets();
-        const serverWallets = data.wallets;
-        
-        let changed = false;
-        ['real', 'usdt'].forEach(k => {
-          if (serverWallets[k] !== undefined && Math.abs(parseFloat(serverWallets[k]) - parseFloat(localWallets[k] || 0)) > 0.009) {
-            localWallets[k] = parseFloat(serverWallets[k]);
-            changed = true;
-          }
-        });
-
-        if (changed) {
-          saveWallets(localWallets);
-          updateAllWalletDisplays();
-          if (typeof renderWalletSwitcherWidget === 'function') {
-            renderWalletSwitcherWidget();
-          }
-          window.dispatchEvent(new CustomEvent('walletChanged', {
-            detail: { wallet: getActiveWalletKey(), balance: getBalance() }
-          }));
-        }
-
-        if (data.vipLevel && data.vipLevel !== localStorage.getItem('ggwins_vip_level')) {
-          localStorage.setItem('ggwins_vip_level', data.vipLevel);
-          if (typeof window.applyVipBadgeUI === 'function') window.applyVipBadgeUI();
-        }
-      }
-    } catch(e) {}
-  };
-
   // Cross-tab and return-to-page balance synchronizer
   window.addEventListener('storage', function(e) {
     if (e.key === 'ggwins_wallets_v2' || e.key === 'ggwins_active_wallet' || e.key === 'ggwins_balance') {
@@ -278,16 +242,7 @@
   });
   window.addEventListener('focus', function() {
     updateAllWalletDisplays();
-    syncWalletWithServer();
   });
-
-  // Run server wallet sync on load, focus, and every 2.5 seconds
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { setTimeout(syncWalletWithServer, 500); });
-  } else {
-    setTimeout(syncWalletWithServer, 500);
-  }
-  setInterval(syncWalletWithServer, 2500);
 
   window.formatCurrency = function(amount, walletKey) {
     const key = walletKey || getActiveWalletKey();
@@ -692,15 +647,9 @@
   window.syncWalletStatusFromServer = async function() {
     try {
       const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
-      let url = '/api/user-status';
-      if (session && (session.id || session.username)) {
-        const p = new URLSearchParams();
-        if (session.id) p.append('userId', session.id);
-        if (session.username) p.append('username', session.username);
-        if (session.email) p.append('email', session.email);
-        if (session.vipLevel) p.append('vipLevel', session.vipLevel);
-        url = `/api/user-status?${p.toString()}`;
-      }
+      const url = session.id 
+        ? `/api/user-status?userId=${encodeURIComponent(session.id)}` 
+        : (session.username ? `/api/user-status?username=${encodeURIComponent(session.username)}` : '/api/user-status');
 
       const res = await fetch(url);
       if (!res.ok) return;
@@ -828,26 +777,6 @@
           }
           if (typeof updateAuthUI === 'function') updateAuthUI();
           if (typeof checkVipAccess === 'function') checkVipAccess();
-        }
-      }
-
-      // 5. Direct Admin Balance Adjustment Live Sync
-      if (data.wallets && typeof data.wallets === 'object') {
-        const sReal = parseFloat(data.wallets.real);
-        const sDemo = parseFloat(data.wallets.demo);
-        const sUsdt = parseFloat(data.wallets.usdt);
-
-        if (!isNaN(sReal) && Math.abs((parseFloat(wallets.real) || 0) - sReal) > 0.001) {
-          wallets.real = sReal;
-          updated = true;
-        }
-        if (!isNaN(sDemo) && Math.abs((parseFloat(wallets.demo) || 0) - sDemo) > 0.001) {
-          wallets.demo = sDemo;
-          updated = true;
-        }
-        if (!isNaN(sUsdt) && Math.abs((parseFloat(wallets.usdt) || 0) - sUsdt) > 0.001) {
-          wallets.usdt = sUsdt;
-          updated = true;
         }
       }
 
