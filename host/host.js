@@ -784,22 +784,51 @@
   let activeSelectedUserId = null;
   let allUsersData = [];
 
+  window.closeUserInspector = function() {
+    activeSelectedUserId = null;
+    const card = document.getElementById('user-details-card');
+    if (card) card.style.display = 'none';
+    const searchInp = document.getElementById('user-wallet-search-input');
+    if (searchInp) {
+      searchInp.value = '';
+      searchInp.focus();
+    }
+    const dirPanel = document.getElementById('all-users-directory-panel');
+    if (dirPanel) {
+      dirPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    showNotification('👋 Closed user profile inspector.', '#94a3b8');
+  };
+
   window.switchUserSubTab = function(subTab) {
     const gameBtn = document.getElementById('user-subtab-game');
     const payBtn = document.getElementById('user-subtab-pay');
+    const refBtn = document.getElementById('user-subtab-ref');
     const gameView = document.getElementById('user-game-history-view');
     const payView = document.getElementById('user-payment-history-view');
+    const refView = document.getElementById('user-referral-history-view');
 
     if (subTab === 'game') {
       if (gameBtn) gameBtn.classList.add('active');
       if (payBtn) payBtn.classList.remove('active');
+      if (refBtn) refBtn.classList.remove('active');
       if (gameView) gameView.style.display = 'block';
       if (payView) payView.style.display = 'none';
-    } else {
+      if (refView) refView.style.display = 'none';
+    } else if (subTab === 'pay') {
       if (gameBtn) gameBtn.classList.remove('active');
       if (payBtn) payBtn.classList.add('active');
+      if (refBtn) refBtn.classList.remove('active');
       if (gameView) gameView.style.display = 'none';
       if (payView) payView.style.display = 'block';
+      if (refView) refView.style.display = 'none';
+    } else if (subTab === 'ref') {
+      if (gameBtn) gameBtn.classList.remove('active');
+      if (payBtn) payBtn.classList.remove('active');
+      if (refBtn) refBtn.classList.add('active');
+      if (gameView) gameView.style.display = 'none';
+      if (payView) payView.style.display = 'none';
+      if (refView) refView.style.display = 'block';
     }
   };
 
@@ -844,6 +873,14 @@
     setElText('u-created-at', u.createdAt ? new Date(u.createdAt).toLocaleString('en-IN') : 'N/A');
     setElText('u-last-login', u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-IN') : 'Just now');
 
+    // Referral Summary
+    const stats = u.stats || {};
+    const refCount = stats.referralCount || (data.referredUsers ? data.referredUsers.length : 0);
+    const refEarnings = stats.referralEarnings || (refCount * 50.0);
+    setElText('u-referral-count', refCount);
+    setElText('u-referral-earnings', `₹${refEarnings.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+    setElText('user-ref-tab-count', refCount);
+
     // Wallet Balances
     const w = u.wallets || { demo: 10000, real: 0, usdt: 0 };
     const realBal = parseFloat(w.real || 0);
@@ -871,8 +908,49 @@
     setElText('user-txs-count', txs.length);
     renderUserPaymentsTable(txs);
 
+    // Referral Network Roster
+    renderUserReferralsTable(data.referredUsers || []);
+
     // Scroll to user details smoothly
     detailsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function renderUserReferralsTable(referredUsers) {
+    const tbody = document.getElementById('user-referrals-tbody');
+    if (!tbody) return;
+
+    if (!referredUsers || referredUsers.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state"><p>No players have used this user's referral code yet.</p></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = referredUsers.map((r, idx) => {
+      const regDate = r.createdAt ? new Date(r.createdAt).toLocaleString('en-IN') : 'N/A';
+      return `
+        <tr>
+          <td><span style="color:#64748b;font-weight:700">#${idx + 1}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <code style="color:#00e676;font-family:monospace;font-weight:800">${r.id || 'USER-N/A'}</code>
+              <button class="btn-copy-mini" onclick="copyText('${r.id}', this)">Copy</button>
+            </div>
+          </td>
+          <td><strong>👑 @${r.username || 'Player'}</strong></td>
+          <td style="color:#cbd5e1">${r.email || '-'}</td>
+          <td style="color:#94a3b8;font-size:12px">${regDate}</td>
+          <td>
+            <span class="badge-status status-completed" style="background:rgba(0,230,118,0.15);border:1px solid #00e676;color:#00e676;font-weight:800">
+              +₹50.00 Real Cash
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-primary" style="padding:4px 10px;font-size:11px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;border:none;border-radius:6px;font-weight:800;cursor:pointer" onclick="searchUserWallet('${r.id}')">
+              🔍 Inspect Player
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   window.quickAdjustReal = function(amt) {

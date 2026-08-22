@@ -361,8 +361,28 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 user_vips = [v for v in db.get("vip_requests", []) if v.get("userId") == target.get("id") or str(v.get("username", "")).lower() == target.get("username", "").lower()]
                 # Gather all game wagers
                 user_wagers = [gw for gw in db.get("game_wagers", []) if gw.get("userId") == target.get("id") or str(gw.get("username", "")).lower() == target.get("username", "").lower()]
+                
+                # Gather all users who registered using this user's referral code/username
+                target_uname = target.get("username", "").lower()
+                target_uid = target.get("id", "").upper()
+                referred_users = []
+                for u in users:
+                    ref_by = str(u.get("referredBy", "")).strip().lower()
+                    if ref_by and (ref_by == target_uname or ref_by == target_uid.lower() or ref_by == f"gg-{target_uname}" or ref_by == f"gg_{target_uname}"):
+                        referred_users.append({
+                            "id": u.get("id", ""),
+                            "username": u.get("username", ""),
+                            "email": u.get("email", ""),
+                            "createdAt": u.get("createdAt", 0),
+                            "wallets": u.get("wallets", {}),
+                            "bonusAwarded": 50.0
+                        })
 
                 clean_user = {k: v for k, v in target.items() if k != "password"}
+                clean_user.setdefault("stats", {})
+                clean_user["stats"]["referralCount"] = max(int(clean_user["stats"].get("referralCount", 0)), len(referred_users))
+                clean_user["stats"]["referralEarnings"] = max(float(clean_user["stats"].get("referralEarnings", 0.0)), len(referred_users) * 50.0)
+
                 self.send_json({
                     "success": True,
                     "user": clean_user,
@@ -370,6 +390,7 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                     "withdrawals": user_withdrawals,
                     "vipRequests": user_vips,
                     "gameWagers": user_wagers,
+                    "referredUsers": referred_users,
                     "transactions": target.get("transactions", [])
                 })
                 return

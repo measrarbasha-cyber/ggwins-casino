@@ -728,29 +728,52 @@
 
       <!-- Active User Profile & Balance Editor (Hidden until user selected) -->
       <div id="user-details-card" style="display:none;margin-bottom:20px">
-        <!-- Top Info Header -->
-        <section class="panel" style="margin-bottom:16px;border:1px solid rgba(255,215,0,0.3)">
+        <!-- Top Info Header with Close Inspector Button -->
+        <section class="panel" style="margin-bottom:16px;border:1.5px solid rgba(255,215,0,0.4);background:linear-gradient(135deg,#111827,#0b0f19);position:relative">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px">
+            <!-- Left User Identity & Badges -->
             <div style="display:flex;align-items:center;gap:14px">
               <div id="u-avatar" style="font-size:36px;background:rgba(255,215,0,0.1);border:1.5px solid #ffd700;width:60px;height:60px;display:flex;align-items:center;justify-content:center;border-radius:16px">👑</div>
               <div>
-                <div style="display:flex;align-items:center;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                   <h2 id="u-username" style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:900;color:#fff;margin:0">Player_Name</h2>
                   <span id="u-vip-badge" style="background:rgba(255,215,0,0.15);border:1px solid #ffd700;color:#ffd700;font-size:11px;font-weight:900;padding:2px 8px;border-radius:6px">None</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;margin-top:4px;font-size:12.5px;color:#94a3b8">
-                  <span><strong>User ID:</strong> <code id="u-id" style="color:#00e676;background:#1e293b;padding:2px 6px;border-radius:4px">USER-XXXX</code></span>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:12.5px;color:#94a3b8;flex-wrap:wrap">
+                  <span><strong>User ID:</strong> <code id="u-id" style="color:#00e676;background:#1e293b;padding:2px 6px;border-radius:4px;font-weight:800">USER-XXXX</code></span>
                   <button class="btn-copy-mini" onclick="copyText(document.getElementById('u-id').textContent, this)">Copy ID</button>
                   <span>•</span>
                   <span><strong>Email:</strong> <span id="u-email" style="color:#cbd5e1">player@gmail.com</span></span>
                 </div>
+                <!-- Referral summary pill -->
+                <div style="display:flex;align-items:center;gap:12px;margin-top:6px;font-size:12px">
+                  <span style="background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.3);color:#00e676;padding:2px 8px;border-radius:6px;font-weight:800">
+                    🎁 Referrals: <strong id="u-referral-count" style="color:#fff">0</strong> Friends Joined
+                  </span>
+                  <span style="background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.3);color:#ffd700;padding:2px 8px;border-radius:6px;font-weight:800">
+                    💵 Earned: <strong id="u-referral-earnings" style="color:#fff">₹0.00</strong>
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div style="text-align:right">
-              <div style="font-size:11.5px;color:#94a3b8">REGISTERED AT</div>
-              <div id="u-created-at" style="font-size:12.5px;color:#f8fafc;font-weight:700;margin-top:2px">N/A</div>
-              <div style="font-size:11px;color:#64748b;margin-top:2px">Last Login: <span id="u-last-login">Just now</span></div>
+            <!-- Right: Registered Date & Close Inspector Button -->
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+              <button 
+                class="btn" 
+                onclick="closeUserInspector()" 
+                title="Close Inspector &amp; Return to All Players Directory" 
+                style="background:rgba(239,68,68,0.15);border:1.5px solid #ef4444;color:#ef4444;font-size:12px;font-weight:900;border-radius:8px;padding:6px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.2s"
+                onmouseover="this.style.background='#ef4444';this.style.color='#fff'"
+                onmouseout="this.style.background='rgba(239,68,68,0.15)';this.style.color='#ef4444'"
+              >
+                ✕ Close Inspector
+              </button>
+              <div style="text-align:right">
+                <div style="font-size:11px;color:#94a3b8">REGISTERED AT</div>
+                <div id="u-created-at" style="font-size:12px;color:#f8fafc;font-weight:700;margin-top:2px">N/A</div>
+                <div style="font-size:11px;color:#64748b;margin-top:2px">Last Login: <span id="u-last-login">Just now</span></div>
+              </div>
             </div>
           </div>
         </section>
@@ -837,7 +860,7 @@
           </div>
         </section>
 
-        <!-- Sub-Tabs for History (Game History vs Payment History) -->
+        <!-- Sub-Tabs for History (Game History vs Payment History vs Referral Network) -->
         <section class="panel">
           <div class="panel-header">
             <div class="filter-tabs">
@@ -846,6 +869,9 @@
               </button>
               <button class="filter-tab" id="user-subtab-pay" onclick="switchUserSubTab('pay')">
                 💳 Payment &amp; Wallet History (<span id="user-txs-count">0</span>)
+              </button>
+              <button class="filter-tab" id="user-subtab-ref" onclick="switchUserSubTab('ref')">
+                🎁 Referral Network (<span id="user-ref-tab-count">0</span>)
               </button>
             </div>
           </div>
@@ -886,6 +912,26 @@
               </thead>
               <tbody id="user-payments-tbody">
                 <tr><td colspan="8" class="empty-state"><p>No payment records found for this player.</p></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 3. Referral Network Table -->
+          <div id="user-referral-history-view" class="table-container" style="display:none">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Referred User ID</th>
+                  <th>Player Username</th>
+                  <th>Google Email</th>
+                  <th>Registration Date</th>
+                  <th>Bonus Awarded to Referrer</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="user-referrals-tbody">
+                <tr><td colspan="7" class="empty-state"><p>No players have used this user's referral code yet.</p></td></tr>
               </tbody>
             </table>
           </div>
