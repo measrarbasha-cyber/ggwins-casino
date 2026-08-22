@@ -37,6 +37,8 @@ window.addEventListener('resize', resizeCanvas);
 
 // ── CRASH POINT GENERATION (HEAVILY HOUSE-BIASED) ────
 function genCrashPoint(){
+  const isDemo = (typeof getActiveWalletKey === 'function' ? getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
+  if (isDemo) return parseFloat((4.50 + Math.random() * 10.0).toFixed(2));
   const r = Math.random();
   // 50% instant crash between 1.00x and 1.16x
   if(r < 0.50) return parseFloat((1.00 + Math.random() * 0.10).toFixed(2));
