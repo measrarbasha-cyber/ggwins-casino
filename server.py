@@ -122,6 +122,30 @@ def save_db(data):
 
 STATIC_DIR = r"C:\Users\ASRAR BASHA\.gemini\antigravity\scratch\ggwins"
 
+# ── CYBER SECURITY & ANTI-DDOS RATE LIMITER ──
+rate_limit_lock = threading.Lock()
+ip_request_counts = {}
+ip_banned_until = {}
+
+def is_rate_limited(ip, max_requests=120, window_sec=60):
+    now = time.time()
+    with rate_limit_lock:
+        if ip in ip_banned_until:
+            if now < ip_banned_until[ip]:
+                return True
+            else:
+                del ip_banned_until[ip]
+
+        timestamps = ip_request_counts.get(ip, [])
+        timestamps = [t for t in timestamps if now - t < window_sec]
+        timestamps.append(now)
+        ip_request_counts[ip] = timestamps
+
+        if len(timestamps) > max_requests:
+            ip_banned_until[ip] = now + 120 # 2 minute cooldown for abusive IPs
+            return True
+        return False
+
 class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=STATIC_DIR, **kwargs)
@@ -130,6 +154,11 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-XSS-Protection", "1; mode=block")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.send_header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
         super().end_headers()
     def log_message(self, format, *args):
         pass
@@ -158,6 +187,10 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         try:
+            client_ip = self.headers.get("X-Forwarded-For", self.client_address[0]).split(",")[0].strip()
+            if is_rate_limited(client_ip, max_requests=180, window_sec=60):
+                self.send_json({"success": False, "error": "Rate limit exceeded. Please wait a moment."}, status=HTTPStatus.TOO_MANY_REQUESTS)
+                return
             parsed = urllib.parse.urlparse(self.path)
             url_path = urllib.parse.unquote(parsed.path)
             query = urllib.parse.parse_qs(parsed.query)
@@ -251,6 +284,11 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 pass
 
     def do_POST(self):
+        client_ip = self.headers.get("X-Forwarded-For", self.client_address[0]).split(",")[0].strip()
+        if is_rate_limited(client_ip, max_requests=90, window_sec=60):
+            self.send_json({"success": False, "error": "Too many requests. Please slow down."}, status=HTTPStatus.TOO_MANY_REQUESTS)
+            return
+
         parsed = urllib.parse.urlparse(self.path)
         url_path = urllib.parse.unquote(parsed.path)
         content_length = int(self.headers.get('Content-Length', 0))
@@ -259,6 +297,11 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
             req_data = json.loads(body)
         except Exception:
             req_data = {}
+
+        # Anti-XSS Sanitization
+        for k, v in list(req_data.items()):
+            if isinstance(v, str):
+                req_data[k] = re.sub(r'<[^>]*>', '', v).strip()
 
         db = load_db()
 
