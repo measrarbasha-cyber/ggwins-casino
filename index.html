@@ -1205,58 +1205,9 @@
           </a>
         </div>
 
-        <div class="topbar-right">
-          <!-- Multi-Account Wallet Chip & Dropdown Menu -->
-          <div class="wallet-dropdown-wrapper" id="wallet-dropdown-wrapper">
-            <div class="wallet-chip" id="wallet-chip-btn" onclick="toggleWalletMenu(event)">
-              <span id="active-acc-icon">🎮</span>
-              <span id="top-bal-display" style="color:#00e676">₹10,000.00</span>
-              <span style="font-size:9px;color:#94a3b8">▼</span>
-            </div>
+          <!-- Multi-Account Dynamic Switcher Target -->
+          <div id="wallet-chip-target"></div>
 
-            <div class="wallet-menu" id="wallet-menu">
-              <div class="wallet-menu-header">
-                <span>SWITCH ACCOUNT</span>
-                <span style="font-size:10px;color:var(--gold);cursor:pointer" onclick="openAccountSwitchModal()">⚡ Modal View</span>
-              </div>
-              <div class="wallet-option active-wallet" id="w-opt-demo" onclick="selectActiveAccount('demo', event)">
-                <div class="w-opt-left">
-                  <span style="font-size:18px">🎮</span>
-                  <div>
-                    <div class="w-opt-name">Demo Practice</div>
-                    <span class="w-opt-badge" style="background:#7c4dff;color:#fff">RISK FREE</span>
-                  </div>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px">
-                  <span class="w-opt-bal" id="bal-txt-demo">₹10,000.00</span>
-                  <button class="btn-refresh-demo" onclick="event.stopPropagation(); refreshDemoBalance();" title="Refill ₹10,000 Demo Practice Credits" style="background:rgba(124,77,255,0.22);border:1px solid #7c4dff;border-radius:6px;color:#c084fc;cursor:pointer;padding:3px 7px;font-size:11px;font-weight:800;transition:all 0.2s" onmouseover="this.style.background='#7c4dff';this.style.color='#fff'" onmouseout="this.style.background='rgba(124,77,255,0.22)';this.style.color='#c084fc'">🔄 Refill</button>
-                </div>
-              </div>
-              <div class="wallet-option" id="w-opt-real" onclick="selectActiveAccount('real', event)">
-                <div class="w-opt-left">
-                  <span style="font-size:18px">🇮🇳</span>
-                  <div>
-                    <div class="w-opt-name">Real (Deposited)</div>
-                    <span class="w-opt-badge" style="background:#00e676;color:#000">INSTANT UPI</span>
-                  </div>
-                </div>
-                <span class="w-opt-bal" id="bal-txt-real">₹0.00</span>
-              </div>
-              <div class="wallet-option" id="w-opt-usdt" onclick="selectActiveAccount('usdt', event)">
-                <div class="w-opt-left">
-                  <span style="font-size:18px">₮</span>
-                  <div>
-                    <div class="w-opt-name">USDT Crypto</div>
-                    <span class="w-opt-badge" style="background:#26a17b;color:#fff">TRC20 / ERC20</span>
-                  </div>
-                </div>
-                <span class="w-opt-bal" id="bal-txt-usdt">$0.00</span>
-              </div>
-            </div>
-          </div>
-
-          
-              
           <a href="deposit.html" target="_blank" class="btn-deposit-box" id="btn-header-deposit" title="Deposit Funds">
             <span class="dep-box-chip">💳</span>
             <span class="dep-box-text">Deposit</span>

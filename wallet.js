@@ -3553,77 +3553,91 @@
     injectWalletStyles();
     injectWalletModalHTML();
 
-    const container = typeof targetContainer === 'string' ? document.getElementById(targetContainer) : targetContainer;
-    if (!container) return;
+    const targets = targetContainer 
+      ? (typeof targetContainer === 'string' ? [document.getElementById(targetContainer)] : [targetContainer])
+      : Array.from(document.querySelectorAll('#wallet-chip-target, .wallet-chip-target'));
 
     const wallets = getWallets();
     const activeKey = getActiveWalletKey();
     const activeCfg = WALLET_CONFIGS[activeKey] || WALLET_CONFIGS.demo;
     const formatted = formatCurrency(wallets[activeKey], activeKey);
 
-    container.innerHTML = `
-      <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
-        <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)" title="Switch Active Account / Currency">
-          <span class="wallet-active-icon">${activeCfg.icon}</span>
-          <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">${activeCfg.shortName}</span>
-          <span id="lobby-balance-val" style="color:#00e676;font-weight:800">${formatted}</span>
-          <span class="wallet-active-badge" style="background:${activeCfg.badgeColor}">${activeCfg.badge}</span>
-          <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
+    targets.forEach(container => {
+      if (!container) return;
 
-        <div class="account-picker-dropdown" id="ggwins-account-dropdown">
-          <div class="account-picker-title">
-            <span>Select Active Account</span>
-            <span style="font-size:10px;color:#00e676">3 Accounts</span>
-          </div>
+      container.innerHTML = `
+        <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+          <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)" title="Switch Active Account / Currency">
+            <span class="wallet-active-icon">${activeCfg.icon}</span>
+            <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">${activeCfg.shortName}</span>
+            <span id="lobby-balance-val" style="color:#00e676;font-weight:800">${formatted}</span>
+            <span class="wallet-active-badge" style="background:${activeCfg.badgeColor}">${activeCfg.badge}</span>
+            <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
 
-          ${Object.values(WALLET_CONFIGS).map(cfg => {
-            const isActive = cfg.key === activeKey;
-            const bal = wallets[cfg.key] || 0;
-            return `
-              <div class="account-picker-item ${isActive ? 'active' : ''}" data-wallet-key="${cfg.key}" onclick="switchActiveAccount('${cfg.key}')">
-                <div class="acc-picker-left">
-                  <div class="acc-picker-icon">${cfg.icon}</div>
-                  <div class="acc-picker-info">
-                    <div class="acc-picker-name">${cfg.name}</div>
-                    <div class="acc-picker-type">${cfg.shortName}</div>
+          <div class="account-picker-dropdown" id="ggwins-account-dropdown">
+            <div class="account-picker-title">
+              <span>Select Active Account</span>
+              <span style="font-size:10px;color:#00e676">3 Accounts</span>
+            </div>
+
+            ${Object.values(WALLET_CONFIGS).map(cfg => {
+              const isActive = cfg.key === activeKey;
+              const bal = wallets[cfg.key] || 0;
+              const isDemo = cfg.key === 'demo';
+
+              return `
+                <div class="account-picker-item ${isActive ? 'active' : ''}" data-wallet-key="${cfg.key}" onclick="switchActiveAccount('${cfg.key}')">
+                  <div class="acc-picker-left">
+                    <div class="acc-picker-icon">${cfg.icon}</div>
+                    <div class="acc-picker-info">
+                      <div class="acc-picker-name">${cfg.name}</div>
+                      <div class="acc-picker-type">${cfg.shortName}</div>
+                    </div>
+                  </div>
+                  <div class="acc-picker-right">
+                    <div class="acc-picker-bal">${formatCurrency(bal, cfg.key)}</div>
+                    <div style="display:flex;align-items:center;gap:4px">
+                      ${isDemo ? `<button onclick="event.stopPropagation();if(typeof refreshDemoBalance==='function')refreshDemoBalance();else{const w=getWallets();w.demo=10000;saveWallets(w);renderWalletSwitcherWidget();if(typeof showToast==='function')showToast('Demo Refilled to ₹10,000!');}" style="background:rgba(124,77,255,0.25);border:1px solid #7c4dff;border-radius:4px;color:#c084fc;padding:2px 5px;font-size:9px;font-weight:800;cursor:pointer" title="Refill ₹10,000 Credits">🔄 Refill</button>` : ''}
+                      ${isActive ? '<span class="acc-active-check">✓ ACTIVE</span>' : ''}
+                    </div>
                   </div>
                 </div>
-                <div class="acc-picker-right">
-                  <div class="acc-picker-bal">${formatCurrency(bal, cfg.key)}</div>
-                  ${isActive ? '<span class="acc-active-check">✓ ACTIVE</span>' : ''}
-                </div>
-              </div>
-            `;
-          }).join('')}
+              `;
+            }).join('')}
 
-          <div class="acc-dropdown-actions">
-            <button class="btn-acc-action dep" onclick="openWalletModal('deposit')">⬇️ Deposit</button>
-            <button class="btn-acc-action wth" onclick="openWalletModal('withdraw')">⬆️ Withdraw</button>
+            <div class="acc-dropdown-actions">
+              <a href="${window.location.pathname.includes('/games/') ? '../deposit.html' : 'deposit.html'}" target="_blank" class="btn-acc-action dep" style="text-decoration:none;display:inline-block;text-align:center">⚡ Deposit</a>
+              <button class="btn-acc-action wth" onclick="openWalletModal('withdraw')">⬆️ Withdraw</button>
+            </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
+    });
   };
 
   window.toggleWalletDropdown = function(e) {
     if (e) e.stopPropagation();
-    const switcher = document.getElementById('ggwins-wallet-switcher');
-    if (switcher) switcher.classList.toggle('open');
+    const switchers = document.querySelectorAll('#ggwins-wallet-switcher');
+    switchers.forEach(s => s.classList.toggle('open'));
   };
 
   window.switchActiveAccount = function(key) {
     setActiveWalletKey(key);
-    const switcher = document.getElementById('ggwins-wallet-switcher');
-    if (switcher) switcher.classList.remove('open');
-    renderWalletSwitcherWidget(document.getElementById('wallet-chip-target') || switcher.parentElement);
+    const switchers = document.querySelectorAll('#ggwins-wallet-switcher');
+    switchers.forEach(s => s.classList.remove('open'));
+    renderWalletSwitcherWidget();
+    if (typeof showToast === 'function') {
+      const cfg = WALLET_CONFIGS[key] || WALLET_CONFIGS.demo;
+      showToast(`Switched active account to ${cfg.icon} ${cfg.name}!`, 'success');
+    }
   };
 
   // Close dropdown on outside click
   document.addEventListener('click', e => {
     if (!e.target.closest('#ggwins-wallet-switcher')) {
-      const switcher = document.getElementById('ggwins-wallet-switcher');
-      if (switcher) switcher.classList.remove('open');
+      const switchers = document.querySelectorAll('#ggwins-wallet-switcher');
+      switchers.forEach(s => s.classList.remove('open'));
     }
   });
 
@@ -3632,12 +3646,7 @@
     injectWalletStyles();
     injectWalletModalHTML();
     updateAllWalletDisplays();
-
-    const target = document.getElementById('wallet-chip-target') || document.querySelector('.lobby-balance-chip');
-    if (target) {
-      target.id = 'wallet-chip-target';
-      renderWalletSwitcherWidget(target);
-    }
+    renderWalletSwitcherWidget();
   }
 
   if (document.readyState === 'loading') {
@@ -3646,4 +3655,6 @@
     initWalletUI();
   }
   window.addEventListener('load', initWalletUI);
+  setTimeout(initWalletUI, 100);
+  setTimeout(initWalletUI, 500);
 })();
