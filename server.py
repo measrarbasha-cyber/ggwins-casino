@@ -277,15 +277,58 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                         "deposits": [d for d in db.get("deposits", []) if d.get("userId") == target_user.get("id") or d.get("username") == target_user.get("username")],
                         "withdrawals": [w for w in db.get("withdrawals", []) if w.get("userId") == target_user.get("id") or w.get("username") == target_user.get("username")],
                         "transactions": [t for t in db.get("transactions", []) if t.get("userId") == target_user.get("id") or t.get("username") == target_user.get("username")]
+            # ── 4. ADMIN USER DETAILS & WALLET AUDIT ───────────────────
+            elif url_path == "/api/admin/all-users":
+                users = db.get("users", [])
+                clean_list = []
+                for u in users:
+                    clean_list.append({
+                        "id": u.get("id", ""),
+                        "username": u.get("username", ""),
+                        "email": u.get("email", ""),
+                        "avatar": u.get("avatar", "👑"),
+                        "wallets": u.get("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0}),
+                        "vipLevel": u.get("vipLevel", "None"),
+                        "stats": u.get("stats", {}),
+                        "createdAt": u.get("createdAt", 0),
+                        "lastLogin": u.get("lastLogin", 0)
                     })
-                else:
-                    self.send_json({
-                        "success": True,
-                        "wallets": db.get("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0}),
-                        "deposits": db.get("deposits", []),
-                        "withdrawals": db.get("withdrawals", []),
-                        "transactions": db.get("transactions", [])
-                    })
+                self.send_json({"success": True, "users": clean_list, "total": len(clean_list)})
+                return
+
+            elif url_path == "/api/admin/user-details":
+                user_id = query.get("userId", [None])[0]
+                username = query.get("username", [None])[0]
+                users = db.get("users", [])
+                target = None
+                if user_id:
+                    target = next((u for u in users if u.get("id", "").upper() == user_id.upper()), None)
+                if not target and username:
+                    target = next((u for u in users if u.get("username", "").lower() == username.lower() or u.get("email", "").lower() == username.lower() or u.get("id", "").upper() == username.upper()), None)
+
+                if not target:
+                    self.send_json({"success": False, "message": "User not found with this ID or Username."}, status=HTTPStatus.NOT_FOUND)
+                    return
+
+                # Gather all deposits for this user
+                user_deposits = [d for d in db.get("deposits", []) if d.get("userId") == target.get("id") or str(d.get("username", "")).lower() == target.get("username", "").lower()]
+                # Gather all withdrawals for this user
+                user_withdrawals = [w for w in db.get("withdrawals", []) if w.get("userId") == target.get("id") or str(w.get("username", "")).lower() == target.get("username", "").lower()]
+                # Gather all VIP requests for this user
+                user_vips = [v for v in db.get("vip_requests", []) if v.get("userId") == target.get("id") or str(v.get("username", "")).lower() == target.get("username", "").lower()]
+                # Gather all game wagers
+                user_wagers = [gw for gw in db.get("game_wagers", []) if gw.get("userId") == target.get("id") or str(gw.get("username", "")).lower() == target.get("username", "").lower()]
+
+                clean_user = {k: v for k, v in target.items() if k != "password"}
+                self.send_json({
+                    "success": True,
+                    "user": clean_user,
+                    "deposits": user_deposits,
+                    "withdrawals": user_withdrawals,
+                    "vipRequests": user_vips,
+                    "gameWagers": user_wagers,
+                    "transactions": target.get("transactions", [])
+                })
                 return
 
             # Static File Serving
@@ -593,6 +636,70 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
             }
             save_db(db)
             self.send_json({"success": True, "message": "Email notification credentials configured successfully."})
+            return
+
+        # ── 4B. ADMIN UPDATE USER WALLET BALANCE ───────────────────
+        elif url_path == "/api/admin/update-user-wallet":
+            user_id = req_data.get("userId")
+            username = req_data.get("username")
+            real_bal = req_data.get("real")
+            demo_bal = req_data.get("demo")
+            usdt_bal = req_data.get("usdt")
+            vip_level = req_data.get("vipLevel")
+            reason = req_data.get("reason", "Admin Balance Adjustment")
+
+            users = db.get("users", [])
+            target = None
+            if user_id:
+                target = next((u for u in users if u.get("id", "").upper() == str(user_id).upper()), None)
+            if not target and username:
+                target = next((u for u in users if u.get("username", "").lower() == str(username).lower() or u.get("id", "").upper() == str(username).upper()), None)
+
+            if not target:
+                self.send_json({"success": False, "message": "User not found."}, status=HTTPStatus.NOT_FOUND)
+                return
+
+            target.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
+            old_real = float(target["wallets"].get("real", 0.0))
+
+            if real_bal is not None:
+                target["wallets"]["real"] = max(0.0, round(float(real_bal), 2))
+            if demo_bal is not None:
+                target["wallets"]["demo"] = max(0.0, round(float(demo_bal), 2))
+            if usdt_bal is not None:
+                target["wallets"]["usdt"] = max(0.0, round(float(usdt_bal), 2))
+            if vip_level:
+                target["vipLevel"] = vip_level
+                if vip_level != "None":
+                    target["isVIP"] = True
+                    target["vipApproved"] = True
+
+            diff = round(target["wallets"]["real"] - old_real, 2)
+            adj_tx = {
+                "id": f"ADM-{os.urandom(4).hex().upper()}",
+                "orderId": f"ORD-ADM-{int(time.time())%1000000:06d}",
+                "userId": target.get("id", ""),
+                "username": target.get("username", ""),
+                "type": "adjustment",
+                "wallet": "real",
+                "amount": diff,
+                "newBalance": target["wallets"]["real"],
+                "currency": "INR",
+                "method": f"Admin Adjustment: {reason}",
+                "status": "Completed",
+                "description": f"Balance adjusted by Admin ({'+' if diff>=0 else ''}₹{diff:,.2f}) - Reason: {reason}",
+                "timestamp": int(time.time() * 1000)
+            }
+            target.setdefault("transactions", []).insert(0, adj_tx)
+            db.setdefault("transactions", []).insert(0, adj_tx)
+            save_db(db)
+
+            clean_user = {k: v for k, v in target.items() if k != "password"}
+            self.send_json({
+                "success": True,
+                "message": f"Successfully updated wallet for @{target['username']}! Real INR: ₹{target['wallets']['real']:,.2f}",
+                "user": clean_user
+            })
             return
 
         # ── 5. APPROVE DEPOSIT ──────────────────────────────────────

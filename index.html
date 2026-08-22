@@ -1262,10 +1262,13 @@
             <button class="btn-register" onclick="openAuthModal('register')">Register</button>
           </div>
 
-          <!-- Logged-in user pill with Awarded VIP Badge -->
-          <div class="user-pill" id="user-pill" onclick="logoutUser()">
+          <!-- Logged-in user pill with Awarded VIP Badge & User ID -->
+          <div class="user-pill" id="user-pill" onclick="logoutUser()" title="Click to logout">
             <span id="user-avatar-lbl">👑</span>
-            <span id="username-lbl">Player</span>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.1">
+              <span id="username-lbl" style="font-weight:900">Player</span>
+              <span id="user-id-lbl" style="font-size:9.5px;color:#00e676;font-family:monospace;font-weight:800"></span>
+            </div>
             <span class="user-vip-awarded-badge" id="user-vip-awarded-badge">👑 VIP</span>
             <span style="font-size:9px;color:#ef4444;margin-left:2px">✕</span>
           </div>
@@ -2837,6 +2840,8 @@
         if (authBtns) authBtns.style.display = 'none';
         if (userPill) userPill.style.display = 'flex';
         if (userLbl) userLbl.textContent = session.username;
+        const userIdLbl = document.getElementById('user-id-lbl');
+        if (userIdLbl) userIdLbl.textContent = session.id ? `ID: ${session.id}` : '';
 
         if (session.isVIP || session.vipApproved || (session.vipLevel && session.vipLevel !== 'Standard' && session.vipLevel !== 'Bronze_Pending')) {
           isVipApproved = true;

@@ -35,6 +35,12 @@
       const btn = document.getElementById('tab-btn-vip');
       if (sec) sec.classList.add('active');
       if (btn) btn.classList.add('active');
+    } else if (tabName === 'user-wallet') {
+      const sec = document.getElementById('section-user-wallet');
+      const btn = document.getElementById('tab-btn-user-wallet');
+      if (sec) sec.classList.add('active');
+      if (btn) btn.classList.add('active');
+      loadAllUsersDirectory();
     }
   };
 
@@ -772,6 +778,299 @@
     lockAdminUI();
     return false;
   }
+
+  // ── 8B. USER WALLET & AUDIT SUITE ──────────────────────────
+  let activeSelectedUserId = null;
+  let allUsersData = [];
+
+  window.switchUserSubTab = function(subTab) {
+    const gameBtn = document.getElementById('user-subtab-game');
+    const payBtn = document.getElementById('user-subtab-pay');
+    const gameView = document.getElementById('user-game-history-view');
+    const payView = document.getElementById('user-payment-history-view');
+
+    if (subTab === 'game') {
+      if (gameBtn) gameBtn.classList.add('active');
+      if (payBtn) payBtn.classList.remove('active');
+      if (gameView) gameView.style.display = 'block';
+      if (payView) payView.style.display = 'none';
+    } else {
+      if (gameBtn) gameBtn.classList.remove('active');
+      if (payBtn) payBtn.classList.add('active');
+      if (gameView) gameView.style.display = 'none';
+      if (payView) payView.style.display = 'block';
+    }
+  };
+
+  window.searchUserWallet = async function(queryParam) {
+    const inputVal = queryParam || (document.getElementById('user-wallet-search-input')?.value || '').trim();
+    if (!inputVal) {
+      alert('Please enter a User ID, Username, or Email to search.');
+      return;
+    }
+
+    try {
+      showNotification('🔍 Searching player records...', '#38bdf8');
+      const res = await fetch(`/api/admin/user-details?userId=${encodeURIComponent(inputVal)}&username=${encodeURIComponent(inputVal)}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.success || !data.user) {
+        alert(`❌ No user found matching "${inputVal}". Please check the User ID or Username.`);
+        return;
+      }
+
+      displayUserDetails(data);
+      showNotification(`✅ Loaded profile for @${data.user.username}`, '#00e676');
+    } catch(e) {
+      console.error(e);
+      alert('Error connecting to server to search user.');
+    }
+  };
+
+  function displayUserDetails(data) {
+    const u = data.user;
+    activeSelectedUserId = u.id;
+
+    const detailsCard = document.getElementById('user-details-card');
+    if (detailsCard) detailsCard.style.display = 'block';
+
+    // Header Details
+    setElText('u-avatar', u.avatar || '👑');
+    setElText('u-username', u.username || 'Player');
+    setElText('u-vip-badge', u.vipLevel && u.vipLevel !== 'None' ? `👑 ${u.vipLevel} VIP` : 'Standard Member');
+    setElText('u-id', u.id || 'USER-N/A');
+    setElText('u-email', u.email || 'N/A');
+    setElText('u-created-at', u.createdAt ? new Date(u.createdAt).toLocaleString('en-IN') : 'N/A');
+    setElText('u-last-login', u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-IN') : 'Just now');
+
+    // Wallet Balances
+    const w = u.wallets || { demo: 10000, real: 0, usdt: 0 };
+    const realBal = parseFloat(w.real || 0);
+    const demoBal = parseFloat(w.demo || 0);
+    const usdtBal = parseFloat(w.usdt || 0);
+
+    setElText('current-real-bal-display', `₹${realBal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+    setElText('current-demo-bal-display', `₹${demoBal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+    setElText('current-usdt-bal-display', `${usdtBal.toFixed(2)} ₮`);
+
+    const editReal = document.getElementById('edit-real-bal');
+    const editDemo = document.getElementById('edit-demo-bal');
+    const editUsdt = document.getElementById('edit-usdt-bal');
+    if (editReal) editReal.value = realBal.toFixed(2);
+    if (editDemo) editDemo.value = demoBal.toFixed(2);
+    if (editUsdt) editUsdt.value = usdtBal.toFixed(2);
+
+    // Game History
+    const games = data.gameWagers || [];
+    setElText('user-games-count', games.length);
+    renderUserGamesTable(games);
+
+    // Payment & Transaction History
+    const txs = (data.transactions && data.transactions.length > 0) ? data.transactions : (data.deposits || []).concat(data.withdrawals || []);
+    setElText('user-txs-count', txs.length);
+    renderUserPaymentsTable(txs);
+
+    // Scroll to user details smoothly
+    detailsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  window.quickAdjustReal = function(amt) {
+    const input = document.getElementById('edit-real-bal');
+    if (!input) return;
+    let cur = parseFloat(input.value || 0);
+    cur = Math.max(0, cur + amt);
+    input.value = cur.toFixed(2);
+  };
+
+  window.saveUserWalletBalance = async function() {
+    if (!activeSelectedUserId) {
+      alert('Please search and select a user first.');
+      return;
+    }
+
+    const editReal = document.getElementById('edit-real-bal');
+    const editDemo = document.getElementById('edit-demo-bal');
+    const editUsdt = document.getElementById('edit-usdt-bal');
+    const editReason = document.getElementById('edit-bal-reason');
+
+    const real = parseFloat(editReal?.value || 0);
+    const demo = parseFloat(editDemo?.value || 0);
+    const usdt = parseFloat(editUsdt?.value || 0);
+    const reason = (editReason?.value || '').trim() || 'Admin Direct Adjustment';
+
+    if (isNaN(real) || real < 0) {
+      alert('Please enter a valid non-negative Real INR balance.');
+      return;
+    }
+
+    if (!confirm(`⚠️ CONFIRM WALLET BALANCE UPDATE\n\nUser ID: ${activeSelectedUserId}\nNew Real INR Balance: ₹${real.toLocaleString('en-IN')}\nNew Demo Balance: ₹${demo.toLocaleString('en-IN')}\nNew USDT Balance: ${usdt} ₮\nReason: ${reason}\n\nThis will immediately update the user's live balance on their screen. Proceed?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/admin/update-user-wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: activeSelectedUserId,
+          real: real,
+          demo: demo,
+          usdt: usdt,
+          reason: reason
+        })
+      });
+
+      const json = await res.json();
+      if (res.ok && json.success) {
+        showNotification(json.message || '✅ User balance updated successfully!', '#00e676');
+        setElText('current-real-bal-display', `₹${real.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+        setElText('current-demo-bal-display', `₹${demo.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+        setElText('current-usdt-bal-display', `${usdt.toFixed(2)} ₮`);
+        if (editReason) editReason.value = '';
+        
+        // Refresh directory table and user details
+        loadAllUsersDirectory();
+        searchUserWallet(activeSelectedUserId);
+      } else {
+        alert(json.message || 'Failed to update balance');
+      }
+    } catch(e) {
+      console.error(e);
+      alert('Error updating user wallet.');
+    }
+  };
+
+  function renderUserGamesTable(games) {
+    const tbody = document.getElementById('user-games-tbody');
+    if (!tbody) return;
+
+    if (!games || games.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><p>No game records found for this player.</p></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = games.map(g => {
+      const bet = parseFloat(g.betAmount || g.bet || 0);
+      const payout = parseFloat(g.payout || g.win || 0);
+      const isWin = g.won !== undefined ? g.won : (payout > bet);
+      const profit = payout - bet;
+      const dateStr = g.timestamp ? new Date(g.timestamp).toLocaleString('en-IN') : 'Recent';
+
+      return `
+        <tr>
+          <td><strong style="color:#38bdf8">${g.gameName || g.game || 'GG Game'}</strong></td>
+          <td style="font-weight:700">₹${bet.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+          <td style="font-weight:800;color:${isWin ? '#00e676' : '#94a3b8'}">₹${payout.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+          <td style="font-weight:900;color:${profit >= 0 ? '#00e676' : '#ef4444'}">
+            ${profit >= 0 ? '+' : ''}₹${profit.toLocaleString('en-IN', {minimumFractionDigits:2})}
+          </td>
+          <td>
+            <span class="badge-status ${isWin ? 'status-completed' : 'status-rejected'}">
+              ${isWin ? '✓ Won' : '✕ Lost'}
+            </span>
+          </td>
+          <td style="color:#94a3b8;font-size:12px">${dateStr}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function renderUserPaymentsTable(txs) {
+    const tbody = document.getElementById('user-payments-tbody');
+    if (!tbody) return;
+
+    if (!txs || txs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><p>No payment records found for this player.</p></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = txs.map(t => {
+      const id = t.orderId || t.id || 'TX-N/A';
+      const type = (t.type || 'deposit').toUpperCase();
+      const amt = parseFloat(t.amount || 0);
+      const isCompleted = t.status === 'Completed' || t.status === 'Approved' || t.status === 'PAID';
+      const isPending = t.status === 'Pending';
+      const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleString('en-IN') : 'Recent';
+
+      const typeBadge = type.includes('DEP') || type === 'DEPOSIT' 
+        ? `<span class="wallet-badge real">📥 DEPOSIT</span>`
+        : type.includes('WTH') || type === 'WITHDRAWAL'
+        ? `<span class="wallet-badge usdt" style="background:rgba(239,68,68,0.15);border-color:#ef4444;color:#ef4444">📤 WITHDRAWAL</span>`
+        : `<span class="wallet-badge" style="background:rgba(255,215,0,0.15);border-color:#ffd700;color:#ffd700">⚙️ ${type}</span>`;
+
+      const statusBadge = isPending 
+        ? `<span class="badge-status status-pending">Pending</span>`
+        : isCompleted 
+        ? `<span class="badge-status status-completed">✓ Completed</span>`
+        : `<span class="badge-status status-rejected">✕ Rejected</span>`;
+
+      return `
+        <tr>
+          <td><span class="tx-id">${id}</span></td>
+          <td>${typeBadge}</td>
+          <td class="tx-amount inr">₹${amt.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+          <td>${t.method || t.qrLabel || 'UPI Gateway'}</td>
+          <td><span class="utr-code">${t.utr || 'N/A'}</span></td>
+          <td>${statusBadge}</td>
+          <td style="font-size:12px;color:#cbd5e1">${t.description || t.reason || '-'}</td>
+          <td style="color:#94a3b8;font-size:12px">${dateStr}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  window.loadAllUsersDirectory = async function() {
+    const tbody = document.getElementById('all-users-tbody');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/admin/all-users');
+      if (!res.ok) return;
+      const data = await res.json();
+      allUsersData = data.users || [];
+
+      setElText('all-users-count', allUsersData.length);
+      setElText('nav-users-count', allUsersData.length);
+
+      if (allUsersData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><p>No registered players on platform yet.</p></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = allUsersData.map(u => {
+        const w = u.wallets || { demo: 10000, real: 0, usdt: 0 };
+        const real = parseFloat(w.real || 0);
+        const demo = parseFloat(w.demo || 0);
+        const usdt = parseFloat(w.usdt || 0);
+        const regDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : 'N/A';
+
+        return `
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px">
+                <code style="color:#00e676;font-family:monospace;font-weight:800">${u.id || 'USER-N/A'}</code>
+                <button class="btn-copy-mini" onclick="copyText('${u.id}', this)">Copy</button>
+              </div>
+            </td>
+            <td><strong>${u.avatar || '👑'} ${u.username || 'Player'}</strong></td>
+            <td style="color:#cbd5e1">${u.email || '-'}</td>
+            <td class="tx-amount inr">₹${real.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td style="color:#c084fc;font-weight:700">₹${demo.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+            <td style="color:#38bdf8;font-weight:700">${usdt.toFixed(2)} ₮</td>
+            <td><span class="badge-status" style="background:rgba(255,215,0,0.12);border:1px solid #ffd700;color:#ffd700">${u.vipLevel || 'None'}</span></td>
+            <td style="color:#94a3b8;font-size:12px">${regDate}</td>
+            <td>
+              <button class="btn btn-primary" style="padding:4px 10px;font-size:11px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;border:none;border-radius:6px;font-weight:800;cursor:pointer" onclick="searchUserWallet('${u.id}')">
+                🔍 Inspect &amp; Edit Wallet
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch(e) {
+      console.error(e);
+    }
+  };
 
   // ── 9. BOOTSTRAP (MANUAL REFRESH ONLY • NO AUTO-RELOAD) ─────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
