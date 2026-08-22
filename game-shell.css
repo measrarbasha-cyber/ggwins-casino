@@ -150,80 +150,39 @@ svg { display: block; flex-shrink: 0; }
   background: rgba(0,230,118,0.15);
   border-color: var(--green);
 }
-/* ── PROFESSIONAL DEPOSIT ACTION BOX WIDGET ── */
-.dep-action-box {
+/* ── CLEAN PROFESSIONAL ROYAL BLUE DEPOSIT BOX ── */
+.btn-deposit-blue, .btn-wallet-game, .dep-box-btn {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.6);
+  color: #ffffff !important;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 9px;
   display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-.dep-box-btn, .btn-deposit-glow, .btn-wallet-game {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  background: linear-gradient(135deg, rgba(0, 230, 118, 0.15) 0%, rgba(0, 176, 255, 0.12) 100%), #0d1527;
-  border: 1.5px solid #00e676;
-  border-radius: 12px;
-  padding: 4px 10px 4px 8px;
-  text-decoration: none;
-  cursor: pointer;
-  box-shadow: 0 0 16px rgba(0, 230, 118, 0.3), 0 4px 12px rgba(0, 0, 0, 0.6);
-  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
-  user-select: none;
-  white-space: nowrap;
-}
-.dep-box-btn:hover, .btn-deposit-glow:hover, .btn-wallet-game:hover {
-  background: linear-gradient(135deg, rgba(0, 230, 118, 0.28) 0%, rgba(0, 176, 255, 0.22) 100%), #111d33;
-  border-color: #34d399;
-  box-shadow: 0 0 25px rgba(0, 230, 118, 0.6), 0 6px 16px rgba(0, 0, 0, 0.8);
-  transform: translateY(-1.5px) scale(1.03);
-}
-.dep-box-left {
-  display: flex;
   align-items: center;
   gap: 6px;
-}
-.dep-box-icon {
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, #00e676, #00b0ff);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: #000;
-  box-shadow: 0 0 10px rgba(0, 230, 118, 0.6);
-}
-.dep-box-text-group {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-  text-align: left;
-}
-.dep-box-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 11.5px;
-  font-weight: 900;
-  color: #ffffff;
-  letter-spacing: 0.05em;
-}
-.dep-box-sub {
-  font-size: 8px;
-  font-weight: 800;
-  color: #00e676;
-  letter-spacing: 0.03em;
-}
-.dep-box-badge {
-  background: linear-gradient(135deg, #ffd700, #f59e0b);
-  color: #000;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 9px;
-  font-weight: 900;
-  padding: 2px 6px;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  white-space: nowrap;
   letter-spacing: 0.02em;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  flex-shrink: 0;
+  user-select: none;
+}
+.btn-deposit-blue:hover, .btn-wallet-game:hover, .dep-box-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #0369a1 100%);
+  border-color: #38bdf8;
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1.5px) scale(1.03);
+  filter: brightness(1.1);
+}
+.dep-blue-icon {
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
 }
 .gnav-balance-label { 
   font-size: 8.5px; color: var(--green); opacity: 0.95;

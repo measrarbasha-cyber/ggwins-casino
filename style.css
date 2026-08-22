@@ -331,6 +331,40 @@ svg { flex-shrink: 0; display: block; }
   white-space: nowrap;
 }
 
+.btn-deposit-blue, .btn-deposit {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.6);
+  color: #ffffff !important;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 15px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  flex-shrink: 0;
+  user-select: none;
+}
+.btn-deposit-blue:hover, .btn-deposit:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #0369a1 100%);
+  border-color: #38bdf8;
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform: translateY(-1.5px) scale(1.03);
+  filter: brightness(1.1);
+}
+.dep-blue-icon {
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+}
+
 /* Buttons */
 .btn-primary {
   background: linear-gradient(135deg, var(--green), var(--green-dim));
