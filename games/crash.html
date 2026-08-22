@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -152,11 +152,20 @@
   <span class="gnav-game-badge">ORIGINAL</span>
   <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
   <div class="gnav-spacer"></div>
-  <div id="wallet-chip-target"></div>
-  <a href="../deposit.html" target="_blank" class="btn-deposit-box" title="Deposit Funds">
-    <span class="dep-box-chip">💳</span>
-    <span class="dep-box-text">Deposit</span>
-  </a>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)" title="Switch Active Account / Currency">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹0.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
 </nav>
 
 <div class="game-layout">
@@ -267,24 +276,6 @@
 <script src="../wallet.js"></script>
 <script src="../auth-guard.js"></script>
 <script src="crash.js"></script>
-<script>
-// ── UNIFIED BETTING PANEL CONTROLS ──
-function halveBet(){
-  const el = document.getElementById('bet-amount') || document.getElementById('bet-amt') || document.getElementById('wager-amount');
-  if(el){ el.value = Math.max(1, (parseFloat(el.value || 100) / 2)).toFixed(2); if(typeof updateBetLabels === 'function') updateBetLabels(); }
-}
-function doubleBet(){
-  const el = document.getElementById('bet-amount') || document.getElementById('bet-amt') || document.getElementById('wager-amount');
-  const bal = typeof getBalance === 'function' ? getBalance() : 50000;
-  if(el){ el.value = Math.min(bal, (parseFloat(el.value || 100) * 2)).toFixed(2); if(typeof updateBetLabels === 'function') updateBetLabels(); }
-}
-function maxBet(){
-  const el = document.getElementById('bet-amount') || document.getElementById('bet-amt') || document.getElementById('wager-amount');
-  const bal = typeof getBalance === 'function' ? getBalance() : 50000;
-  if(el){ el.value = Math.floor(bal).toFixed(2); if(typeof updateBetLabels === 'function') updateBetLabels(); }
-}
-
-</script>
 </body>
 </html>
 

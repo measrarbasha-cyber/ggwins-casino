@@ -1,33 +1,109 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Fortune Wheel 3D – GG Wins</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wheel of Fortune – GG Wins</title>
 <link rel="stylesheet" href="../game-shell.css">
-<script src="../security-guard.js"></script>
 <style>
-.wheel-area {
+.wheel-game-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  background: radial-gradient(circle at 50% 40%, #1e1b4b 0%, #0f172a 70%, #030712 100%);
+  padding: 24px;
+  gap: 20px;
+  overflow: auto;
   position: relative;
-  overflow: hidden;
-  user-select: none;
+  background: radial-gradient(ellipse at 50% 50%, #17102b 0%, #06040d 100%);
 }
-
+.wheel-wrapper {
+  position: relative;
+  width: 340px;
+  height: 340px;
+  margin: 0 auto;
+  perspective: 1000px;
+}
 #wheel-canvas {
-  width: 280px;
-  height: 280px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  box-shadow: 0 15px 45px rgba(0,0,0,0.9), 0 0 35px rgba(255,215,0,0.3);
-  border: 4px solid #ffd700;
+  box-shadow: 0 0 50px rgba(124,77,255,0.3), 0 0 20px rgba(0,0,0,0.8);
+  display: block;
 }
+.wheel-pointer-pin {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-top: 26px solid #ffd700;
+  z-index: 20;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.8));
+  transition: transform 0.1s ease;
+}
+.wheel-pointer-pin.tick {
+  transform: translateX(-50%) rotate(-15deg);
+}
+.wheel-center-hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffd700 0%, #ff8c00 70%, #995200 100%);
+  border: 3px solid #fff;
+  box-shadow: 0 0 25px rgba(255,215,0,0.8), inset 0 0 10px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  color: #000;
+  z-index: 10;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.wheel-center-hub:hover:not(.spinning) {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+.wheel-center-hub.spinning {
+  animation: hubPulse 0.6s infinite alternate;
+}
+@keyframes hubPulse {
+  0%{transform:translate(-50%, -50%) scale(1)} 100%{transform:translate(-50%, -50%) scale(1.06)}
+}
+.wheel-history {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  max-width: 500px;
+  padding: 4px;
+}
+.wh-chip {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  animation: popIn 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.wh-chip.mega { background: #ffd700; color: #000; }
+.wh-chip.high { background: #ff6b35; color: #fff; }
+.wh-chip.mid { background: #7c4dff; color: #fff; }
+.wh-chip.low { background: #00e676; color: #000; }
+.wh-chip.zero { background: #ef4444; color: #fff; }
 </style>
+<script src="../security-guard.js"></script>
 </head>
 <body>
 
@@ -38,31 +114,46 @@
   </button>
   <div class="gnav-brand-block">
     <div class="gnav-logo">GG <span>Wins</span></div>
-    <div class="gnav-game-under-logo">🎡 Fortune Wheel 3D</div>
+    <div class="gnav-game-under-logo">🎡 GG Wheel</div>
   </div>
-  <div class="gnav-game-name">Fortune Wheel</div>
-  <span class="gnav-game-badge" style="background:#ffd700;color:#000">3D WHEEL</span>
+  <div class="gnav-game-name">Wheel of Fortune</div>
+  <span class="gnav-game-badge" style="background:#ffd700;color:#000">ORIGINAL</span>
   <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
   <div class="gnav-spacer"></div>
-  <div id="wallet-chip-target"></div>
-  <a href="../deposit.html" target="_blank" class="btn-deposit-box" title="Deposit Funds">
-    <span class="dep-box-chip">💳</span>
-    <span class="dep-box-text">Deposit</span>
-  </a>
+  <div id="wallet-chip-target">
+    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
+        <span class="wallet-active-icon">🎮</span>
+        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
 </nav>
 
 <div class="game-layout">
-  <div class="game-area wheel-area">
-    <canvas id="wheel-canvas" width="360" height="360"></canvas>
-    
-  </div>
+  <div class="game-area wheel-game-area">
+    <div class="wheel-wrapper">
+      <div class="wheel-pointer-pin" id="wheel-pin"></div>
+      <canvas id="wheel-canvas" width="680" height="680"></canvas>
+      <div class="wheel-center-hub" id="wheel-hub" onclick="spinWheel()">SPIN</div>
+    </div>
+    <div class="wheel-history" id="wheel-history"></div>
+  
+<div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected. Unauthorized Copying Prohibited.</div>
+</div>
 
   <div class="bet-panel">
     <div class="bet-section">
       <div class="bet-label">Bet Amount</div>
       <div class="bet-input-row">
         <div class="bet-currency">₹</div>
-        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="10">
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="1">
         <div class="bet-quick-btns">
           <button class="qbtn" onclick="halveBet()">½</button>
           <button class="qbtn" onclick="doubleBet()">2×</button>
@@ -72,7 +163,17 @@
     </div>
 
     <div class="bet-section">
-      <button class="btn-bet" id="btn-spin" onclick="spinWheel()">🎡 SPIN WHEEL</button>
+      <div class="bet-label">Risk Tier</div>
+      <div class="seg-ctrl" id="risk-ctrl">
+        <div class="seg-btn active" data-risk="low">Low</div>
+        <div class="seg-btn" data-risk="medium">Medium</div>
+        <div class="seg-btn" data-risk="high">High</div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <button class="btn-bet" id="spin-btn" onclick="spinWheel()">Spin Wheel</button>
+      
     </div>
 
     <div class="bet-section">
@@ -82,7 +183,7 @@
     <div class="stats-row">
       <div class="stat-box">
         <div class="stat-box-label">Profit</div>
-        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+        <div class="stat-box-val" id="stat-profit">$0.00</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">Wins</div>
@@ -99,151 +200,279 @@
 <script src="../wallet.js"></script>
 <script src="../auth-guard.js"></script>
 <script>
+function updateBal(){ updateAllWalletDisplays(); }
+updateBal();
+
+const WHEEL_PRESETS = {
+  low: [
+    { mult: 1.105, color: '#00e676', text: '#000' },
+    { mult: 1.10, color: '#00b0ff', text: '#000' },
+    { mult: 1.105, color: '#7c4dff', text: '#fff' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 1.15, color: '#00e676', text: '#000' },
+    { mult: 1.105, color: '#00b0ff', text: '#000' },
+    { mult: 2.2, color: '#ffd700', text: '#000' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 1.10, color: '#00e676', text: '#000' },
+    { mult: 1.4, color: '#7c4dff', text: '#fff' }
+  ],
+  medium: [
+    { mult: 1.105, color: '#00e676', text: '#000' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 2.2, color: '#7c4dff', text: '#fff' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 3.5, color: '#ff6b35', text: '#fff' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 1.105, color: '#00b0ff', text: '#000' },
+    { mult: 6.0, color: '#ffd700', text: '#000' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 1.4, color: '#7c4dff', text: '#fff' }
+  ],
+  high: [
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 3.5, color: '#7c4dff', text: '#fff' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 6.0, color: '#ff6b35', text: '#fff' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 12.0, color: '#e040fb', text: '#fff' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 25.0, color: '#ffd700', text: '#000' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' },
+    { mult: 0.0, color: '#ef4444', text: '#fff' }
+  ]
+};
+
+let currentRisk = 'low';
+let isSpinning = false;
+let currentRotation = 0;
+let totalProfit = 0, wins = 0, losses = 0;
+
 const canvas = document.getElementById('wheel-canvas');
 const ctx = canvas.getContext('2d');
 
-const SEGMENTS = [
-  { mult: 50.0, color: '#ffd700', label: '50×' },
-  { mult: 0.0, color: '#ef4444', label: '0×' },
-  { mult: 2.0, color: '#3b82f6', label: '2×' },
-  { mult: 5.0, color: '#10b981', label: '5×' },
-  { mult: 0.5, color: '#6b7280', label: '0.5×' },
-  { mult: 10.0, color: '#8b5cf6', label: '10×' },
-  { mult: 0.0, color: '#ef4444', label: '0×' },
-  { mult: 3.0, color: '#06b6d4', label: '3×' },
-  { mult: 1.5, color: '#f59e0b', label: '1.5×' },
-  { mult: 20.0, color: '#ec4899', label: '20×' }
-];
-
-let angle = 0;
-let isSpinning = false;
-let totalProfit = 0, wins = 0, losses = 0;
-
 function drawWheel(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  const r = cx - 10;
-  const arc = (Math.PI * 2) / SEGMENTS.length;
+  const segments = WHEEL_PRESETS[currentRisk];
+  const count = segments.length;
+  const arc = (Math.PI * 2) / count;
+  const radius = canvas.width / 2;
 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(angle);
+  ctx.translate(radius, radius);
+  ctx.rotate(currentRotation);
 
-  SEGMENTS.forEach((seg, i) => {
+  segments.forEach((seg, i) => {
+    const angle = i * arc;
     ctx.beginPath();
-    ctx.fillStyle = seg.color;
     ctx.moveTo(0, 0);
-    ctx.arc(0, 0, r, i * arc, (i + 1) * arc);
+    ctx.arc(0, 0, radius - 15, angle, angle + arc);
+    ctx.fillStyle = seg.color;
     ctx.fill();
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 3;
     ctx.stroke();
 
+    // Segment text
     ctx.save();
-    ctx.rotate(i * arc + arc / 2);
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 15px Space Grotesk, sans-serif';
+    ctx.rotate(angle + arc / 2);
     ctx.textAlign = 'right';
-    ctx.fillText(seg.label, r - 16, 5);
+    ctx.fillStyle = seg.text;
+    ctx.font = 'bold 28px Space Grotesk, sans-serif';
+    ctx.fillText(seg.mult > 0 ? seg.mult + '×' : '0×', radius - 45, 10);
     ctx.restore();
   });
 
-  // Center Hub
+  // Outer gold metallic border
   ctx.beginPath();
-  ctx.arc(0, 0, 24, 0, Math.PI * 2);
-  ctx.fillStyle = '#ffd700';
-  ctx.fill();
-  ctx.restore();
+  ctx.arc(0, 0, radius - 8, 0, Math.PI * 2);
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 14;
+  ctx.stroke();
 
-  // Top Pointer Arrow
-  ctx.beginPath();
-  ctx.moveTo(cx - 10, 10);
-  ctx.lineTo(cx + 10, 10);
-  ctx.lineTo(cx, 28);
-  ctx.closePath();
-  ctx.fillStyle = '#fff';
-  ctx.shadowColor = '#00e676';
-  ctx.shadowBlur = 10;
-  ctx.fill();
-  ctx.shadowBlur = 0;
+  ctx.restore();
 }
+
 drawWheel();
 
-function spinWheel(){
-  if(typeof requireAuth === 'function' && !requireAuth()) return;
+document.querySelectorAll('#risk-ctrl .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if(isSpinning) return;
+    document.querySelectorAll('#risk-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentRisk = btn.dataset.risk;
+    drawWheel();
+  });
+});
+
+function addWheelHistory(mult){
+  const c = document.getElementById('wheel-history');
+  const chip = document.createElement('div');
+  let cls = 'wh-chip ';
+  if(mult >= 10) cls += 'mega';
+  else if(mult >= 5) cls += 'high';
+  else if(mult >= 2) cls += 'mid';
+  else if(mult > 0) cls += 'low';
+  else cls += 'zero';
+  chip.className = cls;
+  chip.textContent = mult + '×';
+  c.insertBefore(chip, c.firstChild);
+  if(c.children.length > 12) c.removeChild(c.lastChild);
+}
+
+function spinWheel(){ if(!requireAuth()) return;
   if(isSpinning) return;
-
   const amt = parseFloat(document.getElementById('bet-amount').value);
-  if(isNaN(amt) || amt <= 0){ showToast('Enter a valid bet amount!', 'error'); return; }
+  if(isNaN(amt) || amt <= 0){ showToast('Enter valid amount'); return; }
+  if(amt > getBalance()){ showToast('Insufficient balance'); return; }
 
-  const curBal = typeof getBalance === 'function' ? getBalance() : 10000;
-  if(amt > curBal){ showToast('Insufficient balance!', 'error'); return; }
+  setBalance(getBalance() - amt);
+  if(typeof playGameSound === 'function') playGameSound('bet');
 
-  if(typeof setBalance === 'function') setBalance(curBal - amt);
   isSpinning = true;
-  document.getElementById('btn-spin').disabled = true;
+  document.getElementById('spin-btn').disabled = true;
+  document.getElementById('wheel-hub').classList.add('spinning');
 
-  const spins = 6 + Math.random() * 5;
-  const targetIdx = Math.floor(Math.random() * SEGMENTS.length);
-  const targetAngle = (SEGMENTS.length - targetIdx) * ((Math.PI * 2) / SEGMENTS.length) - (Math.PI / 2) + (spins * Math.PI * 2);
+  const segments = WHEEL_PRESETS[currentRisk];
+  const count = segments.length;
+  const arc = (Math.PI * 2) / count;
 
-  const startAngle = angle;
-  const duration = 3200;
+  // 🎯 Exactly 20% User Win Chance / 80% Loss Chance
+  let targetIdx;
+  if(Math.random() < 0.80){
+    const lossIndices = [];
+    segments.forEach((s, idx) => { if(s.mult === 0 || s.mult < 1.0) lossIndices.push(idx); });
+    targetIdx = lossIndices.length > 0 ? lossIndices[Math.floor(Math.random() * lossIndices.length)] : 0;
+  } else {
+    const winIndices = [];
+    segments.forEach((s, idx) => { if(s.mult >= 1.0) winIndices.push(idx); });
+    targetIdx = winIndices.length > 0 ? winIndices[Math.floor(Math.random() * winIndices.length)] : 0;
+  }
+
+  const selectedSeg = segments[targetIdx];
+  const targetAngle = (Math.PI * 3 / 2) - (targetIdx * arc + arc / 2);
+  const extraSpins = (5 + Math.floor(Math.random() * 3)) * Math.PI * 2;
+  const finalRotation = currentRotation + extraSpins + ((targetAngle - (currentRotation % (Math.PI * 2)) + Math.PI * 4) % (Math.PI * 2));
+
   const startTime = performance.now();
+  const duration = 4000;
+  const initialRot = currentRotation;
+
+  let lastTickAngle = currentRotation;
+  const pinEl = document.getElementById('wheel-pin');
 
   function animate(now){
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / duration);
-    const ease = 1 - Math.pow(1 - progress, 3);
-    angle = startAngle + (targetAngle - startAngle) * ease;
+    // Cubic bezier ease-out
+    const ease = 1 - Math.pow(1 - progress, 3.5);
+    currentRotation = initialRot + (finalRotation - initialRot) * ease;
+
+    // Needle tick sound & animation
+    if(Math.abs(currentRotation - lastTickAngle) >= arc){
+      lastTickAngle = currentRotation;
+      if(typeof playGameSound === 'function') playGameSound('tick');
+      pinEl.classList.add('tick');
+      setTimeout(() => pinEl.classList.remove('tick'), 60);
+    }
+
     drawWheel();
 
     if(progress < 1){
       requestAnimationFrame(animate);
     } else {
       isSpinning = false;
-      document.getElementById('btn-spin').disabled = false;
-      evaluateWheelWin(amt, SEGMENTS[targetIdx]);
+      document.getElementById('spin-btn').disabled = false;
+      document.getElementById('wheel-hub').classList.remove('spinning');
+      resolveSpin(selectedSeg.mult, amt);
     }
   }
+
   requestAnimationFrame(animate);
 }
 
-function evaluateWheelWin(betAmt, seg){
-  const mult = seg.mult;
-  const payout = betAmt * mult;
-
-  const res = document.getElementById('result-container');
-  if(payout >= betAmt){
-    if(typeof setBalance === 'function') setBalance(getBalance() + payout);
-    totalProfit += payout - betAmt;
-    wins++;
-    res.innerHTML = `<div class="result-box win" style="padding:8px;text-align:center;font-weight:900;color:#00e676">🎉 Landed ${seg.label}! +₹${payout.toFixed(2)}</div>`;
-  } else {
-    if(payout > 0 && typeof setBalance === 'function') setBalance(getBalance() + payout);
-    totalProfit -= (betAmt - payout);
-    losses++;
-    res.innerHTML = `<div class="result-box lose" style="padding:8px;text-align:center;font-weight:900;color:#ef4444">💀 Landed ${seg.label}! -₹${(betAmt - payout).toFixed(2)}</div>`;
+function launchWheelConfetti(){
+  let canvas = document.getElementById('wheel-confetti');
+  if(!canvas){
+    canvas = document.createElement('canvas');
+    canvas.id = 'wheel-confetti';
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;';
+    document.querySelector('.wheel-game-area').appendChild(canvas);
   }
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+
+  const particles = [];
+  const colors = ['#ffd700', '#ff8c00', '#00e676', '#7c4dff', '#00bcd4'];
+  for(let i=0; i<70; i++){
+    particles.push({
+      x: canvas.width/2, y: canvas.height/2,
+      vx: (Math.random()-0.5)*14, vy: (Math.random()-0.8)*16,
+      size: Math.random()*8+3, color: colors[Math.floor(Math.random()*colors.length)],
+      alpha: 1
+    });
+  }
+
+  function render(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.35; p.alpha -= 0.015;
+      if(p.alpha > 0){
+        alive = true;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+    });
+    if(alive) requestAnimationFrame(render);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  render();
+}
+
+function resolveSpin(mult, amt){
+  const won = mult > 0;
+  const payout = amt * mult;
+  const resContainer = document.getElementById('result-container');
+
+  if(won){
+    setBalance(getBalance() + payout);
+    totalProfit += payout - amt;
+    wins++;
+    flashBal('flash-win');
+    launchWheelConfetti();
+    if(typeof playGameSound === 'function') playGameSound('win');
+    if(typeof trackGameWager === 'function') trackGameWager('GG Wheel', amt, payout, true);
+    resContainer.innerHTML = `<div class="result-box win"><div class="result-box-title">🎉 You Won!</div><div class="result-box-val">+₹${payout.toFixed(2)} (${mult}×)</div></div>`;
+  } else {
+    totalProfit -= amt;
+    losses++;
+    flashBal('flash-lose');
+    if(typeof playGameSound === 'function') playGameSound('lose');
+    if(typeof trackGameWager === 'function') trackGameWager('GG Wheel', amt, 0, false);
+    resContainer.innerHTML = `<div class="result-box lose"><div class="result-box-title">💸 No Luck!</div><div class="result-box-val">-₹${amt.toFixed(2)}</div></div>`;
+  }
+
+  addWheelHistory(mult);
   updateStats();
+  setTimeout(() => resContainer.innerHTML = '', 3500);
 }
 
 function updateStats(){
   const p = document.getElementById('stat-profit');
-  if(p){
-    p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
-    p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
-  }
-  const w = document.getElementById('stat-wins');
-  if(w) w.textContent = wins;
-  const l = document.getElementById('stat-losses');
-  if(l) l.textContent = losses;
+  p.textContent = (totalProfit >= 0 ? '+' : '') + ' ₹' + totalProfit.toFixed(2);
+  p.className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
+  document.getElementById('stat-wins').textContent = wins;
+  document.getElementById('stat-losses').textContent = losses;
 }
 
-function halveBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
-function doubleBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
-function maxBet(){ const i=document.getElementById('bet-amount'); if(i) i.value=getBalance().toFixed(2); }
+function halveBet(){ const i=document.getElementById('bet-amount'); i.value=Math.max(1,parseFloat(i.value||1)/2).toFixed(2); }
+function doubleBet(){ const i=document.getElementById('bet-amount'); i.value=Math.min(getBalance(),parseFloat(i.value||1)*2).toFixed(2); }
+function maxBet(){ document.getElementById('bet-amount').value=getBalance().toFixed(2); }
 </script>
 </body>
 </html>
+
+
+

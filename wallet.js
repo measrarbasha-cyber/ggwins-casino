@@ -202,50 +202,11 @@
 
   window.getActiveBalance = window.getBalance;
 
-  window.showFloatingDelta = function(delta, walletKey) {
-    try {
-      const key = walletKey || getActiveWalletKey();
-      const cfg = WALLET_CONFIGS[key] || WALLET_CONFIGS.demo;
-      const num = Math.abs(parseFloat(delta || 0));
-      if (num === 0) return;
-
-      const isWin = delta > 0;
-      const text = (isWin ? '+' : '-') + (cfg.isCrypto ? `${num.toFixed(2)} ₮` : `₹${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-
-      const target = document.getElementById('wallet-chip-target') || document.querySelector('.wallet-switcher-container') || document.body;
-      const pill = document.createElement('div');
-      pill.className = `floating-bal-pill ${isWin ? 'win' : 'lose'}`;
-      pill.innerHTML = `<span>${isWin ? '🔺' : '🔻'}</span> <span>${text}</span>`;
-      
-      const rect = target.getBoundingClientRect();
-      pill.style.position = 'fixed';
-      pill.style.top = `${Math.max(10, rect.bottom + 6)}px`;
-      pill.style.left = `${Math.max(10, rect.left + rect.width / 2 - 40)}px`;
-      pill.style.zIndex = '999999';
-      document.body.appendChild(pill);
-
-      setTimeout(() => {
-        pill.remove();
-      }, 1400);
-    } catch(e) {}
-  };
-
   window.setBalance = function(val) {
     const wallets = getWallets();
     const key = getActiveWalletKey();
-    const prev = parseFloat(wallets[key] !== undefined ? wallets[key] : 10000);
-    const next = Math.max(0, parseFloat(val) || 0);
-    const delta = next - prev;
-    wallets[key] = next;
+    wallets[key] = Math.max(0, parseFloat(val) || 0);
     saveWallets(wallets);
-
-    if (delta > 0) {
-      if (typeof window.flashBal === 'function') window.flashBal('flash-win');
-      if (typeof window.showFloatingDelta === 'function') window.showFloatingDelta(delta, key);
-    } else if (delta < 0) {
-      if (typeof window.flashBal === 'function') window.flashBal('flash-lose');
-      if (typeof window.showFloatingDelta === 'function') window.showFloatingDelta(delta, key);
-    }
   };
 
   window.adjustBalance = function(delta, description) {
@@ -257,24 +218,19 @@
     wallets[key] = next;
     saveWallets(wallets);
 
-    if (change > 0) {
-      if (typeof window.flashBal === 'function') window.flashBal('flash-win');
-      if (typeof window.showFloatingDelta === 'function') window.showFloatingDelta(change, key);
-    } else if (change < 0) {
-      if (typeof window.flashBal === 'function') window.flashBal('flash-lose');
-      if (typeof window.showFloatingDelta === 'function') window.showFloatingDelta(change, key);
-    }
+    if (change > 0 && typeof window.flashBal === 'function') window.flashBal('flash-win');
+    else if (change < 0 && typeof window.flashBal === 'function') window.flashBal('flash-lose');
 
     return next;
   };
 
   window.flashBal = function(cls) {
-    const els = document.querySelectorAll('#bal-display, .gnav-balance-val, #gnav-balance-val, #lobby-balance-val, .wallet-chip-btn');
+    const els = document.querySelectorAll('#bal-display, .gnav-balance-val, #gnav-balance-val, #lobby-balance-val');
     els.forEach(el => {
       el.classList.remove('flash-win', 'flash-lose');
       void el.offsetWidth; // trigger reflow
       el.classList.add(cls);
-      setTimeout(() => el.classList.remove(cls), 700);
+      setTimeout(() => el.classList.remove(cls), 600);
     });
   };
 
@@ -691,15 +647,9 @@
   window.syncWalletStatusFromServer = async function() {
     try {
       const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
-      let url = '/api/user-status';
-      if (session && (session.id || session.username)) {
-        const p = new URLSearchParams();
-        if (session.id) p.append('userId', session.id);
-        if (session.username) p.append('username', session.username);
-        if (session.email) p.append('email', session.email);
-        if (session.vipLevel) p.append('vipLevel', session.vipLevel);
-        url = `/api/user-status?${p.toString()}`;
-      }
+      const url = session.id 
+        ? `/api/user-status?userId=${encodeURIComponent(session.id)}` 
+        : (session.username ? `/api/user-status?username=${encodeURIComponent(session.username)}` : '/api/user-status');
 
       const res = await fetch(url);
       if (!res.ok) return;
@@ -827,23 +777,6 @@
           }
           if (typeof updateAuthUI === 'function') updateAuthUI();
           if (typeof checkVipAccess === 'function') checkVipAccess();
-      // 5. Direct Admin Balance Adjustment Live Sync
-      if (data.wallets && typeof data.wallets === 'object') {
-        const sReal = parseFloat(data.wallets.real);
-        const sDemo = parseFloat(data.wallets.demo);
-        const sUsdt = parseFloat(data.wallets.usdt);
-
-        if (!isNaN(sReal) && Math.abs((parseFloat(wallets.real) || 0) - sReal) > 0.001) {
-          wallets.real = sReal;
-          updated = true;
-        }
-        if (!isNaN(sDemo) && Math.abs((parseFloat(wallets.demo) || 0) - sDemo) > 0.001) {
-          wallets.demo = sDemo;
-          updated = true;
-        }
-        if (!isNaN(sUsdt) && Math.abs((parseFloat(wallets.usdt) || 0) - sUsdt) > 0.001) {
-          wallets.usdt = sUsdt;
-          updated = true;
         }
       }
 
@@ -1102,6 +1035,7 @@
     const activeBal = wallets[activeKey] !== undefined ? wallets[activeKey] : 10000;
     const formatted = formatCurrency(activeBal, activeKey);
 
+    // Update standard balance target elements
     const targets = [
       'lobby-balance-val', 'lobby-balance-val-2', 'bal-display',
       'nav-balance-val', 'header-balance-val'
@@ -1113,11 +1047,6 @@
         el.title = `${activeCfg.name} (${activeCfg.code})`;
       }
     });
-
-    const chipTarget = document.getElementById('wallet-chip-target');
-    if (chipTarget && !chipTarget.querySelector('#ggwins-wallet-switcher')) {
-      renderWalletSwitcherWidget(chipTarget);
-    }
 
     // Update currency prefixes
     document.querySelectorAll('.bet-currency').forEach(el => {
@@ -1379,129 +1308,6 @@
     const style = document.createElement('style');
     style.id = 'ggwins-wallet-styles';
     style.textContent = `
-      /* Floating Balance Delta Notification Pill */
-      .floating-bal-pill {
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 13.5px;
-        font-weight: 900;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        pointer-events: none;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.8);
-        animation: floatDelta 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-      }
-      .floating-bal-pill.win {
-        background: linear-gradient(135deg, #00e676, #00b0ff);
-        color: #000;
-        box-shadow: 0 0 25px rgba(0,230,118,0.8);
-      }
-      .floating-bal-pill.lose {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: #fff;
-        box-shadow: 0 0 25px rgba(239,68,68,0.8);
-      }
-      @keyframes floatDelta {
-        0% { opacity: 0; transform: translateY(-8px) scale(0.85); }
-        20% { opacity: 1; transform: translateY(0) scale(1.08); }
-        70% { opacity: 1; transform: translateY(6px) scale(1); }
-        100% { opacity: 0; transform: translateY(18px) scale(0.9); }
-      }
-
-      .flash-win {
-        animation: balPulseWin 0.6s ease;
-      }
-      @keyframes balPulseWin {
-        0% { box-shadow: 0 0 0 rgba(0,230,118,0); }
-        50% { box-shadow: 0 0 25px rgba(0,230,118,0.9); border-color: #00e676; }
-        100% { box-shadow: 0 0 0 rgba(0,230,118,0); }
-      }
-      .flash-lose {
-        animation: balPulseLose 0.6s ease;
-      }
-      @keyframes balPulseLose {
-        0% { box-shadow: 0 0 0 rgba(239,68,68,0); }
-        50% { box-shadow: 0 0 25px rgba(239,68,68,0.9); border-color: #ef4444; }
-        100% { box-shadow: 0 0 0 rgba(239,68,68,0); }
-      }
-
-      /* ── 3-ACCOUNTS SEGMENTED TAB BAR ── */
-      .accounts-tab-bar {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: rgba(11, 18, 33, 0.95);
-        border: 1.5px solid rgba(255, 255, 255, 0.14);
-        border-radius: 12px;
-        padding: 3px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-        user-select: none;
-      }
-      .acc-tab-btn {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: transparent;
-        border: 1px solid transparent;
-        border-radius: 9px;
-        padding: 4px 10px;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-        color: #94a3b8;
-        font-family: 'Space Grotesk', sans-serif;
-      }
-      .acc-tab-btn:hover {
-        background: rgba(255, 255, 255, 0.06);
-        color: #f8fafc;
-      }
-      .acc-tab-btn.active {
-        background: rgba(0, 230, 118, 0.12);
-        border-color: rgba(0, 230, 118, 0.4);
-        color: #ffffff;
-        box-shadow: 0 0 12px rgba(0, 230, 118, 0.2);
-      }
-      .acc-tab-btn.active.tab-real {
-        background: rgba(255, 215, 0, 0.12);
-        border-color: rgba(255, 215, 0, 0.4);
-        box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
-      }
-      .acc-tab-btn.active.tab-usdt {
-        background: rgba(38, 161, 123, 0.15);
-        border-color: rgba(38, 161, 123, 0.4);
-        box-shadow: 0 0 12px rgba(38, 161, 123, 0.2);
-      }
-      .acc-tab-icon {
-        font-size: 14px;
-        display: inline-flex;
-        align-items: center;
-      }
-      .acc-tab-info {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        line-height: 1.1;
-        text-align: left;
-      }
-      .acc-tab-name {
-        font-size: 9.5px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .acc-tab-bal {
-        font-size: 12px;
-        font-weight: 900;
-        color: #00e676;
-      }
-      .acc-tab-btn.active.tab-real .acc-tab-bal {
-        color: #ffd700;
-      }
-      .acc-tab-btn.active.tab-usdt .acc-tab-bal {
-        color: #26a17b;
-      }
-
       /* Wallet Dropdown & Switcher */
       .wallet-switcher-container {
         position: relative;
@@ -2494,9 +2300,20 @@
   let withdrawSourceAccount = 'real';
 
   window.openWalletModal = function(tab) {
-    if (tab === 'deposit') {
-      const depUrl = window.location.pathname.includes('/games/') ? '../deposit.html' : 'deposit.html';
-      window.open(depUrl, '_blank');
+    // Only allow logged-in users to access deposit/withdraw
+    const session = typeof getSession === 'function' ? getSession() : JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+    if (!session) {
+      // Close wallet if accidentally open
+      const existingModal = document.getElementById('ggwins-wallet-modal');
+      if (existingModal) existingModal.classList.remove('active');
+      // Show login modal
+      if (typeof openModal === 'function') {
+        openModal('login');
+      }
+      // Show toast
+      if (typeof showToast === 'function') {
+        showToast('⚠️ Please sign in or register to deposit or withdraw.', 'error');
+      }
       return;
     }
     injectWalletStyles();
@@ -3628,87 +3445,91 @@
     injectWalletStyles();
     injectWalletModalHTML();
 
-    const targets = targetContainer 
-      ? (typeof targetContainer === 'string' ? [document.getElementById(targetContainer)] : [targetContainer])
-      : Array.from(document.querySelectorAll('#wallet-chip-target, .wallet-chip-target'));
+    const container = typeof targetContainer === 'string' ? document.getElementById(targetContainer) : targetContainer;
+    if (!container) return;
 
     const wallets = getWallets();
     const activeKey = getActiveWalletKey();
     const activeCfg = WALLET_CONFIGS[activeKey] || WALLET_CONFIGS.demo;
     const formatted = formatCurrency(wallets[activeKey], activeKey);
 
-    targets.forEach(container => {
-      if (!container) return;
+    container.innerHTML = `
+      <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
+        <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)" title="Switch Active Account / Currency">
+          <span class="wallet-active-icon">${activeCfg.icon}</span>
+          <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">${activeCfg.shortName}</span>
+          <span id="lobby-balance-val" style="color:#00e676;font-weight:800">${formatted}</span>
+          <span class="wallet-active-badge" style="background:${activeCfg.badgeColor}">${activeCfg.badge}</span>
+          <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
 
-      container.innerHTML = `
-        <div class="accounts-tab-bar" id="accounts-tab-bar">
-          <button class="acc-tab-btn ${activeKey === 'demo' ? 'active' : ''}" id="tab-demo" onclick="switchActiveAccount('demo')" title="🎮 Demo Practice Account (Refillable)">
-            <span class="acc-tab-icon">🎮</span>
-            <span class="acc-tab-info">
-              <span class="acc-tab-name">Demo</span>
-              <span class="acc-tab-bal" id="tab-bal-demo">${formatCurrency(wallets.demo, 'demo')}</span>
-            </span>
-          </button>
+        <div class="account-picker-dropdown" id="ggwins-account-dropdown">
+          <div class="account-picker-title">
+            <span>Select Active Account</span>
+            <span style="font-size:10px;color:#00e676">3 Accounts</span>
+          </div>
 
-          <button class="acc-tab-btn tab-real ${activeKey === 'real' ? 'active' : ''}" id="tab-real" onclick="switchActiveAccount('real')" title="💵 Real Deposited INR Account">
-            <span class="acc-tab-icon">💵</span>
-            <span class="acc-tab-info">
-              <span class="acc-tab-name">Real INR</span>
-              <span class="acc-tab-bal" id="tab-bal-real">${formatCurrency(wallets.real, 'real')}</span>
-            </span>
-          </button>
+          ${Object.values(WALLET_CONFIGS).map(cfg => {
+            const isActive = cfg.key === activeKey;
+            const bal = wallets[cfg.key] || 0;
+            return `
+              <div class="account-picker-item ${isActive ? 'active' : ''}" data-wallet-key="${cfg.key}" onclick="switchActiveAccount('${cfg.key}')">
+                <div class="acc-picker-left">
+                  <div class="acc-picker-icon">${cfg.icon}</div>
+                  <div class="acc-picker-info">
+                    <div class="acc-picker-name">${cfg.name}</div>
+                    <div class="acc-picker-type">${cfg.shortName}</div>
+                  </div>
+                </div>
+                <div class="acc-picker-right">
+                  <div class="acc-picker-bal">${formatCurrency(bal, cfg.key)}</div>
+                  ${isActive ? '<span class="acc-active-check">✓ ACTIVE</span>' : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
 
-          <button class="acc-tab-btn tab-usdt ${activeKey === 'usdt' ? 'active' : ''}" id="tab-usdt" onclick="switchActiveAccount('usdt')" title="🪙 USDT Crypto Account">
-            <span class="acc-tab-icon">🪙</span>
-            <span class="acc-tab-info">
-              <span class="acc-tab-name">USDT</span>
-              <span class="acc-tab-bal" id="tab-bal-usdt">${formatCurrency(wallets.usdt, 'usdt')}</span>
-            </span>
-          </button>
+          <div class="acc-dropdown-actions">
+            <button class="btn-acc-action dep" onclick="openWalletModal('deposit')">⬇️ Deposit</button>
+            <button class="btn-acc-action wth" onclick="openWalletModal('withdraw')">⬆️ Withdraw</button>
+          </div>
         </div>
-      `;
-    });
+      </div>
+    `;
   };
 
   window.toggleWalletDropdown = function(e) {
     if (e) e.stopPropagation();
-    const switchers = document.querySelectorAll('#ggwins-wallet-switcher');
-    switchers.forEach(s => s.classList.toggle('open'));
+    const switcher = document.getElementById('ggwins-wallet-switcher');
+    if (switcher) switcher.classList.toggle('open');
   };
 
   window.switchActiveAccount = function(key) {
     setActiveWalletKey(key);
-    const switchers = document.querySelectorAll('#ggwins-wallet-switcher');
-    switchers.forEach(s => s.classList.remove('open'));
-    renderWalletSwitcherWidget();
-    if (typeof showToast === 'function') {
-      const cfg = WALLET_CONFIGS[key] || WALLET_CONFIGS.demo;
-      showToast(`Switched active account to ${cfg.icon} ${cfg.name}!`, 'success');
-    }
+    const switcher = document.getElementById('ggwins-wallet-switcher');
+    if (switcher) switcher.classList.remove('open');
+    renderWalletSwitcherWidget(document.getElementById('wallet-chip-target') || switcher.parentElement);
   };
 
   // Close dropdown on outside click
   document.addEventListener('click', e => {
     if (!e.target.closest('#ggwins-wallet-switcher')) {
-      const switchers = document.querySelectorAll('#ggwins-wallet-switcher');
-      switchers.forEach(s => s.classList.remove('open'));
+      const switcher = document.getElementById('ggwins-wallet-switcher');
+      if (switcher) switcher.classList.remove('open');
     }
   });
 
-  // Auto initialize on DOMContentLoaded and immediate
-  function initWalletUI() {
+  // Auto initialize on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', () => {
     injectWalletStyles();
     injectWalletModalHTML();
     updateAllWalletDisplays();
-    renderWalletSwitcherWidget();
-  }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWalletUI);
-  } else {
-    initWalletUI();
-  }
-  window.addEventListener('load', initWalletUI);
-  setTimeout(initWalletUI, 100);
-  setTimeout(initWalletUI, 500);
+    const target = document.getElementById('wallet-chip-target') || document.querySelector('.lobby-balance-chip');
+    if (target && !document.getElementById('ggwins-wallet-switcher')) {
+      target.id = 'wallet-chip-target';
+      renderWalletSwitcherWidget(target);
+    }
+  });
+
 })();
