@@ -216,7 +216,19 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
 
             users = db.get("users", [])
             if any(u.get("username", "").lower() == username.lower() for u in users):
-                self.send_json({"success": False, "message": "Username is already taken. Please choose another."}, status=HTTPStatus.CONFLICT)
+                import random
+                clean_u = re.sub(r'[^a-zA-Z0-9]', '', username) or "Player"
+                suggestions = [
+                    f"{clean_u}_{random.randint(10, 99)}",
+                    f"{clean_u}_Pro",
+                    f"{clean_u}_777",
+                    f"{clean_u}_Win"
+                ]
+                self.send_json({
+                    "success": False,
+                    "message": f"Username '{username}' is already taken. Please choose another or pick a suggested username below.",
+                    "suggestions": suggestions
+                }, status=HTTPStatus.CONFLICT)
                 return
             if any(u.get("email", "").lower() == email for u in users):
                 self.send_json({"success": False, "message": "An account with this email address already exists. Please Sign In."}, status=HTTPStatus.CONFLICT)
