@@ -2463,11 +2463,21 @@
       } else if (type === 'help') {
         title.textContent = '❓ Help & Support Centre';
         content.innerHTML = `
-          <p><strong>24/7 Player Support:</strong></p>
+          <div style="background:rgba(0,230,118,0.12);border:1.5px solid var(--green);padding:12px;border-radius:10px;margin-bottom:14px">
+            <strong style="color:var(--green);font-size:13px">📧 Official Player Support Email:</strong>
+            <p style="margin-top:6px;color:#f8fafc;font-size:13.5px">
+              Email us directly at: <a href="mailto:ggwinssupport@gmail.com" style="color:var(--gold);font-weight:900;text-decoration:underline">ggwinssupport@gmail.com</a>
+            </p>
+            <p style="margin-top:4px;color:#94a3b8;font-size:11px">
+              Our support team is available 24/7 for deposit UTR queries, fast withdrawal tracking, tournament rules, and account assistance.
+            </p>
+          </div>
+          <p><strong>24/7 Player Support &amp; Information:</strong></p>
           <ul style="margin: 8px 0 12px 18px;">
+            <li><strong>Official Support Email:</strong> <a href="mailto:ggwinssupport@gmail.com" style="color:var(--gold)">ggwinssupport@gmail.com</a></li>
             <li><strong>AI Casino Host:</strong> Click the "💬 AI Chat" button for instant real-time assistance.</li>
             <li><strong>Tournaments:</strong> ₹50 entry fee per game with prize pools up to ₹75,000.</li>
-            <li><strong>Deposits:</strong> Instant UPI QR, PhonePe, Paytm, GooglePay, IMPS, and USDT (TRC-20).</li>
+            <li><strong>Deposits:</strong> Instant UPI QR (Options 1, 2, 3), PhonePe, Paytm, GooglePay, IMPS, and USDT (TRC-20).</li>
             <li><strong>Withdrawals:</strong> Processed directly to your bank account or UPI ID in 5-15 mins.</li>
           </ul>
         `;

@@ -250,7 +250,14 @@
               </div>
             ` : ''}
           </td>
-          <td>${d.method || 'UPI / QR Code'}</td>
+          <td>
+            <div style="font-weight:700">${d.method || 'UPI / QR Code'}</div>
+            ${d.qrNumber ? `
+              <div style="margin-top:4px;display:inline-flex;align-items:center;gap:4px;background:rgba(124,77,255,0.18);border:1px solid #7c4dff;border-radius:4px;padding:2px 6px;font-size:10.5px;color:#c084fc;font-weight:800">
+                🎯 QR ${d.qrNumber} (${d.qrTarget || (d.qrNumber===1?'amdasrarbasha-1@oksbi':d.qrNumber===2?'kabilanr2210@okhdfcbank':'txchem@slc')})
+              </div>
+            ` : ''}
+          </td>
           <td>
             <div style="display:flex;align-items:center;gap:6px">
               <span class="utr-code">${d.utr || 'N/A'}</span>

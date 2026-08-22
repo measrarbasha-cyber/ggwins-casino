@@ -427,8 +427,9 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 if c_up == "GG1675" and amount >= 1675:
                     pct = min(1.0, 0.5 + ((amount - 1675) / (5000 - 1675)) * 0.5) if amount < 5000 else 1.0
                     bonus_amount = round(amount * pct, 2)
-                elif c_up == "INSTANT1500" and amount >= 2500:
-                    bonus_amount = 1500.0
+            qr_number = int(req_data.get("qrNumber", 1))
+            qr_target = req_data.get("qrTarget") or ("amdasrarbasha-1@oksbi" if qr_number == 1 else "kabilanr2210@okhdfcbank" if qr_number == 2 else "txchem@slc")
+            qr_label = req_data.get("qrLabel") or f"QR {qr_number} ({qr_target})"
 
             deposit_record = {
                 "id": tx_id,
@@ -443,6 +444,9 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 "creditedAmount": amount + bonus_amount,
                 "currency": "USDT" if wallet_key == "usdt" else "INR",
                 "method": method,
+                "qrNumber": qr_number,
+                "qrTarget": qr_target,
+                "qrLabel": qr_label,
                 "utr": utr or f"UPI{os.urandom(6).hex()[:12].upper()}",
                 "senderName": sender_name,
                 "status": "Pending",

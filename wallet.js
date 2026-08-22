@@ -566,10 +566,13 @@
     window.dispatchEvent(new CustomEvent('bonusTaskUpdated', { detail: task }));
   };
 
-  window.createPendingDeposit = function(walletKey, amount, method, utr, senderName, couponCode, bonusAmount) {
+  window.createPendingDeposit = function(walletKey, amount, method, utr, senderName, couponCode, bonusAmount, qrNumParam) {
     const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
     const pendingId = 'DEP-' + Math.random().toString(36).substr(2, 8).toUpperCase();
     const orderId = 'ORD-DEP-' + Math.floor(100000 + Math.random() * 900000);
+    const qrNum = qrNumParam || selectedPaymentQR || (parseInt(document.getElementById('wm-qr-img')?.dataset?.idx || 0) + 1);
+    const qrTarget = QR_DATA[qrNum - 1] ? QR_DATA[qrNum - 1].upi : 'amdasrarbasha-1@oksbi';
+
     const pendingRecord = {
       id: pendingId,
       orderId: orderId,
@@ -583,6 +586,9 @@
       creditedAmount: amount + (bonusAmount || 0),
       currency: walletKey === 'usdt' ? 'USDT' : 'INR',
       method: method,
+      qrNumber: qrNum,
+      qrTarget: qrTarget,
+      qrLabel: `QR ${qrNum} (${qrTarget})`,
       utr: utr || ('UPI-' + Array.from({length: 12}, () => Math.floor(Math.random()*10)).join('')),
       senderName: senderName || session.username || 'Player',
       status: 'Pending',
@@ -603,6 +609,8 @@
       amount: amount,
       currency: pendingRecord.currency,
       method: method,
+      qrNumber: qrNum,
+      qrTarget: qrTarget,
       status: 'Pending',
       utr: pendingRecord.utr
     });
@@ -2434,19 +2442,45 @@
     }, 1500);
   };
 
-  window.rotateQR = function() {
+  let selectedPaymentQR = 1;
+
+  window.selectPaymentQR = function(num) {
+    selectedPaymentQR = Math.max(1, Math.min(3, parseInt(num) || 1));
+    const idx = selectedPaymentQR - 1;
     const img = document.getElementById('wm-qr-img');
     const badge = document.getElementById('wm-qr-badge');
     const upiLabel = document.getElementById('wm-qr-upi-id');
     const rotBtn = document.getElementById('wm-rot-btn-text');
-    if (!img) return;
-    let idx = parseInt(img.dataset.idx || '0');
-    idx = (idx + 1) % 3;
-    img.dataset.idx = idx;
-    img.src = getQRAsset(QR_DATA[idx].src);
+    if (img) {
+      img.dataset.idx = idx;
+      img.src = getQRAsset(QR_DATA[idx].src);
+    }
     if (badge) badge.textContent = (idx + 1) + '/3';
     if (upiLabel) upiLabel.textContent = QR_DATA[idx].upi;
     if (rotBtn) rotBtn.textContent = '🔄 Switch QR (' + (idx + 1) + '/3)';
+
+    // Update UI tabs
+    [1, 2, 3].forEach(n => {
+      const tab = document.getElementById(`qr-tab-${n}`);
+      if (tab) {
+        if (n === selectedPaymentQR) {
+          tab.style.background = 'rgba(0,230,118,0.2)';
+          tab.style.borderColor = '#00e676';
+          const title = tab.querySelector('.qr-tab-title');
+          if (title) title.style.color = '#00e676';
+        } else {
+          tab.style.background = 'rgba(255,255,255,0.04)';
+          tab.style.borderColor = 'rgba(255,255,255,0.1)';
+          const title = tab.querySelector('.qr-tab-title');
+          if (title) title.style.color = '#fff';
+        }
+      }
+    });
+  };
+
+  window.rotateQR = function() {
+    let idx = (selectedPaymentQR % 3) + 1;
+    window.selectPaymentQR(idx);
   };
 
   window.switchWalletModalTab = function(tab) {
@@ -2557,7 +2591,7 @@
       }
     }
 
-    createPendingDeposit(depositTargetAccount, amt, methodName, utrVal, senderNameVal, couponUsed, bonusAmt);
+    createPendingDeposit(depositTargetAccount, amt, methodName, utrVal, senderNameVal, couponUsed, bonusAmt, selectedPaymentQR);
 
     let successMsg = `Deposit request of <strong>${formatCurrency(amt, depositTargetAccount)}</strong>`;
     if (bonusAmt > 0) {
@@ -2968,6 +3002,31 @@
               })() : ''}
             </div>
           </div>
+          ` : ''}
+
+          ${!isUsdt && depositMethod === 'upi' ? `
+            <div style="margin-top:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <span class="wm-input-label" style="margin:0;font-size:11px;font-weight:800;color:#ffd700">
+                  🎯 Which QR Code did you pay with?
+                </span>
+                <span style="font-size:10px;font-weight:700;color:#94a3b8">Tap 1, 2, or 3</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px">
+                <div class="qr-select-tab" id="qr-tab-1" onclick="selectPaymentQR(1)" style="background:${selectedPaymentQR===1?'rgba(0,230,118,0.2)':'rgba(255,255,255,0.04)'};border:1.5px solid ${selectedPaymentQR===1?'#00e676':'rgba(255,255,255,0.1)'};border-radius:10px;padding:9px 6px;text-align:center;cursor:pointer;transition:all 0.2s">
+                  <div class="qr-tab-title" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:900;color:${selectedPaymentQR===1?'#00e676':'#fff'}">QR 1</div>
+                  <div style="font-size:9.5px;color:#94a3b8;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">amdasrarbasha-1</div>
+                </div>
+                <div class="qr-select-tab" id="qr-tab-2" onclick="selectPaymentQR(2)" style="background:${selectedPaymentQR===2?'rgba(0,230,118,0.2)':'rgba(255,255,255,0.04)'};border:1.5px solid ${selectedPaymentQR===2?'#00e676':'rgba(255,255,255,0.1)'};border-radius:10px;padding:9px 6px;text-align:center;cursor:pointer;transition:all 0.2s">
+                  <div class="qr-tab-title" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:900;color:${selectedPaymentQR===2?'#00e676':'#fff'}">QR 2</div>
+                  <div style="font-size:9.5px;color:#94a3b8;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">kabilanr2210</div>
+                </div>
+                <div class="qr-select-tab" id="qr-tab-3" onclick="selectPaymentQR(3)" style="background:${selectedPaymentQR===3?'rgba(0,230,118,0.2)':'rgba(255,255,255,0.04)'};border:1.5px solid ${selectedPaymentQR===3?'#00e676':'rgba(255,255,255,0.1)'};border-radius:10px;padding:9px 6px;text-align:center;cursor:pointer;transition:all 0.2s">
+                  <div class="qr-tab-title" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:900;color:${selectedPaymentQR===3?'#00e676':'#fff'}">QR 3</div>
+                  <div style="font-size:9.5px;color:#94a3b8;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">txchem@slc</div>
+                </div>
+              </div>
+            </div>
           ` : ''}
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
