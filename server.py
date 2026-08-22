@@ -355,12 +355,12 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 referrer_user = next((u for u in users if u.get("username", "").upper() == ref_code or u.get("id", "").upper() == ref_code or f"GG-{u.get('username','').upper()}" == ref_code), None)
                 if referrer_user and referrer_user.get("id") != user_id:
                     referred_by = referrer_user["username"]
-                    # Add ₹250.00 Real Cash to the Referrer!
+                    # Add ₹50.00 Real Cash to the Referrer!
                     referrer_user.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
-                    referrer_user["wallets"]["real"] = referrer_user["wallets"].get("real", 0.0) + 250.0
+                    referrer_user["wallets"]["real"] = referrer_user["wallets"].get("real", 0.0) + 50.0
                     referrer_user.setdefault("stats", {})
                     referrer_user["stats"]["referralCount"] = referrer_user["stats"].get("referralCount", 0) + 1
-                    referrer_user["stats"]["referralEarnings"] = referrer_user["stats"].get("referralEarnings", 0.0) + 250.0
+                    referrer_user["stats"]["referralEarnings"] = referrer_user["stats"].get("referralEarnings", 0.0) + 50.0
 
                     ref_tx_id = f"REF-{os.urandom(4).hex().upper()}"
                     ref_tx = {
@@ -370,11 +370,11 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                         "username": referrer_user["username"],
                         "type": "deposit",
                         "wallet": "real",
-                        "amount": 250.0,
+                        "amount": 50.0,
                         "currency": "INR",
                         "method": "Refer & Earn Reward",
                         "status": "Completed",
-                        "description": f"Earned ₹250 referral reward for inviting {username}",
+                        "description": f"Earned ₹50 referral reward for inviting {username}",
                         "timestamp": int(time.time() * 1000)
                     }
                     referrer_user.setdefault("transactions", []).insert(0, ref_tx)
