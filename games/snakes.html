@@ -562,33 +562,20 @@ function startPoolMatch() {
   if (matchActive) return;
   const pool = POOLS[activePool];
 
-  // Get real and active wallet balances
-  const wallets = typeof getWallets === 'function' ? getWallets() : (JSON.parse(localStorage.getItem('ggwins_wallets_v2') || '{"demo":10000,"real":0,"usdt":0}'));
-  const activeKey = typeof getActiveWalletKey === 'function' ? getActiveWalletKey() : 'demo';
-  const currentBal = wallets[activeKey] !== undefined ? wallets[activeKey] : 0;
-
+  const currentBal = typeof getBalance === 'function' ? getBalance() : 10000;
   if (currentBal < pool.entry) {
     if (typeof showToast === 'function') {
-      showToast(`Insufficient balance in ${activeKey.toUpperCase()} account (₹${currentBal.toFixed(2)}). Need ₹${pool.entry}.`, 'error');
+      showToast(`Insufficient balance (₹${currentBal.toFixed(2)}). Need ₹${pool.entry}.`, 'error');
     }
     if (typeof openWalletModal === 'function') {
       openWalletModal('deposit');
-    } else {
-      alert(`Insufficient balance! Please deposit ₹${pool.entry} to join.`);
     }
     return;
   }
 
-  // Deduct entry fee immediately from player's balance
-  wallets[activeKey] = Math.max(0, wallets[activeKey] - pool.entry);
-  if (typeof saveWallets === 'function') {
-    saveWallets(wallets);
-  } else {
-    localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
-  }
-
-  if (typeof showToast === 'function') {
-    showToast(`Deducted ₹${pool.entry} entry from ${activeKey.toUpperCase()} balance. Joined ${pool.name}!`, 'info');
+  // Deduct entry fee immediately from active balance
+  if (typeof setBalance === 'function') {
+    setBalance(currentBal - pool.entry);
   }
 
   matchActive = true;
@@ -721,17 +708,11 @@ function handleGameOver(winner) {
     const profit = pool.prize - pool.entry;
     statsProfit += profit;
 
-    // Credit Prize directly to player's balance
-    const wallets = typeof getWallets === 'function' ? getWallets() : (JSON.parse(localStorage.getItem('ggwins_wallets_v2') || '{"demo":10000,"real":0,"usdt":0}'));
-    const activeKey = typeof getActiveWalletKey === 'function' ? getActiveWalletKey() : 'demo';
-    wallets[activeKey] = (wallets[activeKey] || 0) + pool.prize;
-    if (typeof saveWallets === 'function') saveWallets(wallets);
-
-    if (typeof showToast === 'function') {
-      showToast(`🏆 Credited 1st Prize +₹${pool.prize.toLocaleString()} to ${activeKey.toUpperCase()} balance!`, 'success');
+    // Credit Prize directly to active balance
+    if (typeof setBalance === 'function') {
+      setBalance(getBalance() + pool.prize);
     }
 
-    if (typeof flashBal === 'function') flashBal('flash-win');
     launchSnakesConfetti();
 
     resContainer.innerHTML = `
