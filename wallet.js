@@ -3542,17 +3542,23 @@
     }
   });
 
-  // Auto initialize on DOMContentLoaded
-  document.addEventListener('DOMContentLoaded', () => {
+  // Auto initialize on DOMContentLoaded and immediate
+  function initWalletUI() {
     injectWalletStyles();
     injectWalletModalHTML();
     updateAllWalletDisplays();
 
     const target = document.getElementById('wallet-chip-target') || document.querySelector('.lobby-balance-chip');
-    if (target && !document.getElementById('ggwins-wallet-switcher')) {
+    if (target) {
       target.id = 'wallet-chip-target';
       renderWalletSwitcherWidget(target);
     }
-  });
+  }
 
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWalletUI);
+  } else {
+    initWalletUI();
+  }
+  window.addEventListener('load', initWalletUI);
 })();

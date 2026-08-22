@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -12,51 +12,61 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  overflow: auto;
+  padding: 16px 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
-  background: radial-gradient(ellipse at 50% 60%, #1e1022 0%, #07040a 100%);
+  background: radial-gradient(ellipse at 50% 50%, #1a102f 0%, #080511 100%);
+  width: 100%;
+  min-height: 400px;
 }
 .tower-container {
   display: flex;
   flex-direction: column-reverse;
-  gap: 6px;
-  width: min(420px, 92vw);
-  perspective: 1000px;
+  gap: 8px;
+  width: 100%;
+  max-width: 440px;
+  margin: auto;
+  padding: 10px 0 10px 60px;
+  position: relative;
 }
 .tower-row {
   display: flex;
-  gap: 6px;
-  background: rgba(255,255,255,0.03);
-  border-radius: 10px;
-  padding: 4px;
-  border: 1px solid rgba(255,255,255,0.06);
-  transition: all 0.3s;
+  gap: 8px;
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 12px;
+  padding: 6px;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.25s ease;
   position: relative;
+  width: 100%;
 }
 .tower-row.active-row {
-  background: rgba(124,77,255,0.15);
-  border-color: #7c4dff;
-  box-shadow: 0 0 20px rgba(124,77,255,0.3);
+  background: linear-gradient(135deg, rgba(124, 77, 255, 0.25), rgba(0, 230, 118, 0.15));
+  border-color: #00e676;
+  box-shadow: 0 0 25px rgba(0, 230, 118, 0.4);
+  transform: scale(1.02);
 }
 .row-mult-tag {
   position: absolute;
-  left: -55px;
+  left: -58px;
   top: 50%;
   transform: translateY(-50%);
   font-family: 'Space Grotesk', sans-serif;
-  font-weight: 800;
-  font-size: 11px;
+  font-weight: 900;
+  font-size: 12px;
   color: #ffd700;
-  width: 45px;
+  width: 50px;
   text-align: right;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 .tower-tile {
   flex: 1;
-  height: 48px;
-  background: linear-gradient(145deg, #241432, #12091a);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
+  min-height: 44px;
+  height: 44px;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,10 +74,13 @@
   cursor: pointer;
   user-select: none;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 .tower-tile:hover:not(.disabled) {
-  border-color: #ffd700;
-  transform: scale(1.04);
+  border-color: #00e676;
+  background: #27364f;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 0 15px rgba(0, 230, 118, 0.6);
 }
 .tower-tile.egg {
   background: radial-gradient(circle, #059669 0%, #064e3b 100%);
@@ -89,7 +102,7 @@
 }
 .tower-tile.disabled {
   cursor: default;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 </style>
 <script src="../security-guard.js"></script>
@@ -109,17 +122,7 @@
   <span class="gnav-game-badge" style="background:#ff6b35;color:#fff">ORIGINAL</span>
   <button class="btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer">🔊</button>
   <div class="gnav-spacer"></div>
-  <div id="wallet-chip-target">
-    <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
-      <button class="wallet-chip-btn" onclick="toggleWalletDropdown(event)">
-        <span class="wallet-active-icon">🎮</span>
-        <span class="wallet-active-name" style="color:#94a3b8;font-size:11px">Demo INR</span>
-        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
-        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
-        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-    </div>
-  </div>
+  <div id="wallet-chip-target"></div>
   <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
     💳 Deposit
   </button>
