@@ -67,33 +67,24 @@
 
   // ── INITIAL STORAGE SETUP ────────────────────────────────────
   function initWalletStorage() {
-    const rawV2 = localStorage.getItem('ggwins_wallets_v2');
-    const rawV1 = localStorage.getItem('ggwins_wallets');
     let wallets = null;
     try {
+      const rawV2 = localStorage.getItem('ggwins_wallets_v2');
+      const rawV1 = localStorage.getItem('ggwins_wallets');
       wallets = JSON.parse(rawV2 || rawV1);
     } catch(e){}
 
-    const txs = JSON.parse(localStorage.getItem('ggwins_transactions') || '[]');
-    const hasApprovedDeposit = txs.some(t => t.type === 'deposit' && (t.status === 'Completed' || t.status === 'Approved') && t.wallet === 'real');
-
-    if (!wallets) {
+    if (!wallets || typeof wallets !== 'object') {
       wallets = {
         demo: 10000.00,
         real: 0.00,
         usdt: 0.00
       };
     } else {
-      // Enforce 0rs default for real and USDT unless legitimately approved
-      if (wallets.real === 25000 || (!hasApprovedDeposit && wallets.real > 0 && !localStorage.getItem('ggwins_session'))) {
-        wallets.real = 0.00;
-      }
-      if (wallets.usdt === 500) {
-        wallets.usdt = 0.00;
-      }
-      if (typeof wallets.demo !== 'number' || isNaN(wallets.demo)) {
-        wallets.demo = 10000.00;
-      }
+      // 🛡️ Permanently preserve user's remaining balance across refresh/restart
+      wallets.demo = typeof wallets.demo === 'number' && !isNaN(wallets.demo) ? wallets.demo : 10000.00;
+      wallets.real = typeof wallets.real === 'number' && !isNaN(wallets.real) ? Math.max(0, wallets.real) : 0.00;
+      wallets.usdt = typeof wallets.usdt === 'number' && !isNaN(wallets.usdt) ? Math.max(0, wallets.usdt) : 0.00;
     }
     localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
     localStorage.setItem('ggwins_wallets', JSON.stringify(wallets));
