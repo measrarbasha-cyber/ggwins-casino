@@ -2323,22 +2323,38 @@
   let withdrawSourceAccount = 'real';
 
   window.openWalletModal = function(tab) {
-    // Only allow logged-in users to access deposit/withdraw
-    const session = typeof getSession === 'function' ? getSession() : JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+    let session = null;
+    try {
+      session = typeof getSession === 'function' ? getSession() : JSON.parse(localStorage.getItem('ggwins_session') || 'null');
+      if (!session && typeof getPersistentCookie === 'function') {
+        const cookieData = getPersistentCookie('ggwins_persistent_user');
+        if (cookieData) {
+          session = JSON.parse(cookieData);
+          localStorage.setItem('ggwins_session', JSON.stringify(session));
+        }
+      }
+    } catch(e){}
+
     if (!session) {
-      // Close wallet if accidentally open
+      // Close wallet if open
       const existingModal = document.getElementById('ggwins-wallet-modal');
       if (existingModal) existingModal.classList.remove('active');
-      // Show login modal
-      if (typeof openModal === 'function') {
+
+      // Open auth modal
+      if (typeof openAuthModal === 'function') {
+        openAuthModal('login');
+      } else if (typeof openModal === 'function') {
         openModal('login');
       }
-      // Show toast
+
       if (typeof showToast === 'function') {
-        showToast('⚠️ Please sign in or register to deposit or withdraw.', 'error');
+        showToast('⚠️ Please sign in or register to make a deposit.', 'info');
+      } else if (typeof showToastMsg === 'function') {
+        showToastMsg('⚠️ Please sign in or register to make a deposit.');
       }
       return;
     }
+
     injectWalletStyles();
     injectWalletModalHTML();
     if (tab) activeModalTab = tab;
