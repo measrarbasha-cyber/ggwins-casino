@@ -263,7 +263,7 @@
     <div class="stats-row">
       <div class="stat-box">
         <div class="stat-box-label">Net Profit</div>
-        <div class="stat-box-val" id="stat-profit">$0.00</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">Wins</div>
@@ -573,7 +573,7 @@ function resolveResults(results, amt){
 
 function showWinOverlay(mult, amount){
   document.getElementById('sr-mult').textContent = mult + '×';
-  document.getElementById('sr-amount').textContent = '+$'+amount.toFixed(2);
+  document.getElementById('sr-amount').textContent = '+₹'+amount.toFixed(2);
   document.getElementById('spin-result').classList.add('visible');
   setTimeout(()=>document.getElementById('spin-result').classList.remove('visible'), 2500);
 }
@@ -609,7 +609,7 @@ function showResult(won, amount){
   const c=document.getElementById('result-container');
   c.innerHTML=`<div class="result-box ${won?'win':'lose'}">
     <div class="result-box-title">${won?'🎰 Winner!':'No match'}</div>
-    <div class="result-box-val">${won?'+$'+amount.toFixed(2):'-$'+amount.toFixed(2)}</div>
+    <div class="result-box-val">${won?'+₹'+amount.toFixed(2):'-₹'+amount.toFixed(2)}</div>
   </div>`;
   setTimeout(()=>c.innerHTML='',3000);
 }

@@ -476,6 +476,7 @@ function selectLevel(cups, mult, label){
 }
 
 function renderCups(){
+  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   const rack = document.getElementById('cups-rack');
   rack.innerHTML = '';
   for(let i=0; i<numCups; i++){
@@ -516,6 +517,7 @@ updateBetLabels();
 
 
 function startCupsGame(){
+  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   if(!requireAuth()) return;
   if(isShuffling || isGuessing) return;
 
@@ -599,6 +601,7 @@ function startCupsGame(){
 }
 
 function pickCup(chosenIndex){
+  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   if(!isGuessing) return;
   isGuessing = false;
 
@@ -685,6 +688,7 @@ function pickCup(chosenIndex){
 }
 
 function launchCupsConfetti(){
+  const isDemo = (typeof window.getActiveWalletKey === "function" ? window.getActiveWalletKey() : (localStorage.getItem("ggwins_active_wallet") || "demo")) === "demo";
   const canvas = document.getElementById('cups-confetti');
   const ctx = canvas.getContext('2d');
   canvas.width  = canvas.parentElement.clientWidth;

@@ -219,7 +219,7 @@
     <div class="stats-row">
       <div class="stat-box">
         <div class="stat-box-label">Net Profit</div>
-        <div class="stat-box-val" id="stat-profit">$0.00</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
       </div>
       <div class="stat-box">
         <div class="stat-box-label">Wins</div>
@@ -270,7 +270,7 @@ function updateOdds(){
   const chance = Math.min(99, 0.82 / target * 100);
   const betAmt = parseFloat(document.getElementById('bet-amount').value) || 1;
   document.getElementById('win-chance').textContent = chance.toFixed(2) + '%';
-  document.getElementById('profit-on-win').textContent = '$' + (betAmt * (target - 1)).toFixed(2);
+  document.getElementById('profit-on-win').textContent = '₹' + (betAmt * (target - 1)).toFixed(2);
   document.getElementById('target-disp').textContent = target.toFixed(2) + '×';
 }
 
@@ -375,7 +375,7 @@ function showResult(won, amount){
   const c = document.getElementById('result-container');
   c.innerHTML=`<div class="result-box ${won?'win':'lose'}">
     <div class="result-box-title">${won?'🎉 You Won!':'💸 You Lost'}</div>
-    <div class="result-box-val">${won?'+$'+amount.toFixed(2):'-$'+amount.toFixed(2)}</div>
+    <div class="result-box-val">${won?'+₹'+amount.toFixed(2):'-₹'+amount.toFixed(2)}</div>
   </div>`;
   setTimeout(()=>c.innerHTML='',3000);
 }
