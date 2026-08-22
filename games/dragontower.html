@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -232,17 +232,27 @@ function buildTower(){
     container.appendChild(row);
   });
 }
-buildTower();
 
-document.querySelectorAll('#diff-ctrl .seg-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if(gameActive) return;
-    document.querySelectorAll('#diff-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentDiff = btn.dataset.diff;
-    buildTower();
+function initDragonTower() {
+  buildTower();
+  document.querySelectorAll('#diff-ctrl .seg-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(gameActive) return;
+      document.querySelectorAll('#diff-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentDiff = btn.dataset.diff;
+      buildTower();
+    });
   });
-});
+}
+
+buildTower();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDragonTower);
+} else {
+  initDragonTower();
+}
+window.addEventListener('load', buildTower);
 
 function startTower(){ if(!requireAuth()) return;
   const amt = parseFloat(document.getElementById('bet-amount').value);
