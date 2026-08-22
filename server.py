@@ -185,15 +185,16 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
 
-    def do_GET(self):
-        try:
-            client_ip = self.headers.get("X-Forwarded-For", self.client_address[0]).split(",")[0].strip()
-            if is_rate_limited(client_ip, max_requests=180, window_sec=60):
-                self.send_json({"success": False, "error": "Rate limit exceeded. Please wait a moment."}, status=HTTPStatus.TOO_MANY_REQUESTS)
-                return
             parsed = urllib.parse.urlparse(self.path)
             url_path = urllib.parse.unquote(parsed.path)
             query = urllib.parse.parse_qs(parsed.query)
+
+            # Apply rate limiting to API endpoints only (allow unlimited static assets)
+            if url_path.startswith("/api/"):
+                client_ip = self.headers.get("X-Forwarded-For", self.client_address[0]).split(",")[0].strip()
+                if is_rate_limited(client_ip, max_requests=250, window_sec=60):
+                    self.send_json({"success": False, "error": "Rate limit exceeded. Please wait a moment."}, status=HTTPStatus.TOO_MANY_REQUESTS)
+                    return
 
             # ── 0. HEALTH CHECK ENDPOINT (FOR 24/7 WATCHDOG) ────────────
             if url_path == "/api/health" or url_path == "/health":
