@@ -277,6 +277,17 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                         "deposits": [d for d in db.get("deposits", []) if d.get("userId") == target_user.get("id") or d.get("username") == target_user.get("username")],
                         "withdrawals": [w for w in db.get("withdrawals", []) if w.get("userId") == target_user.get("id") or w.get("username") == target_user.get("username")],
                         "transactions": [t for t in db.get("transactions", []) if t.get("userId") == target_user.get("id") or t.get("username") == target_user.get("username")]
+                    })
+                else:
+                    self.send_json({
+                        "success": True,
+                        "wallets": db.get("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0}),
+                        "deposits": db.get("deposits", []),
+                        "withdrawals": db.get("withdrawals", []),
+                        "transactions": db.get("transactions", [])
+                    })
+                return
+
             # ── 4. ADMIN USER DETAILS & WALLET AUDIT ───────────────────
             elif url_path == "/api/admin/all-users":
                 users = db.get("users", [])
