@@ -210,7 +210,7 @@
           </div>
           <div class="mines-info-item">
             <div class="mines-info-label">Next Multiplier</div>
-            <div class="mines-info-val green" id="next-mult">1.16×</div>
+            <div class="mines-info-val green" id="next-mult">1.04×</div>
           </div>
           <div class="mines-info-item">
             <div class="mines-info-label">Current Payout</div>
@@ -316,7 +316,7 @@ const mcGrid = document.getElementById('mine-count-grid');
   mcGrid.appendChild(btn);
 });
 
-// Multiplier calculation (heavily reduced across all levels and all picks)
+// Multiplier calculation (substantially reduced multiplier curve)
 function calcMult(totalTiles, mines, safeRevealed){
   if(safeRevealed === 0) return 1.00;
   let prob = 1;
@@ -324,22 +324,22 @@ function calcMult(totalTiles, mines, safeRevealed){
     prob *= (totalTiles - mines - i) / (totalTiles - i);
   }
   
-  // Heavily reduced base multiplier scaling
-  let baseMult = 1.00 + (0.55 * (1.0 / prob - 1.0));
+  // Substantially reduced base multiplier scaling (house edge protected)
+  let baseMult = 1.00 + (0.28 * (1.0 / prob - 1.0));
 
-  // Tightly flatten multiplier gains after 3 gems
-  if (safeRevealed > 3) {
-    let p3 = 1;
-    for (let i = 0; i < 3; i++) {
-      p3 *= (totalTiles - mines - i) / (totalTiles - i);
+  // Tightly flatten multiplier gains after 2 gems
+  if (safeRevealed > 2) {
+    let p2 = 1;
+    for (let i = 0; i < 2; i++) {
+      p2 *= (totalTiles - mines - i) / (totalTiles - i);
     }
-    const multAt3 = 1.00 + (0.55 * (1.0 / p3 - 1.0));
-    const excess = baseMult - multAt3;
-    baseMult = multAt3 + (excess * 0.15);
+    const multAt2 = 1.00 + (0.28 * (1.0 / p2 - 1.0));
+    const excess = baseMult - multAt2;
+    baseMult = multAt2 + (excess * 0.10);
   }
 
-  // Cap extreme maximum multipliers
-  baseMult = Math.min(3.50, Math.max(1.02, baseMult));
+  // Maximum capped multiplier (tight casino control)
+  baseMult = Math.min(2.10, Math.max(1.03, baseMult));
 
   return parseFloat(baseMult.toFixed(2));
 }
