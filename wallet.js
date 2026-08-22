@@ -783,6 +783,9 @@
           }
           if (typeof updateAuthUI === 'function') updateAuthUI();
           if (typeof checkVipAccess === 'function') checkVipAccess();
+        }
+      }
+
       // 5. Direct Admin Balance Adjustment Live Sync
       if (data.wallets && typeof data.wallets === 'object') {
         const sReal = parseFloat(data.wallets.real);
