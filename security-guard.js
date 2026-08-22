@@ -38,9 +38,9 @@
     e.preventDefault();
     e.stopPropagation();
     if (typeof showToast === 'function') {
-      showToast('🔒 Protected Content © 2026 GG Wins. Copying is disabled.', 'error');
+      showToast('🔒 Protected Content 
     } else if (typeof showToastMsg === 'function') {
-      showToastMsg('🔒 Protected Content © 2026 GG Wins. Copying is disabled.');
+      showToastMsg('🔒 Protected Content 
     }
     return false;
   }, true);
@@ -140,6 +140,6 @@
   // 8. 🛡️ Console Security Watermark
   try {
     console.log("%c🔒 GG WINS FORTRESS SECURITY ACTIVE (256-BIT ENCRYPTED)", "color:#00e676; font-size:16px; font-weight:900; background:#0b0f19; padding:6px 12px; border-radius:6px; border:1px solid #00e676;");
-    console.log("%c© 2026 GG Wins Network Inc. All core assets, algorithms & transactions are digitally watermarked.", "color:#94a3b8; font-size:11px;");
+    console.log("%c
   } catch(e){}
 })();
