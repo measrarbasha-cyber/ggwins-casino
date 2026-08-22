@@ -563,8 +563,13 @@ function doubleBetVal(panel) {
 }
 
 function generateCrashPoint() {
+  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
+  if (isDemo) {
+    // 🌟 DEMO ACCOUNT: High multipliers (4.5x - 16x) for continuous winning
+    return parseFloat((4.50 + Math.random() * 11.50).toFixed(2));
+  }
   const r = Math.random();
-  // Heavily reduced crash points (conservative low-multiplier curve)
+  // Heavily reduced crash points (conservative low-multiplier curve for real money)
   if (r < 0.50) return parseFloat((1.02 + Math.random() * 0.18).toFixed(2)); // 1.02x - 1.20x
   if (r < 0.85) return parseFloat((1.21 + Math.random() * 0.35).toFixed(2)); // 1.21x - 1.56x
   if (r < 0.97) return parseFloat((1.57 + Math.random() * 0.50).toFixed(2)); // 1.57x - 2.07x
@@ -768,6 +773,18 @@ function launchFlight() {
 }
 
 function triggerCrash() {
+  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
+
+  // 🌟 DEMO ACCOUNT GUARANTEED WIN: If demo user has active bets, auto-cashout before crash!
+  if (isDemo) {
+    [1, 2].forEach(p => {
+      const b = (p === 1) ? bet1 : bet2;
+      if (b.active && !b.cashedOut) {
+        cashOutBet(p);
+      }
+    });
+  }
+
   gameState = 'crashed';
   playCrashBoom();
   addHistoryPill(crashPoint);

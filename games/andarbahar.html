@@ -424,10 +424,26 @@ function startAndarBahar() {
 
   let currentSide = 'andar';
   let matched = false;
+  let dealCount = 0;
+  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
 
   function dealNext() {
     if (matched) return;
-    const card = deck.pop();
+    dealCount++;
+
+    let card = deck.pop();
+
+    // 🌟 DEMO ACCOUNT GUARANTEED WIN: Ensure winning card lands on user's chosen side!
+    if (isDemo) {
+      if (currentSide === chosenSide && dealCount >= 2) {
+        // Force matching rank for user's side
+        card.rank = joker.rank;
+      } else if (currentSide !== chosenSide && card.rank === joker.rank) {
+        // Prevent match on opponent's side
+        card.rank = (joker.rank === 'A') ? 'K' : 'A';
+      }
+    }
+
     const targetSlot = document.getElementById(currentSide === 'andar' ? 'andar-cards' : 'bahar-cards');
     targetSlot.appendChild(renderCard(card));
 

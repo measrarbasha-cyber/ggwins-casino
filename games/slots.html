@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -350,10 +350,18 @@ function spin(){ if(!requireAuth()) return;
   spinning = true;
   document.getElementById('spin-btn').disabled = true;
   document.getElementById('spin-btn').classList.add('spinning');
-  // Generate house-biased results (85% near-miss / loss, 15% small win)
+
+  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
+
   let results;
-  if(Math.random() < 0.85){
-    // Force near miss: Pick a symbol for reels 0 and 1, then ensure reel 2 and beyond break the streak
+  if (isDemo) {
+    // 🌟 DEMO ACCOUNT GUARANTEED WIN: Always match 3, 4, or 5 top jackpot symbols!
+    const winSymbols = ['7️⃣', '💎', '👑', '🔔', '⭐', '🍀'];
+    const targetSym = winSymbols[Math.floor(Math.random() * winSymbols.length)];
+    const matchCount = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5 matches
+    results = Array(5).fill(null).map((_, i) => i < matchCount ? targetSym : SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+  } else if(Math.random() < 0.85){
+    // Force near miss for real money: Pick a symbol for reels 0 and 1, then ensure reel 2 and beyond break the streak
     const s1 = weightedPick();
     const otherSymbols = SYMBOLS.filter(s => s !== s1);
     results = [

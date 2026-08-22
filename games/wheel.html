@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -336,9 +336,16 @@ function spinWheel(){ if(!requireAuth()) return;
   const count = segments.length;
   const arc = (Math.PI * 2) / count;
 
-  // 🎯 Exactly 20% User Win Chance / 80% Loss Chance
+  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
+
   let targetIdx;
-  if(Math.random() < 0.80){
+  if (isDemo) {
+    // 🌟 DEMO ACCOUNT GUARANTEED WIN: Always land on profitable multiplier (>= 1.5x)!
+    const winIndices = [];
+    segments.forEach((s, idx) => { if(s.mult >= 1.5) winIndices.push(idx); });
+    targetIdx = winIndices.length > 0 ? winIndices[Math.floor(Math.random() * winIndices.length)] : 0;
+  } else if(Math.random() < 0.80){
+    // Real money odds: 20% win chance
     const lossIndices = [];
     segments.forEach((s, idx) => { if(s.mult === 0 || s.mult < 1.0) lossIndices.push(idx); });
     targetIdx = lossIndices.length > 0 ? lossIndices[Math.floor(Math.random() * lossIndices.length)] : 0;

@@ -909,9 +909,10 @@ function endCarromMatch() {
   }
 
   const pool = POOLS[activePool];
-  // Final score comparison after all coins are potted
-  const isPlayerWin = (playerPts > botPts);
-  const isDraw = (playerPts === botPts);
+  const isDemo = (typeof window.getActiveWalletKey === 'function' ? window.getActiveWalletKey() : (localStorage.getItem('ggwins_active_wallet') || 'demo')) === 'demo';
+  // 🌟 DEMO ACCOUNT GUARANTEED WIN: Player always wins in demo mode!
+  const isPlayerWin = isDemo || (playerPts > botPts);
+  const isDraw = !isDemo && (playerPts === botPts);
   const res = document.getElementById('result-container');
 
   if (isPlayerWin) {
