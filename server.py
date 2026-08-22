@@ -121,13 +121,29 @@ def load_db():
             return initial_data
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
                 data.setdefault("users", [])
                 data.setdefault("deposits", [])
                 data.setdefault("withdrawals", [])
                 data.setdefault("vip_requests", [])
                 data.setdefault("transactions", [])
                 data.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
+
+                # Automatically assign unique User IDs to any legacy/existing users without an ID
+                dirty = False
+                for u in data["users"]:
+                    if not u.get("id"):
+                        u["id"] = f"USER-{os.urandom(4).hex().upper()}"
+                        dirty = True
+                    if not u.get("wallets"):
+                        u["wallets"] = {"demo": 10000.0, "real": 0.0, "usdt": 0.0}
+                        dirty = True
+                if dirty:
+                    try:
+                        with open(DB_FILE, "w", encoding="utf-8") as wf:
+                            json.dump(data, wf, indent=2)
+                    except Exception:
+                        pass
+
                 return data
         except Exception:
             return {"users": [], "wallets": {"demo": 10000.0, "real": 0.0, "usdt": 0.0}, "deposits": [], "withdrawals": [], "vip_requests": [], "transactions": []}

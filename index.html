@@ -2841,7 +2841,11 @@
         if (userPill) userPill.style.display = 'flex';
         if (userLbl) userLbl.textContent = session.username;
         const userIdLbl = document.getElementById('user-id-lbl');
-        if (userIdLbl) userIdLbl.textContent = session.id ? `ID: ${session.id}` : '';
+        if (!session.id) {
+          session.id = 'USER-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+          localStorage.setItem('ggwins_session', JSON.stringify(session));
+        }
+        if (userIdLbl) userIdLbl.textContent = `ID: ${session.id}`;
 
         if (session.isVIP || session.vipApproved || (session.vipLevel && session.vipLevel !== 'Standard' && session.vipLevel !== 'Bronze_Pending')) {
           isVipApproved = true;
@@ -2852,6 +2856,10 @@
           const res = await fetch('/api/user-status?username=' + encodeURIComponent(session.username));
           const data = await res.json();
           if (data && data.user) {
+            if (data.user.id) {
+              session.id = data.user.id;
+              if (userIdLbl) userIdLbl.textContent = `ID: ${session.id}`;
+            }
             if (data.user.vipApproved || (data.user.vipLevel && !data.user.vipLevel.includes('Pending') && data.user.vipLevel !== 'Standard')) {
               isVipApproved = true;
               vipTierName = data.user.vipLevel;
