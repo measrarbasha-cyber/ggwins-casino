@@ -792,23 +792,15 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    .tourn-player-tag {
-      font-size: 8px;
+    }
+    .bot-tag {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid #38bdf8;
+      font-size: 7.5px;
       font-weight: 900;
-      padding: 1px 5px;
+      padding: 0 3px;
       border-radius: 3px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .tourn-player-tag.vip-tag {
-      background: linear-gradient(135deg, #ffd700, #ff8c00);
-      color: #000;
-      box-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
-    }
-    .tourn-player-tag.pro-tag {
-      background: rgba(0, 230, 118, 0.18);
-      color: #00e676;
-      border: 1px solid rgba(0, 230, 118, 0.4);
     }
     .tourn-score { font-weight: 800; color: var(--gold); }
     .btn-join-tourn {
@@ -2276,17 +2268,17 @@
               </div>
               <div class="tourn-row">
                 <span class="tourn-rank rank-1">#1</span>
-                <span class="tourn-user"><span>👑</span> @${t.bots[0].name} <span class="tourn-player-tag vip-tag">${t.bots[0].tag || 'VIP'}</span></span>
+                <span class="tourn-user"><span>👑</span> ${t.bots[0].name}</span>
                 <span class="tourn-score">${bot1Score.toLocaleString()} pts</span>
               </div>
               <div class="tourn-row">
                 <span class="tourn-rank rank-2">#2</span>
-                <span class="tourn-user"><span>🥈</span> @${t.bots[1].name} <span class="tourn-player-tag pro-tag">${t.bots[1].tag || 'PRO'}</span></span>
+                <span class="tourn-user">${t.bots[1].name}</span>
                 <span class="tourn-score">${bot2Score.toLocaleString()} pts</span>
               </div>
               <div class="tourn-row">
                 <span class="tourn-rank rank-3">#3</span>
-                <span class="tourn-user"><span>🥉</span> @${t.bots[2].name} <span class="tourn-player-tag pro-tag">${t.bots[2].tag || 'PRO'}</span></span>
+                <span class="tourn-user">${t.bots[2].name}</span>
                 <span class="tourn-score">${bot3Score.toLocaleString()} pts</span>
               </div>
               ${isJoined ? `
