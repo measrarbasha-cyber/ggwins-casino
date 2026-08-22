@@ -134,7 +134,6 @@
 
   // 8. 🛡️ Console Security Watermark
   try {
-    console.log("%c🔒 GG WINS FORTRESS SECURITY ACTIVE (256-BIT ENCRYPTED)", "color:#00e676; font-size:16px; font-weight:900; background:#0b0f19; padding:6px 12px; border-radius:6px; border:1px solid #00e676;");
-    console.log("%c
+    console.log("%c🔒 GG WINS SECURITY ACTIVE", "color:#00e676; font-size:14px; font-weight:900; background:#0b0f19; padding:4px 8px; border-radius:4px;");
   } catch(e){}
 })();
