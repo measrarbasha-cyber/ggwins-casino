@@ -699,20 +699,28 @@
     return false;
   }
 
-  // ── 9. BOOTSTRAP & 1-SECOND POLLING ─────────────────────────
+  // ── 9. BOOTSTRAP (MANUAL REFRESH ONLY • NO AUTO-RELOAD) ─────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     const isUnlocked = checkAdminSession();
     if (isUnlocked) {
       fetchAllData();
     }
-    // Poll every 1 second for instant real-time notifications
-    setInterval(() => {
-      const auth = sessionStorage.getItem('ggwins_admin_auth') || localStorage.getItem('ggwins_admin_auth');
-      if (auth) fetchAllData();
-    }, 1000);
 
     const refreshBtn = document.getElementById('refresh-btn');
-    if (refreshBtn) refreshBtn.addEventListener('click', fetchAllData);
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        refreshBtn.style.opacity = '0.5';
+        refreshBtn.style.pointerEvents = 'none';
+        fetchAllData().then(() => {
+          showNotification('🔄 Admin Data Refreshed Successfully!', '#38bdf8');
+        }).finally(() => {
+          setTimeout(() => {
+            refreshBtn.style.opacity = '1';
+            refreshBtn.style.pointerEvents = 'auto';
+          }, 600);
+        });
+      });
+    }
   });
 
 })();
