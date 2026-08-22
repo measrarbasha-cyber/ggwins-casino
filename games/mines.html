@@ -351,7 +351,7 @@ function getDynamicLoseChance(currentMines) {
   const isPostRecovery = getPostRecoveryFlag();
   const winStreak = getGameWinStreak();
 
-  // 1. 🔄 LOSS RECOVERY RULE: If user loses 9+ games in a row, boost winning probability significantly (85% win / 15% loss)
+  // 1. 🔄 LOSS RECOVERY RULE: If user loses 9+ games in a row, boost winning probability (85% win / 15% loss)
   if (loseStreak >= 9) {
     return 0.15; // 85% Winning chance
   }
@@ -361,24 +361,29 @@ function getDynamicLoseChance(currentMines) {
     return 0.75; // 75% Losing chance (Winning chance reduced to 25%)
   }
 
-  // 3. 🎯 STANDARD & ANTI-WIN-STREAK HOUSE EDGE
-  if (currentMines <= 10) {
-    // Base: 60% Winning Probability / 40% Losing Probability
-    let loseChance = 0.40;
+  // 3. 🎯 75% WINNING PROBABILITY FOR MINES 1, 2, 3, 4, 5, 6, 7, 8
+  if (currentMines >= 1 && currentMines <= 8) {
+    // Base: 75% Winning Probability / 25% Losing Probability
+    let loseChance = 0.25;
     
-    // If the user keeps on winning consecutive rounds, increase losing probability
+    // Anti-streak escalation on consecutive wins
     if (winStreak === 1) {
-      loseChance = 0.55; // 45% Win / 55% Loss
+      loseChance = 0.38; // 62% Win / 38% Loss
     } else if (winStreak === 2) {
-      loseChance = 0.68; // 32% Win / 68% Loss
+      loseChance = 0.55; // 45% Win / 55% Loss
     } else if (winStreak === 3) {
-      loseChance = 0.80; // 20% Win / 80% Loss
+      loseChance = 0.72; // 28% Win / 72% Loss
     } else if (winStreak >= 4) {
-      loseChance = 0.92; // 8% Win / 92% Loss
+      loseChance = 0.88; // 12% Win / 88% Loss
     }
     return loseChance;
+  } else if (currentMines <= 10) {
+    // For 10 mines: 55% Win / 45% Loss
+    let loseChance = 0.45;
+    if (winStreak >= 1) loseChance = Math.min(0.90, 0.45 + winStreak * 0.12);
+    return loseChance;
   } else {
-    // Mines > 10 (High Risk Mode)
+    // Mines > 10 (High Risk Mode: 12-24 mines)
     let loseChance = 0.75;
     if (currentMines >= 15) loseChance = 0.92;
     if (currentMines >= 20) loseChance = 0.98;
@@ -438,11 +443,22 @@ function clickTile(idx, tile){
   picksInRound++;
 
   let hitMine = false;
-  const loseChance = getDynamicLoseChance(mineCount);
+  const maxSafeGems = TOTAL - mineCount;
 
-  // Apply probability on pick
-  if (Math.random() < loseChance) {
+  // 🛑 RULE: NEVER ALLOW PLAYER TO FIND ALL GEMS (Trigger unavoidable mine on the last attempts)
+  if (picksInRound >= maxSafeGems) {
     hitMine = true;
+  } else {
+    const loseChance = getDynamicLoseChance(mineCount);
+    if (Math.random() < loseChance) {
+      hitMine = true;
+    } else {
+      hitMine = false;
+    }
+  }
+
+  // Ensure mine positions strictly match mineCount without adding extra mines
+  if (hitMine) {
     if (!minePositions.has(idx)) {
       // Clean swap: Remove an unrevealed mine so minePositions.size ALWAYS strictly equals mineCount!
       const unrevMines = Array.from(minePositions).filter(m => !revealed.has(m) && m !== idx);
@@ -452,7 +468,6 @@ function clickTile(idx, tile){
       minePositions.add(idx);
     }
   } else {
-    hitMine = false;
     if (minePositions.has(idx)) {
       minePositions.delete(idx);
       // Relocate mine to an unrevealed tile
