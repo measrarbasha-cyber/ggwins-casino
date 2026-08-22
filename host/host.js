@@ -833,7 +833,10 @@
   };
 
   window.searchUserWallet = async function(queryParam) {
-    const inputVal = queryParam || (document.getElementById('user-wallet-search-input')?.value || '').trim();
+    let inputVal = (queryParam || (document.getElementById('user-wallet-search-input')?.value || '')).trim();
+    // Strip quotes or hashes/at symbols if pasted
+    inputVal = inputVal.replace(/^["']|["']$/g, '').replace(/^[#@]/, '').trim();
+
     if (!inputVal) {
       alert('Please enter a User ID, Username, or Email to search.');
       return;
@@ -850,7 +853,8 @@
       }
 
       displayUserDetails(data);
-      showNotification(`✅ Loaded profile for @${data.user.username}`, '#00e676');
+      loadAllUsersDirectory();
+      showNotification(`✅ Loaded profile for @${data.user.username} (${data.user.id})`, '#00e676');
     } catch(e) {
       console.error(e);
       alert('Error connecting to server to search user.');

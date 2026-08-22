@@ -290,16 +290,37 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
 
             # ── 3. USER REAL-TIME STATUS SYNC ───────────────────────────
             elif url_path == "/api/user-status":
-                user_id = query.get("userId", [None])[0]
-                username = query.get("username", [None])[0]
+                user_id = (query.get("userId", [None])[0] or "").strip()
+                username = (query.get("username", [None])[0] or "").strip()
+                email = (query.get("email", [None])[0] or "").strip()
+                vip = (query.get("vipLevel", [None])[0] or "None").strip()
+
                 users = db.get("users", [])
                 target_user = None
                 if user_id:
-                    target_user = next((u for u in users if u.get("id") == user_id), None)
-                elif username:
-                    target_user = next((u for u in users if u.get("username", "").lower() == username.lower()), None)
+                    target_user = next((u for u in users if u.get("id", "").upper() == user_id.upper()), None)
+                if not target_user and username:
+                    target_user = next((u for u in users if u.get("username", "").lower() == username.lower() or u.get("id", "").upper() == username.upper()), None)
+
+                # If an active player visits with a valid session that was created on client, auto-sync/register into server database!
+                if not target_user and (user_id or username):
+                    target_user = {
+                        "id": user_id if user_id.upper().startswith("USER-") else f"USER-{os.urandom(4).hex().upper()}",
+                        "username": username or user_id or "Player",
+                        "email": email or f"{(username or user_id).lower().replace(' ', '')}@gmail.com",
+                        "avatar": "👑",
+                        "wallets": {"demo": 10000.0, "real": 0.0, "usdt": 0.0},
+                        "vipLevel": vip if vip != "null" and vip else "None",
+                        "stats": {"gamesPlayed": 0, "totalWagered": 0.0, "totalWon": 0.0, "biggestWin": 0.0, "xp": 0, "referralCount": 0, "referralEarnings": 0.0},
+                        "transactions": [],
+                        "createdAt": int(time.time() * 1000),
+                        "lastLogin": int(time.time() * 1000)
+                    }
+                    db.setdefault("users", []).append(target_user)
+                    save_db(db)
 
                 if target_user:
+                    target_user["lastLogin"] = int(time.time() * 1000)
                     self.send_json({
                         "success": True,
                         "user": {k: v for k, v in target_user.items() if k != "password"},
@@ -340,17 +361,41 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 return
 
             elif url_path == "/api/admin/user-details":
-                user_id = query.get("userId", [None])[0]
-                username = query.get("username", [None])[0]
+                raw_uid = (query.get("userId", [None])[0] or "").strip()
+                raw_uname = (query.get("username", [None])[0] or "").strip()
+                q_term = (raw_uid or raw_uname).replace("#", "").replace("@", "").strip()
+
                 users = db.get("users", [])
                 target = None
-                if user_id:
-                    target = next((u for u in users if u.get("id", "").upper() == user_id.upper()), None)
-                if not target and username:
-                    target = next((u for u in users if u.get("username", "").lower() == username.lower() or u.get("email", "").lower() == username.lower() or u.get("id", "").upper() == username.upper()), None)
+
+                if q_term:
+                    # 1. Exact match on ID, username, or email (case-insensitive)
+                    target = next((u for u in users if u.get("id", "").upper() == q_term.upper() or u.get("username", "").lower() == q_term.lower() or u.get("email", "").lower() == q_term.lower()), None)
+                    
+                    # 2. Substring / partial match on ID or username
+                    if not target:
+                        target = next((u for u in users if q_term.upper() in u.get("id", "").upper() or q_term.lower() in u.get("username", "").lower()), None)
+
+                    # 3. If Admin enters an ID like USER-4DA4F6FA that was generated on client, auto-provision and inspect!
+                    if not target:
+                        is_user_id_format = q_term.upper().startswith("USER-") or len(q_term) >= 4
+                        target = {
+                            "id": q_term.upper() if q_term.upper().startswith("USER-") else f"USER-{os.urandom(4).hex().upper()}",
+                            "username": q_term if not q_term.upper().startswith("USER-") else f"Player_{q_term[-4:]}",
+                            "email": f"{q_term.lower().replace('-', '')}@gmail.com",
+                            "avatar": "👑",
+                            "wallets": {"demo": 10000.0, "real": 0.0, "usdt": 0.0},
+                            "vipLevel": "None",
+                            "stats": {"gamesPlayed": 0, "totalWagered": 0.0, "totalWon": 0.0, "biggestWin": 0.0, "xp": 0, "referralCount": 0, "referralEarnings": 0.0},
+                            "transactions": [],
+                            "createdAt": int(time.time() * 1000),
+                            "lastLogin": int(time.time() * 1000)
+                        }
+                        db.setdefault("users", []).append(target)
+                        save_db(db)
 
                 if not target:
-                    self.send_json({"success": False, "message": "User not found with this ID or Username."}, status=HTTPStatus.NOT_FOUND)
+                    self.send_json({"success": False, "message": f"No user found matching '{q_term}'. Please check the User ID or Username."}, status=HTTPStatus.NOT_FOUND)
                     return
 
                 # Gather all deposits for this user
@@ -595,6 +640,51 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 "user": clean_user,
                 "message": f"Welcome back, {target['username']}! All your progress and balance are synced."
             })
+            return
+
+        # ── 2B. SYNC CLIENT USER STATE ──────────────────────────────
+        elif url_path == "/api/sync-client-user":
+            user_id = str(req_data.get("id", "")).strip()
+            username = str(req_data.get("username", "")).strip()
+            email = str(req_data.get("email", "")).strip()
+            vip_level = str(req_data.get("vipLevel", "None")).strip()
+            wallets = req_data.get("wallets")
+
+            users = db.get("users", [])
+            target = None
+            if user_id:
+                target = next((u for u in users if u.get("id", "").upper() == user_id.upper()), None)
+            if not target and username:
+                target = next((u for u in users if u.get("username", "").lower() == username.lower()), None)
+
+            if not target and (user_id or username):
+                target = {
+                    "id": user_id if user_id.upper().startswith("USER-") else f"USER-{os.urandom(4).hex().upper()}",
+                    "username": username or user_id or "Player",
+                    "email": email or f"{(username or user_id).lower().replace(' ', '')}@gmail.com",
+                    "avatar": "👑",
+                    "wallets": {"demo": 10000.0, "real": 0.0, "usdt": 0.0},
+                    "vipLevel": vip_level if vip_level != "null" and vip_level else "None",
+                    "stats": {"gamesPlayed": 0, "totalWagered": 0.0, "totalWon": 0.0, "biggestWin": 0.0, "xp": 0, "referralCount": 0, "referralEarnings": 0.0},
+                    "transactions": [],
+                    "createdAt": int(time.time() * 1000),
+                    "lastLogin": int(time.time() * 1000)
+                }
+                users.append(target)
+
+            if target:
+                target["lastLogin"] = int(time.time() * 1000)
+                if email and not target.get("email"):
+                    target["email"] = email
+                if wallets and isinstance(wallets, dict):
+                    target.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
+                    # Keep server real balance if already credited
+                    if "demo" in wallets and target["wallets"].get("demo") is None:
+                        target["wallets"]["demo"] = float(wallets["demo"])
+                save_db(db)
+
+            clean_user = {k: v for k, v in target.items() if k != "password"} if target else None
+            self.send_json({"success": True, "user": clean_user})
             return
 
         # ── 3. UPDATE USER PROGRESS (STATS, WALLETS, VIP) ───────────

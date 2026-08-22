@@ -647,9 +647,15 @@
   window.syncWalletStatusFromServer = async function() {
     try {
       const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
-      const url = session.id 
-        ? `/api/user-status?userId=${encodeURIComponent(session.id)}` 
-        : (session.username ? `/api/user-status?username=${encodeURIComponent(session.username)}` : '/api/user-status');
+      let url = '/api/user-status';
+      if (session && (session.id || session.username)) {
+        const p = new URLSearchParams();
+        if (session.id) p.append('userId', session.id);
+        if (session.username) p.append('username', session.username);
+        if (session.email) p.append('email', session.email);
+        if (session.vipLevel) p.append('vipLevel', session.vipLevel);
+        url = `/api/user-status?${p.toString()}`;
+      }
 
       const res = await fetch(url);
       if (!res.ok) return;
