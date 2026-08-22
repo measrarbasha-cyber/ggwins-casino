@@ -1,8 +1,3 @@
-/**
- * GG WINS MILITARY-GRADE CLIENT SECURITY & ANTI-TAMPER SHIELD
- * (C) 2026 GG Wins Network Inc. All Rights Reserved.
- * UNLAWFUL COPYING, REVERSE ENGINEERING, SCRAPING, OR TAMPERING IS BLOCKED & LOGGED.
- */
 (function() {
   'use strict';
 
