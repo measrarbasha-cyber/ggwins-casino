@@ -202,11 +202,50 @@
 
   window.getActiveBalance = window.getBalance;
 
+  window.showFloatingDelta = function(delta, walletKey) {
+    try {
+      const key = walletKey || getActiveWalletKey();
+      const cfg = WALLET_CONFIGS[key] || WALLET_CONFIGS.demo;
+      const num = Math.abs(parseFloat(delta || 0));
+      if (num === 0) return;
+
+      const isWin = delta > 0;
+      const text = (isWin ? '+' : '-') + (cfg.isCrypto ? `${num.toFixed(2)} ₮` : `₹${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+
+      const target = document.getElementById('wallet-chip-target') || document.querySelector('.wallet-switcher-container') || document.body;
+      const pill = document.createElement('div');
+      pill.className = `floating-bal-pill ${isWin ? 'win' : 'lose'}`;
+      pill.innerHTML = `<span>${isWin ? '🔺' : '🔻'}</span> <span>${text}</span>`;
+      
+      const rect = target.getBoundingClientRect();
+      pill.style.position = 'fixed';
+      pill.style.top = `${Math.max(10, rect.bottom + 6)}px`;
+      pill.style.left = `${Math.max(10, rect.left + rect.width / 2 - 40)}px`;
+      pill.style.zIndex = '999999';
+      document.body.appendChild(pill);
+
+      setTimeout(() => {
+        pill.remove();
+      }, 1400);
+    } catch(e) {}
+  };
+
   window.setBalance = function(val) {
     const wallets = getWallets();
     const key = getActiveWalletKey();
-    wallets[key] = Math.max(0, parseFloat(val) || 0);
+    const prev = parseFloat(wallets[key] !== undefined ? wallets[key] : 10000);
+    const next = Math.max(0, parseFloat(val) || 0);
+    const delta = next - prev;
+    wallets[key] = next;
     saveWallets(wallets);
+
+    if (delta > 0) {
+      if (typeof window.flashBal === 'function') window.flashBal('flash-win');
+      if (typeof window.showFloatingDelta === 'function') window.showFloatingDelta(delta, key);
+    } else if (delta < 0) {
+      if (typeof window.flashBal === 'function') window.flashBal('flash-lose');
+      if (typeof window.showFloatingDelta === 'function') window.showFloatingDelta(delta, key);
+    }
   };
 
   window.adjustBalance = function(delta, description) {
@@ -218,19 +257,24 @@
     wallets[key] = next;
     saveWallets(wallets);
 
-    if (change > 0 && typeof window.flashBal === 'function') window.flashBal('flash-win');
-    else if (change < 0 && typeof window.flashBal === 'function') window.flashBal('flash-lose');
+    if (change > 0) {
+      if (typeof window.flashBal === 'function') window.flashBal('flash-win');
+      if (typeof window.showFloatingDelta === 'function') window.showFloatingDelta(change, key);
+    } else if (change < 0) {
+      if (typeof window.flashBal === 'function') window.flashBal('flash-lose');
+      if (typeof window.showFloatingDelta === 'function') window.showFloatingDelta(change, key);
+    }
 
     return next;
   };
 
   window.flashBal = function(cls) {
-    const els = document.querySelectorAll('#bal-display, .gnav-balance-val, #gnav-balance-val, #lobby-balance-val');
+    const els = document.querySelectorAll('#bal-display, .gnav-balance-val, #gnav-balance-val, #lobby-balance-val, .wallet-chip-btn');
     els.forEach(el => {
       el.classList.remove('flash-win', 'flash-lose');
       void el.offsetWidth; // trigger reflow
       el.classList.add(cls);
-      setTimeout(() => el.classList.remove(cls), 600);
+      setTimeout(() => el.classList.remove(cls), 700);
     });
   };
 
@@ -1335,6 +1379,54 @@
     const style = document.createElement('style');
     style.id = 'ggwins-wallet-styles';
     style.textContent = `
+      /* Floating Balance Delta Notification Pill */
+      .floating-bal-pill {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 13.5px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        pointer-events: none;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+        animation: floatDelta 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+      .floating-bal-pill.win {
+        background: linear-gradient(135deg, #00e676, #00b0ff);
+        color: #000;
+        box-shadow: 0 0 25px rgba(0,230,118,0.8);
+      }
+      .floating-bal-pill.lose {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: #fff;
+        box-shadow: 0 0 25px rgba(239,68,68,0.8);
+      }
+      @keyframes floatDelta {
+        0% { opacity: 0; transform: translateY(-8px) scale(0.85); }
+        20% { opacity: 1; transform: translateY(0) scale(1.08); }
+        70% { opacity: 1; transform: translateY(6px) scale(1); }
+        100% { opacity: 0; transform: translateY(18px) scale(0.9); }
+      }
+
+      .flash-win {
+        animation: balPulseWin 0.6s ease;
+      }
+      @keyframes balPulseWin {
+        0% { box-shadow: 0 0 0 rgba(0,230,118,0); }
+        50% { box-shadow: 0 0 25px rgba(0,230,118,0.9); border-color: #00e676; }
+        100% { box-shadow: 0 0 0 rgba(0,230,118,0); }
+      }
+      .flash-lose {
+        animation: balPulseLose 0.6s ease;
+      }
+      @keyframes balPulseLose {
+        0% { box-shadow: 0 0 0 rgba(239,68,68,0); }
+        50% { box-shadow: 0 0 25px rgba(239,68,68,0.9); border-color: #ef4444; }
+        100% { box-shadow: 0 0 0 rgba(239,68,68,0); }
+      }
+
       /* Wallet Dropdown & Switcher */
       .wallet-switcher-container {
         position: relative;
