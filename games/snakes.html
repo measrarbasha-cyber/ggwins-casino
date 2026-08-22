@@ -806,6 +806,23 @@ window.addEventListener('load', () => {
   });
 });
 </script>
-<script src="../auth-guard.js"></script>
+<script src="../auth-guard.js">
+// ── UNIFIED BETTING PANEL CONTROLS ──
+function halveBet(){
+  const el = document.getElementById('bet-amount') || document.getElementById('bet-amt') || document.getElementById('wager-amount');
+  if(el){ el.value = Math.max(1, (parseFloat(el.value || 100) / 2)).toFixed(2); if(typeof updateBetLabels === 'function') updateBetLabels(); }
+}
+function doubleBet(){
+  const el = document.getElementById('bet-amount') || document.getElementById('bet-amt') || document.getElementById('wager-amount');
+  const bal = typeof getBalance === 'function' ? getBalance() : 50000;
+  if(el){ el.value = Math.min(bal, (parseFloat(el.value || 100) * 2)).toFixed(2); if(typeof updateBetLabels === 'function') updateBetLabels(); }
+}
+function maxBet(){
+  const el = document.getElementById('bet-amount') || document.getElementById('bet-amt') || document.getElementById('wager-amount');
+  const bal = typeof getBalance === 'function' ? getBalance() : 50000;
+  if(el){ el.value = Math.floor(bal).toFixed(2); if(typeof updateBetLabels === 'function') updateBetLabels(); }
+}
+
+</script>
 </body>
 </html>
