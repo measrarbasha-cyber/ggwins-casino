@@ -316,7 +316,47 @@ const mcGrid = document.getElementById('mine-count-grid');
   mcGrid.appendChild(btn);
 });
 
-// Multiplier calculation (substantially reduced multiplier curve)
+// 🎯 DYNAMIC PROBABILITY & ANTI-WIN-STREAK HOUSE EDGE ENGINE
+function getGameWinStreak() {
+  return parseInt(localStorage.getItem('ggwins_win_streak_mines') || '0');
+}
+function incrementGameWinStreak() {
+  const cur = getGameWinStreak();
+  localStorage.setItem('ggwins_win_streak_mines', (cur + 1).toString());
+}
+function resetGameWinStreak() {
+  localStorage.setItem('ggwins_win_streak_mines', '0');
+}
+
+function getDynamicLoseChance(currentMines) {
+  const winStreak = getGameWinStreak();
+  
+  if (currentMines <= 10) {
+    // Base: 60% Winning Probability / 40% Losing Probability
+    let loseChance = 0.40;
+    
+    // Adaptive anti-streak: If the user keeps on winning consecutive rounds, increase losing probability
+    if (winStreak === 1) {
+      loseChance = 0.52; // 48% Win / 52% Loss
+    } else if (winStreak === 2) {
+      loseChance = 0.65; // 35% Win / 65% Loss
+    } else if (winStreak === 3) {
+      loseChance = 0.78; // 22% Win / 78% Loss
+    } else if (winStreak >= 4) {
+      loseChance = 0.90; // 10% Win / 90% Loss
+    }
+    return loseChance;
+  } else {
+    // Mines > 10 (High Risk Mode)
+    let loseChance = 0.75;
+    if (currentMines >= 15) loseChance = 0.92;
+    if (currentMines >= 20) loseChance = 0.98;
+    if (winStreak >= 1) loseChance = Math.min(0.99, loseChance + 0.05);
+    return loseChance;
+  }
+}
+
+// Multiplier calculation (ultra-reduced multiplier curve with strict ceiling)
 function calcMult(totalTiles, mines, safeRevealed){
   if(safeRevealed === 0) return 1.00;
   let prob = 1;
@@ -324,8 +364,8 @@ function calcMult(totalTiles, mines, safeRevealed){
     prob *= (totalTiles - mines - i) / (totalTiles - i);
   }
   
-  // Substantially reduced base multiplier scaling (house edge protected)
-  let baseMult = 1.00 + (0.28 * (1.0 / prob - 1.0));
+  // Ultra-reduced base multiplier scaling (house edge protected)
+  let baseMult = 1.00 + (0.16 * (1.0 / prob - 1.0));
 
   // Tightly flatten multiplier gains after 2 gems
   if (safeRevealed > 2) {
@@ -333,13 +373,13 @@ function calcMult(totalTiles, mines, safeRevealed){
     for (let i = 0; i < 2; i++) {
       p2 *= (totalTiles - mines - i) / (totalTiles - i);
     }
-    const multAt2 = 1.00 + (0.28 * (1.0 / p2 - 1.0));
+    const multAt2 = 1.00 + (0.16 * (1.0 / p2 - 1.0));
     const excess = baseMult - multAt2;
-    baseMult = multAt2 + (excess * 0.10);
+    baseMult = multAt2 + (excess * 0.08);
   }
 
-  // Maximum capped multiplier (tight casino control)
-  baseMult = Math.min(2.10, Math.max(1.03, baseMult));
+  // Maximum capped multiplier (strict house ceiling)
+  baseMult = Math.min(1.75, Math.max(1.02, baseMult));
 
   return parseFloat(baseMult.toFixed(2));
 }
@@ -362,40 +402,18 @@ function buildGrid(){
   }
 }
 
-/* 🎯 DYNAMIC PROBABILITY MATRIX:
-   - For Mines 15, 18, 20, 22, 24: 0 free gems, 1% Win / 99% Loss from pick 1!
-   - For Mines < 15: First 2-3 gems guaranteed safe, then 25% Win / 75% Loss.
-*/
-let safePicksThreshold = 2;
-
 function clickTile(idx, tile){
   if(!gameActive || revealed.has(idx)) return;
   picksInRound++;
 
   let hitMine = false;
+  const loseChance = getDynamicLoseChance(mineCount);
 
-  // 1. Extreme Mine Counts (15, 18, 20, 22, 24): NO free gems, 1% Win / 99% Loss
-  if (mineCount >= 15) {
-    const loseChance = 0.99; // 99% Loss, 1% Win
-    if (Math.random() < loseChance) {
-      hitMine = true;
-      minePositions.add(idx);
-    } else {
-      hitMine = false;
-      if (minePositions.has(idx)) {
-        minePositions.delete(idx);
-        const unrevealed = [];
-        for (let i = 0; i < TOTAL; i++) {
-          if (!revealed.has(i) && i !== idx && !minePositions.has(i)) unrevealed.push(i);
-        }
-        if (unrevealed.length > 0) {
-          minePositions.add(unrevealed[Math.floor(Math.random() * unrevealed.length)]);
-        }
-      }
-    }
-  } 
-  // 2. Regular Mine Counts (< 15): First 2-3 gems safe, then 25% Win / 75% Loss
-  else if (picksInRound <= safePicksThreshold && (TOTAL - mineCount) >= picksInRound) {
+  // Apply probability on pick
+  if (Math.random() < loseChance) {
+    hitMine = true;
+    minePositions.add(idx);
+  } else {
     hitMine = false;
     if (minePositions.has(idx)) {
       minePositions.delete(idx);
@@ -406,25 +424,6 @@ function clickTile(idx, tile){
       }
       if (unrevealed.length > 0) {
         minePositions.add(unrevealed[Math.floor(Math.random() * unrevealed.length)]);
-      }
-    }
-  } else {
-    // After 2-3 gems for regular boards: 25% Win / 75% Loss
-    const loseChance = 0.75;
-    if (Math.random() < loseChance) {
-      hitMine = true;
-      minePositions.add(idx);
-    } else {
-      hitMine = false;
-      if (minePositions.has(idx)) {
-        minePositions.delete(idx);
-        const unrevealed = [];
-        for (let i = 0; i < TOTAL; i++) {
-          if (!revealed.has(i) && i !== idx && !minePositions.has(i)) unrevealed.push(i);
-        }
-        if (unrevealed.length > 0) {
-          minePositions.add(unrevealed[Math.floor(Math.random() * unrevealed.length)]);
-        }
       }
     }
   }
@@ -550,6 +549,7 @@ function endGame(won, cashed = false){
   document.querySelectorAll('.mc-btn').forEach(b => b.style.opacity = '');
 
   if(!won){
+    resetGameWinStreak();
     totalProfit -= betAmount;
     losses++;
     const mult = calcMult(TOTAL, mineCount, gemsFound);
@@ -559,6 +559,7 @@ function endGame(won, cashed = false){
     if(typeof trackGameWager === 'function') trackGameWager('GG Mines', betAmount, 0, false);
   } else if(!cashed){
     // Auto win (all gems found)
+    incrementGameWinStreak();
     const mult = calcMult(TOTAL, mineCount, gemsFound);
     const payout = betAmount * mult;
     if(typeof adjustBalance === 'function') adjustBalance(payout, 'GG Mines All Gems Found');
@@ -569,6 +570,8 @@ function endGame(won, cashed = false){
     if(typeof flashBal === 'function') flashBal('flash-win');
     if(typeof trackGameWager === 'function') trackGameWager('GG Mines', betAmount, payout, true);
   } else {
+    // Cashed out with win
+    incrementGameWinStreak();
     if(typeof flashBal === 'function') flashBal('flash-win');
   }
   updateStats();
