@@ -234,53 +234,6 @@
     });
   };
 
-  // ── 🔄 REAL-TIME SERVER BALANCE SYNCHRONIZER ──
-  window.syncWalletWithServer = async function() {
-    try {
-      const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
-      const userId = session.id || localStorage.getItem('ggwins_user_id') || '';
-      const username = session.username || '';
-      
-      if (!userId && !username) return;
-
-      const res = await fetch(`/api/user-status?userId=${encodeURIComponent(userId)}&username=${encodeURIComponent(username)}`, {
-        cache: 'no-store'
-      });
-      if (!res.ok) return;
-
-      const data = await res.json();
-      if (data && data.success && data.wallets) {
-        const localWallets = getWallets();
-        const serverWallets = data.wallets;
-        
-        let changed = false;
-        ['real', 'usdt'].forEach(k => {
-          if (serverWallets[k] !== undefined && Math.abs(parseFloat(serverWallets[k]) - parseFloat(localWallets[k] || 0)) > 0.009) {
-            localWallets[k] = parseFloat(serverWallets[k]);
-            changed = true;
-          }
-        });
-
-        if (changed) {
-          saveWallets(localWallets);
-          updateAllWalletDisplays();
-          if (typeof renderWalletSwitcherWidget === 'function') {
-            renderWalletSwitcherWidget();
-          }
-          window.dispatchEvent(new CustomEvent('walletChanged', {
-            detail: { wallet: getActiveWalletKey(), balance: getBalance() }
-          }));
-        }
-
-        // Also sync VIP level if updated by Admin
-        if (data.vipLevel && data.vipLevel !== localStorage.getItem('ggwins_vip_level')) {
-          localStorage.setItem('ggwins_vip_level', data.vipLevel);
-          if (typeof window.applyVipBadgeUI === 'function') window.applyVipBadgeUI();
-        }
-      }
-    } catch(e) {}
-  };
-
   // Cross-tab and return-to-page balance synchronizer
   window.addEventListener('storage', function(e) {
     if (e.key === 'ggwins_wallets_v2' || e.key === 'ggwins_active_wallet' || e.key === 'ggwins_balance') {
@@ -289,16 +242,7 @@
   });
   window.addEventListener('focus', function() {
     updateAllWalletDisplays();
-    syncWalletWithServer();
   });
-
-  // Run server wallet sync on load, focus, and every 2.5 seconds
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { setTimeout(syncWalletWithServer, 500); });
-  } else {
-    setTimeout(syncWalletWithServer, 500);
-  }
-  setInterval(syncWalletWithServer, 2500);
 
   window.formatCurrency = function(amount, walletKey) {
     const key = walletKey || getActiveWalletKey();

@@ -834,14 +834,13 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
 
             users = db.get("users", [])
             target = None
-            query_key = str(user_id or username or "").strip()
-            if query_key:
-                q_upper = query_key.upper()
-                q_lower = query_key.lower()
-                target = next((u for u in users if u.get("id", "").upper() == q_upper or u.get("username", "").lower() == q_lower or u.get("email", "").lower() == q_lower), None)
+            if user_id:
+                target = next((u for u in users if u.get("id", "").upper() == str(user_id).upper()), None)
+            if not target and username:
+                target = next((u for u in users if u.get("username", "").lower() == str(username).lower() or u.get("id", "").upper() == str(username).upper()), None)
 
             if not target:
-                self.send_json({"success": False, "message": f"User '{query_key}' not found in registered database."}, status=HTTPStatus.NOT_FOUND)
+                self.send_json({"success": False, "message": "User not found."}, status=HTTPStatus.NOT_FOUND)
                 return
 
             target.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
