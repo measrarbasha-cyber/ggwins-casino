@@ -733,14 +733,17 @@
     try {
       const session = JSON.parse(localStorage.getItem('ggwins_session') || '{}');
       let url = '/api/user-status';
-      if (session && (session.id || session.username)) {
-        const p = new URLSearchParams();
-        if (session.id) p.append('userId', session.id);
-        if (session.username) p.append('username', session.username);
-        if (session.email) p.append('email', session.email);
-        if (session.vipLevel) p.append('vipLevel', session.vipLevel);
-        url = `/api/user-status?${p.toString()}`;
-      }
+      const curLocalWallets = getWallets();
+
+      const p = new URLSearchParams();
+      if (session && session.id) p.append('userId', session.id);
+      if (session && session.username) p.append('username', session.username);
+      if (session && session.email) p.append('email', session.email);
+      if (session && session.vipLevel) p.append('vipLevel', session.vipLevel);
+      p.append('real', curLocalWallets.real !== undefined ? curLocalWallets.real : 0);
+      p.append('demo', curLocalWallets.demo !== undefined ? curLocalWallets.demo : 10000);
+      p.append('usdt', curLocalWallets.usdt !== undefined ? curLocalWallets.usdt : 0);
+      url = `/api/user-status?${p.toString()}`;
 
       const res = await fetch(url);
       if (!res.ok) return;
@@ -876,11 +879,30 @@
         const sReal = parseFloat(data.wallets.real);
         const sDemo = parseFloat(data.wallets.demo);
         const sUsdt = parseFloat(data.wallets.usdt);
+        const lReal = parseFloat(wallets.real) || 0;
 
-        if (!isNaN(sReal) && Math.abs((parseFloat(wallets.real) || 0) - sReal) > 0.001) {
-          wallets.real = sReal;
-          updated = true;
+        // 🛡️ RESTART & REDEPLOY PROTECTION:
+        // If local balance has real cash (e.g. ₹500) and server returns 0 without an explicit admin debit transaction, NEVER zero out!
+        if (!isNaN(sReal)) {
+          if (sReal === 0 && lReal > 0 && (!data.transactions || !data.transactions.some(t => t.type === 'adjustment' && t.newBalance === 0))) {
+            // Server restarted with fresh memory: Re-seed server with player's real balance
+            if (session && (session.id || session.username)) {
+              fetch('/api/update-user-progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: session.id || '',
+                  username: session.username || '',
+                  wallets: wallets
+                })
+              }).catch(() => {});
+            }
+          } else if (Math.abs(lReal - sReal) > 0.001) {
+            wallets.real = sReal;
+            updated = true;
+          }
         }
+
         if (!isNaN(sDemo) && Math.abs((parseFloat(wallets.demo) || 0) - sDemo) > 0.001) {
           wallets.demo = sDemo;
           updated = true;

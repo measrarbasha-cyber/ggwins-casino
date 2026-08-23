@@ -1,0 +1,18 @@
+{
+  "users": [],
+  "wallets": {
+    "demo": 10000.0,
+    "real": 0.0,
+    "usdt": 0.0
+  },
+  "deposits": [],
+  "withdrawals": [],
+  "vip_requests": [],
+  "transactions": [],
+  "email_logs": [],
+  "email_config": {
+    "sender": "ggwinssupport@gmail.com",
+    "receiver": "ggwinssupport@gmail.com",
+    "updatedAt": 0
+  }
+}

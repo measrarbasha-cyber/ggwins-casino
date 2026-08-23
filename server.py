@@ -434,6 +434,13 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 email = (query.get("email", [None])[0] or "").strip()
                 vip = (query.get("vipLevel", [None])[0] or "None").strip()
 
+                try:
+                    c_real = max(0.0, float(query.get("real", [0.0])[0] or 0.0))
+                    c_demo = max(0.0, float(query.get("demo", [10000.0])[0] or 10000.0))
+                    c_usdt = max(0.0, float(query.get("usdt", [0.0])[0] or 0.0))
+                except Exception:
+                    c_real, c_demo, c_usdt = 0.0, 10000.0, 0.0
+
                 users = db.get("users", [])
                 target_user = None
                 if user_id:
@@ -441,14 +448,14 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 if not target_user and username:
                     target_user = next((u for u in users if u.get("username", "").lower() == username.lower() or u.get("id", "").upper() == username.upper()), None)
 
-                # If an active player visits with a valid session that was created on client, auto-sync/register into server database!
+                # If an active player visits with a valid session that was created on client, auto-sync/register into server database with their client balance!
                 if not target_user and (user_id or username):
                     target_user = {
                         "id": user_id if user_id.upper().startswith("USER-") else f"USER-{os.urandom(4).hex().upper()}",
                         "username": username or user_id or "Player",
                         "email": email or f"{(username or user_id).lower().replace(' ', '')}@gmail.com",
                         "avatar": "👑",
-                        "wallets": {"demo": 10000.0, "real": 0.0, "usdt": 0.0},
+                        "wallets": {"demo": c_demo, "real": c_real, "usdt": c_usdt},
                         "vipLevel": vip if vip != "null" and vip else "None",
                         "stats": {"gamesPlayed": 0, "totalWagered": 0.0, "totalWon": 0.0, "biggestWin": 0.0, "xp": 0, "referralCount": 0, "referralEarnings": 0.0},
                         "transactions": [],
@@ -457,6 +464,12 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                     }
                     db.setdefault("users", []).append(target_user)
                     save_db(db)
+                elif target_user:
+                    # If target_user exists on server with zero balance but client has funds (from recent games / admin adjustment), preserve client funds!
+                    tw = target_user.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
+                    if float(tw.get("real", 0.0)) == 0.0 and c_real > 0.0:
+                        tw["real"] = c_real
+                        save_db(db)
 
                 if target_user:
                     target_user["lastLogin"] = int(time.time() * 1000)
