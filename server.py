@@ -26,42 +26,117 @@ def dispatch_admin_email_alert(subject, plain_text, html, receiver_override=None
             sender = (os.environ.get("ADMIN_EMAIL") or email_cfg.get("sender") or "ggwinssupport@gmail.com").strip()
             pwd = (os.environ.get("ADMIN_EMAIL_PASSWORD") or email_cfg.get("password") or "dvqilktybosupeuh").replace(" ", "").strip()
             receiver = (receiver_override or os.environ.get("ADMIN_NOTIFY_RECEIVER") or email_cfg.get("receiver") or "ggwinssupport@gmail.com").strip()
-
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = f"GG WINS Admin Alerts <{sender}>"
-            msg["To"] = receiver
-            msg["Reply-To"] = sender
-
-            msg.attach(MIMEText(plain_text, "plain"))
-            msg.attach(MIMEText(html, "html"))
+            webhook_url = (os.environ.get("EMAIL_WEBHOOK_URL") or email_cfg.get("webhook_url") or "").strip()
+            resend_key = (os.environ.get("RESEND_API_KEY") or email_cfg.get("resend_key") or "").strip()
+            tg_token = (os.environ.get("TELEGRAM_BOT_TOKEN") or email_cfg.get("telegram_bot_token") or "").strip()
+            tg_chat_id = (os.environ.get("TELEGRAM_CHAT_ID") or email_cfg.get("telegram_chat_id") or "").strip()
 
             sent = False
             err_msg = ""
-            try:
-                with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=12) as server:
-                    server.login(sender, pwd)
-                    server.sendmail(sender, receiver, msg.as_string())
-                sent = True
-                print(f"[Email Alert SSL-465] Delivered: {subject} -> {receiver}")
-            except Exception as e465:
-                err_msg = str(e465)
+            delivery_channel = "SMTP"
+
+            # ── 1. RESEND HTTPS API RELAY (PORT 443 - NEVER BLOCKED) ──────
+            if not sent and resend_key:
                 try:
-                    with smtplib.SMTP("smtp.gmail.com", 587, timeout=12) as server:
-                        server.starttls()
+                    resend_req = urllib.request.Request(
+                        "https://api.resend.com/emails",
+                        data=json.dumps({
+                            "from": f"GG WINS Alerts <onboarding@resend.dev>",
+                            "to": [receiver],
+                            "subject": subject,
+                            "html": html,
+                            "text": plain_text
+                        }).encode("utf-8"),
+                        headers={
+                            "Authorization": f"Bearer {resend_key}",
+                            "Content-Type": "application/json",
+                            "User-Agent": "GG-Wins-Alerts/1.0"
+                        }
+                    )
+                    with urllib.request.urlopen(resend_req, timeout=10) as r:
+                        if r.status in (200, 201):
+                            sent = True
+                            delivery_channel = "Resend HTTPS API"
+                            print(f"[Email Alert Resend] Delivered: {subject} -> {receiver}")
+                except Exception as e_resend:
+                    err_msg += f"Resend Error: {e_resend}; "
+
+            # ── 2. CUSTOM HTTPS WEBHOOK RELAY (PORT 443) ──────────────────
+            if not sent and webhook_url:
+                try:
+                    payload = json.dumps({
+                        "to": receiver,
+                        "subject": subject,
+                        "html": html,
+                        "text": plain_text,
+                        "timestamp": int(time.time() * 1000)
+                    }).encode("utf-8")
+                    wb_req = urllib.request.Request(webhook_url, data=payload, headers={"Content-Type": "application/json", "User-Agent": "GG-Wins-Relay/1.0"})
+                    with urllib.request.urlopen(wb_req, timeout=10) as r:
+                        if r.status in (200, 201, 204):
+                            sent = True
+                            delivery_channel = "HTTPS Webhook Relay"
+                            print(f"[Email Alert Webhook] Dispatched: {subject} -> {webhook_url}")
+                except Exception as e_wb:
+                    err_msg += f"Webhook Error: {e_wb}; "
+
+            # ── 3. TELEGRAM BOT INSTANT PUSH NOTIFICATION (PORT 443) ───────
+            if tg_token and tg_chat_id:
+                try:
+                    clean_tg_text = f"🚨 *{subject}*\n\n{plain_text}"
+                    tg_url = f"https://api.telegram.org/bot{tg_token}/sendMessage"
+                    tg_payload = json.dumps({
+                        "chat_id": tg_chat_id,
+                        "text": clean_tg_text,
+                        "parse_mode": "Markdown"
+                    }).encode("utf-8")
+                    tg_req = urllib.request.Request(tg_url, data=tg_payload, headers={"Content-Type": "application/json"})
+                    with urllib.request.urlopen(tg_req, timeout=8) as r:
+                        if r.status == 200:
+                            sent = True
+                            delivery_channel = "Telegram Bot Alert"
+                            print(f"[Telegram Alert] Sent to Chat {tg_chat_id}")
+                except Exception as e_tg:
+                    err_msg += f"Telegram Error: {e_tg}; "
+
+            # ── 4. DIRECT SMTP SSL-465 / STARTTLS-587 ─────────────────────
+            if not sent:
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = subject
+                msg["From"] = f"GG WINS Admin Alerts <{sender}>"
+                msg["To"] = receiver
+                msg["Reply-To"] = sender
+
+                msg.attach(MIMEText(plain_text, "plain"))
+                msg.attach(MIMEText(html, "html"))
+
+                try:
+                    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=8) as server:
                         server.login(sender, pwd)
                         server.sendmail(sender, receiver, msg.as_string())
                     sent = True
-                    print(f"[Email Alert TLS-587] Delivered: {subject} -> {receiver}")
-                except Exception as e587:
-                    err_msg = f"SSL-465: {e465} | TLS-587: {e587}"
-                    print(f"[Email Alert Failed] {err_msg}")
+                    delivery_channel = "SMTP SSL-465"
+                    print(f"[Email Alert SSL-465] Delivered: {subject} -> {receiver}")
+                except Exception as e465:
+                    err_msg += f"SSL-465: {e465}; "
+                    try:
+                        with smtplib.SMTP("smtp.gmail.com", 587, timeout=8) as server:
+                            server.starttls()
+                            server.login(sender, pwd)
+                            server.sendmail(sender, receiver, msg.as_string())
+                        sent = True
+                        delivery_channel = "SMTP TLS-587"
+                        print(f"[Email Alert TLS-587] Delivered: {subject} -> {receiver}")
+                    except Exception as e587:
+                        err_msg += f"TLS-587: {e587}"
+                        print(f"[Email Alert Failed] {err_msg}")
 
             # Record in email dispatch logs
             log_entry = {
                 "id": f"EML-{os.urandom(4).hex().upper()}",
                 "to": receiver,
                 "subject": subject,
+                "channel": delivery_channel,
                 "status": "Delivered" if sent else "Failed",
                 "error": err_msg if not sent else None,
                 "timestamp": int(time.time() * 1000)
@@ -69,7 +144,7 @@ def dispatch_admin_email_alert(subject, plain_text, html, receiver_override=None
             db.setdefault("email_logs", []).insert(0, log_entry)
             db["email_logs"] = db["email_logs"][:60]
             save_db(db)
-            return sent, err_msg
+            return sent, (delivery_channel if sent else err_msg)
         except Exception as e:
             print(f"[Email Alert Exception] {e}")
             return False, str(e)
