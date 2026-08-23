@@ -909,11 +909,8 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 </div>
             </div>
             """
-            ok, res_msg = dispatch_admin_email_alert(sub, plain, html, receiver_override=receiver, sync=True)
-            if ok:
-                self.send_json({"success": True, "message": f"Test notification email successfully delivered to {receiver}!"})
-            else:
-                self.send_json({"success": False, "message": f"SMTP delivery failed: {res_msg}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            dispatch_admin_email_alert(sub, plain, html, receiver_override=receiver, sync=False)
+            self.send_json({"success": True, "message": f"Test notification email dispatched to {receiver}! Check your inbox in 5-10 seconds."})
             return
 
         # ── 4B. ADMIN UPDATE USER WALLET BALANCE ───────────────────
