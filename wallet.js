@@ -994,7 +994,7 @@
 
       // 4. Check for VIP Level approval from Admin in data.user
       if (data.user && data.user.vipLevel) {
-        const currentVip = localStorage.getItem('ggwins_vip_level') || 'Bronze';
+        const currentVip = localStorage.getItem('ggwins_vip_level') || 'None';
         const serverVip = data.user.vipLevel;
         const serverExpires = data.user.vipExpiresAt || 0;
 
@@ -1006,7 +1006,7 @@
             session.vipExpiresAt = serverExpires;
             localStorage.setItem('ggwins_session', JSON.stringify(session));
           }
-          if (serverVip !== 'Bronze') {
+          if (serverVip !== 'None') {
             if (typeof showToast === 'function') {
               showToast(`👑 CONGRATULATIONS! Host approved your ${serverVip} Upgrade! Glowing VIP Badge & VIP Lounge unlocked!`, 'success');
             }
@@ -1356,7 +1356,7 @@
       if (session) {
         document.querySelectorAll('.gnav-user-avatar').forEach(el => el.textContent = session.avatar || '🎮');
         document.querySelectorAll('.gnav-user-name').forEach(el => el.textContent = session.username || 'Player');
-        document.querySelectorAll('.gnav-vip-badge').forEach(el => el.textContent = session.vipLevel || 'Bronze');
+        document.querySelectorAll('.gnav-vip-badge').forEach(el => el.textContent = (session.vipLevel && session.vipLevel !== 'None') ? session.vipLevel : 'Standard');
       }
     } catch(e) {}
   };
@@ -1556,16 +1556,11 @@
         window.recordTournamentMatch(gameName, !!won);
       }
 
-      // VIP Level auto-upgrade
-      const totalW = session.stats.totalWagered;
-      let newVip = 'Bronze';
-      if (totalW >= 500000) newVip = 'Diamond';
-      else if (totalW >= 200000) newVip = 'Platinum';
-      else if (totalW >= 50000) newVip = 'Gold';
-      else if (totalW >= 10000) newVip = 'Silver';
-
-      session.vipLevel = newVip;
-      localStorage.setItem('ggwins_vip_level', newVip);
+      // 🛡️ VIP Membership is STRICTLY controlled by Admin Approval via Admin Host Terminal
+      // New users and unapproved players remain 'None' unless approved by host
+      const currentVip = session.vipLevel || localStorage.getItem('ggwins_vip_level') || 'None';
+      session.vipLevel = currentVip;
+      localStorage.setItem('ggwins_vip_level', currentVip);
       localStorage.setItem('ggwins_session', JSON.stringify(session));
 
       // Sync progress to backend server
