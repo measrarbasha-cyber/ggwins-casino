@@ -18,81 +18,128 @@ ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "ggwinssupport@gmail.com")
 ADMIN_EMAIL_PASSWORD = os.environ.get("ADMIN_EMAIL_PASSWORD", "dvqilktybosupeuh")
 ADMIN_NOTIFY_RECEIVER = os.environ.get("ADMIN_NOTIFY_RECEIVER", "ggwinssupport@gmail.com")
 
-def send_deposit_email_notification(deposit):
+def dispatch_admin_email_alert(subject, plain_text, html, receiver_override=None, sync=False):
     def _send():
         try:
             db = load_db()
             email_cfg = db.get("email_config", {})
             sender = (os.environ.get("ADMIN_EMAIL") or email_cfg.get("sender") or "ggwinssupport@gmail.com").strip()
             pwd = (os.environ.get("ADMIN_EMAIL_PASSWORD") or email_cfg.get("password") or "dvqilktybosupeuh").replace(" ", "").strip()
-            receiver = (os.environ.get("ADMIN_NOTIFY_RECEIVER") or email_cfg.get("receiver") or "ggwinssupport@gmail.com").strip()
-
-            amt = deposit.get("amount", 0)
-            u = deposit.get("username", "Player")
-            qr = deposit.get("qrLabel") or f"QR {deposit.get('qrNumber', 1)}"
-            utr = deposit.get("utr", "N/A")
-            order_id = deposit.get("orderId", "N/A")
+            receiver = (receiver_override or os.environ.get("ADMIN_NOTIFY_RECEIVER") or email_cfg.get("receiver") or "ggwinssupport@gmail.com").strip()
 
             msg = MIMEMultipart("alternative")
-            msg["Subject"] = f"🚨 [GG WINS] New Deposit Alert: ₹{amt:,.2f} from @{u} ({qr})"
+            msg["Subject"] = subject
             msg["From"] = f"GG WINS Admin Alerts <{sender}>"
             msg["To"] = receiver
             msg["Reply-To"] = sender
 
-            plain_text = f"GG WINS New Deposit Alert\n\nPlayer: @{u}\nAmount: Rs.{amt:,.2f}\nGateway: {qr}\nUTR: {utr}\nOrder ID: {order_id}\n\nApprove at https://ggwins.site/host/index.html"
-
-            html = f"""
-            <div style="font-family: Arial, sans-serif; background-color: #0f172a; padding: 24px; color: #f8fafc; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1.5px solid #ffd700;">
-                <div style="text-align: center; margin-bottom: 16px;">
-                    <h2 style="color: #ffd700; margin: 0;">🎮 GG WINS – New Deposit Alert</h2>
-                    <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">A player has submitted a new deposit request on your platform.</p>
-                </div>
-                
-                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                    <p style="margin: 6px 0; font-size: 14px;"><strong>👤 Player Username:</strong> <span style="color: #38bdf8; font-weight: bold;">@{u}</span></p>
-                    <p style="margin: 6px 0; font-size: 14px;"><strong>💰 Deposit Amount:</strong> <span style="color: #00e676; font-size: 16px; font-weight: bold;">₹{amt:,.2f}</span></p>
-                    <p style="margin: 6px 0; font-size: 14px;"><strong>🎯 Payment Gateway / QR:</strong> <span style="color: #c084fc; font-weight: bold;">{qr}</span></p>
-                    <p style="margin: 6px 0; font-size: 14px;"><strong>🔢 12-Digit UTR Number:</strong> <span style="background: #1e293b; padding: 3px 8px; border-radius: 4px; font-family: monospace; color: #ffd700; font-weight: bold;">{utr}</span></p>
-                    <p style="margin: 6px 0; font-size: 14px;"><strong>📦 Order ID:</strong> {order_id}</p>
-                    <p style="margin: 6px 0; font-size: 13px; color: #94a3b8;"><strong>⏰ Submitted At:</strong> {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(deposit.get('timestamp', time.time()*1000)/1000))}</p>
-                </div>
-
-                <div style="text-align: center; margin-top: 20px;">
-                    <a href="https://ggwins.site/host/index.html" style="background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
-                        🔓 Open Admin Terminal to Approve
-                    </a>
-                </div>
-            </div>
-            """
-
             msg.attach(MIMEText(plain_text, "plain"))
             msg.attach(MIMEText(html, "html"))
 
-            # Primary: Port 465 SSL
             sent = False
+            err_msg = ""
             try:
                 with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=12) as server:
                     server.login(sender, pwd)
                     server.sendmail(sender, receiver, msg.as_string())
-                print(f"[Email Alert SSL-465] Successfully delivered deposit alert to {receiver} for {order_id}")
                 sent = True
+                print(f"[Email Alert SSL-465] Delivered: {subject} -> {receiver}")
             except Exception as e465:
-                print(f"[Email Alert SSL-465 Notice] {e465}, trying STARTTLS-587...")
-
-            # Fallback: Port 587 STARTTLS
-            if not sent:
+                err_msg = str(e465)
                 try:
                     with smtplib.SMTP("smtp.gmail.com", 587, timeout=12) as server:
                         server.starttls()
                         server.login(sender, pwd)
                         server.sendmail(sender, receiver, msg.as_string())
-                    print(f"[Email Alert TLS-587] Successfully delivered deposit alert to {receiver} for {order_id}")
+                    sent = True
+                    print(f"[Email Alert TLS-587] Delivered: {subject} -> {receiver}")
                 except Exception as e587:
-                    print(f"[Email Alert TLS-587 Error] Failed to send email: {e587}")
+                    err_msg = f"SSL-465: {e465} | TLS-587: {e587}"
+                    print(f"[Email Alert Failed] {err_msg}")
+
+            # Record in email dispatch logs
+            log_entry = {
+                "id": f"EML-{os.urandom(4).hex().upper()}",
+                "to": receiver,
+                "subject": subject,
+                "status": "Delivered" if sent else "Failed",
+                "error": err_msg if not sent else None,
+                "timestamp": int(time.time() * 1000)
+            }
+            db.setdefault("email_logs", []).insert(0, log_entry)
+            db["email_logs"] = db["email_logs"][:60]
+            save_db(db)
+            return sent, err_msg
         except Exception as e:
             print(f"[Email Alert Exception] {e}")
+            return False, str(e)
 
-    threading.Thread(target=_send, daemon=True).start()
+    if sync:
+        return _send()
+    else:
+        threading.Thread(target=_send, daemon=True).start()
+        return True, "Queued"
+
+def send_deposit_email_notification(deposit):
+    amt = deposit.get("amount", 0)
+    u = deposit.get("username", "Player")
+    qr = deposit.get("qrLabel") or f"QR {deposit.get('qrNumber', 1)}"
+    utr = deposit.get("utr", "N/A")
+    order_id = deposit.get("orderId", "N/A")
+    sub = f"🚨 [GG WINS] New Deposit Alert: ₹{amt:,.2f} from @{u} ({qr})"
+    plain = f"GG WINS New Deposit Alert\n\nPlayer: @{u}\nAmount: Rs.{amt:,.2f}\nGateway: {qr}\nUTR: {utr}\nOrder ID: {order_id}\n\nApprove at https://ggwins.site/host/index.html"
+    html = f"""
+    <div style="font-family: Arial, sans-serif; background-color: #0f172a; padding: 24px; color: #f8fafc; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1.5px solid #ffd700;">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <h2 style="color: #ffd700; margin: 0;">🎮 GG WINS – New Deposit Alert</h2>
+            <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">A player has submitted a new deposit request on your platform.</p>
+        </div>
+        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+            <p style="margin: 6px 0; font-size: 14px;"><strong>👤 Player Username:</strong> <span style="color: #38bdf8; font-weight: bold;">@{u}</span></p>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>💰 Deposit Amount:</strong> <span style="color: #00e676; font-size: 16px; font-weight: bold;">₹{amt:,.2f}</span></p>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>🎯 Payment Gateway / QR:</strong> <span style="color: #c084fc; font-weight: bold;">{qr}</span></p>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>🔢 12-Digit UTR Number:</strong> <span style="background: #1e293b; padding: 3px 8px; border-radius: 4px; font-family: monospace; color: #ffd700; font-weight: bold;">{utr}</span></p>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>📦 Order ID:</strong> {order_id}</p>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="https://ggwins.site/host/index.html" style="background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+                🔓 Open Admin Terminal to Approve
+            </a>
+        </div>
+    </div>
+    """
+    dispatch_admin_email_alert(sub, plain, html)
+
+def send_withdrawal_email_notification(withdrawal):
+    amt = withdrawal.get("amount", 0)
+    u = withdrawal.get("username", "Player")
+    w_key = withdrawal.get("wallet", "real")
+    method = withdrawal.get("method", "UPI Payout")
+    upi = withdrawal.get("accountNo") or withdrawal.get("upiId") or "N/A"
+    order_id = withdrawal.get("orderId", "N/A")
+    curr = "$" if w_key == "usdt" else "₹"
+    sub = f"💸 [GG WINS] New Withdrawal Request: {curr}{amt:,.2f} from @{u}"
+    plain = f"GG WINS Withdrawal Request\n\nPlayer: @{u}\nAmount: {curr}{amt:,.2f}\nMethod: {method}\nPayout Target: {upi}\nOrder ID: {order_id}\n\nReview at https://ggwins.site/host/index.html"
+    html = f"""
+    <div style="font-family: Arial, sans-serif; background-color: #0f172a; padding: 24px; color: #f8fafc; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1.5px solid #00e676;">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <h2 style="color: #00e676; margin: 0;">💸 GG WINS – Withdrawal Alert</h2>
+            <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">A player has requested a cash withdrawal payout.</p>
+        </div>
+        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+            <p style="margin: 6px 0; font-size: 14px;"><strong>👤 Player:</strong> <span style="color: #38bdf8; font-weight: bold;">@{u}</span></p>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>💵 Payout Amount:</strong> <span style="color: #00e676; font-size: 16px; font-weight: bold;">{curr}{amt:,.2f}</span></p>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>🏦 Payout Method / Destination:</strong> <span style="color: #ffd700; font-weight: bold;">{method} ({upi})</span></p>
+            <p style="margin: 6px 0; font-size: 14px;"><strong>📦 Order ID:</strong> {order_id}</p>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="https://ggwins.site/host/index.html" style="background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+                🔓 Process Withdrawal in Admin Terminal
+            </a>
+        </div>
+    </div>
+    """
+    dispatch_admin_email_alert(sub, plain, html)
 
 BASE_DIR = Path(__file__).resolve().parent
 USER_DIR = BASE_DIR
@@ -459,6 +506,23 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 })
                 return
 
+            # ── 5. ADMIN EMAIL CONFIG & LOGS ──────────────────────────
+            elif url_path == "/api/admin/get-email-config":
+                email_cfg = db.get("email_config", {})
+                sender = (os.environ.get("ADMIN_EMAIL") or email_cfg.get("sender") or "ggwinssupport@gmail.com").strip()
+                receiver = (os.environ.get("ADMIN_NOTIFY_RECEIVER") or email_cfg.get("receiver") or "ggwinssupport@gmail.com").strip()
+                logs = db.get("email_logs", [])
+                self.send_json({
+                    "success": True,
+                    "config": {
+                        "sender": sender,
+                        "receiver": receiver,
+                        "updatedAt": email_cfg.get("updatedAt", 0)
+                    },
+                    "logs": logs[:40]
+                })
+                return
+
             # Static File Serving
             super().do_GET()
         except Exception as e:
@@ -808,18 +872,48 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
 
         # ── EMAIL NOTIFICATION CONFIGURATION ────────────────────────
         elif url_path == "/api/admin/set-email-config":
-            sender = req_data.get("sender", "ggwinssupport@gmail.com")
+            sender = (req_data.get("sender") or "ggwinssupport@gmail.com").strip()
             password = req_data.get("password", "").strip()
-            receiver = req_data.get("receiver", sender)
+            receiver = (req_data.get("receiver") or sender).strip()
 
-            db["email_config"] = {
-                "sender": sender,
-                "password": password,
-                "receiver": receiver,
-                "updatedAt": int(time.time() * 1000)
-            }
+            db.setdefault("email_config", {})
+            db["email_config"]["sender"] = sender
+            db["email_config"]["receiver"] = receiver
+            if password:
+                db["email_config"]["password"] = password.replace(" ", "")
+            db["email_config"]["updatedAt"] = int(time.time() * 1000)
             save_db(db)
-            self.send_json({"success": True, "message": "Email notification credentials configured successfully."})
+            self.send_json({"success": True, "message": f"Email alert target saved: {receiver}", "config": db["email_config"]})
+            return
+
+        # ── SEND TEST NOTIFICATION EMAIL ──────────────────────────
+        elif url_path == "/api/admin/send-test-email":
+            receiver = (req_data.get("receiver") or os.environ.get("ADMIN_NOTIFY_RECEIVER") or db.get("email_config", {}).get("receiver") or "ggwinssupport@gmail.com").strip()
+            sub = "🧪 [GG WINS] Admin Email Notification Test"
+            plain = f"GG WINS Email Notification Test\n\nThis is a test notification confirming that the GG WINS email alert engine is operating smoothly and connected to {receiver}.\n\nTimestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}"
+            html = f"""
+            <div style="font-family: Arial, sans-serif; background-color: #0f172a; padding: 24px; color: #f8fafc; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1.5px solid #00e676;">
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <h2 style="color: #00e676; margin: 0;">🧪 GG WINS – Email Test Alert</h2>
+                    <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Live notification dispatch test from Admin Terminal.</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                    <p style="margin: 6px 0; font-size: 14px;"><strong>✅ SMTP Status:</strong> <span style="color: #00e676; font-weight: bold;">CONNECTED & OPERATIONAL</span></p>
+                    <p style="margin: 6px 0; font-size: 14px;"><strong>📬 Alert Target:</strong> <span style="color: #38bdf8; font-weight: bold;">{receiver}</span></p>
+                    <p style="margin: 6px 0; font-size: 13px; color: #94a3b8;"><strong>⏰ Dispatched At:</strong> {time.strftime('%Y-%m-%d %H:%M:%S')}</p>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="https://ggwins.site/host/index.html" style="background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+                        🔓 Return to Admin Terminal
+                    </a>
+                </div>
+            </div>
+            """
+            ok, res_msg = dispatch_admin_email_alert(sub, plain, html, receiver_override=receiver, sync=True)
+            if ok:
+                self.send_json({"success": True, "message": f"Test notification email successfully delivered to {receiver}!"})
+            else:
+                self.send_json({"success": False, "message": f"SMTP delivery failed: {res_msg}"}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
             return
 
         # ── 4B. ADMIN UPDATE USER WALLET BALANCE ───────────────────
@@ -1071,6 +1165,7 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 user_obj.setdefault("transactions", []).insert(0, tx_record)
 
             save_db(db)
+            send_withdrawal_email_notification(wth_record)
             self.send_json({
                 "success": True,
                 "withdrawal": wth_record,

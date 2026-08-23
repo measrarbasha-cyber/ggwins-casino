@@ -445,10 +445,6 @@
           <span>👥 Users Wallet</span>
           <span class="badge-tab-count" id="nav-users-count" style="background:#00e676;color:#000">0</span>
         </button>
-        <button class="nav-tab-btn email-tab" id="tab-btn-email" onclick="switchMainTab('email')">
-          <span>📧 Email Alerts</span>
-          <span class="badge-tab-count" id="nav-email-status" style="background:#38bdf8;color:#000">ON</span>
-        </button>
       </div>
 
       <div class="topbar-actions">
@@ -1002,83 +998,6 @@
           >
             <span>🔽</span> <span id="btn-toggle-users-dir-bottom-txt">Show More Registered Players</span>
           </button>
-        </div>
-      </section>
-    </div>
-
-    <!-- SECTION 5: EMAIL ALERTS & NOTIFICATIONS -->
-    <div class="tab-section" id="section-email">
-      <section class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title" style="color:#38bdf8">
-              <span>📧</span> Live Email Alert & Notification Suite
-            </div>
-            <div class="panel-subtitle">Instant real-time email dispatch for player deposits, cash withdrawals, and VIP upgrades</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span id="smtp-status-badge" style="background:rgba(0,230,118,0.15);border:1px solid #00e676;color:#00e676;font-size:12px;font-weight:900;padding:6px 12px;border-radius:8px">
-              🟢 SMTP SSL-465 CONNECTED
-            </span>
-          </div>
-        </div>
-
-        <!-- Email Configuration Grid -->
-        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px;margin-bottom:24px">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;margin-bottom:16px">
-            <div>
-              <label style="display:block;font-size:12px;color:#94a3b8;font-weight:700;margin-bottom:6px">📬 Notification Receiver Email (Where alerts arrive):</label>
-              <input type="email" id="email-receiver-input" class="input" style="width:100%;font-size:14px;font-weight:700;color:#ffd700" placeholder="e.g. ggwinssupport@gmail.com or your personal email" value="ggwinssupport@gmail.com">
-              <span style="font-size:11px;color:#64748b;margin-top:4px;display:block">New deposit, withdrawal, and VIP alerts will be delivered immediately to this address.</span>
-            </div>
-            <div>
-              <label style="display:block;font-size:12px;color:#94a3b8;font-weight:700;margin-bottom:6px">📤 SMTP Sender Account:</label>
-              <input type="email" id="email-sender-input" class="input" style="width:100%;font-size:14px;color:#cbd5e1" value="ggwinssupport@gmail.com" readonly>
-              <span style="font-size:11px;color:#64748b;margin-top:4px;display:block">Authenticated Google Cloud SSL-465 Relay (Pre-configured & verified).</span>
-            </div>
-          </div>
-
-          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-            <button class="btn btn-primary" onclick="saveEmailConfig()" style="background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900;padding:10px 20px">
-              💾 Save Alert Receiver Email
-            </button>
-            <button class="btn" onclick="sendTestNotificationEmail()" style="background:linear-gradient(135deg,#ffd700,#ff8c00);color:#000;font-weight:900;padding:10px 20px;border:none">
-              📨 Send Test Notification Email Now
-            </button>
-            <span id="email-action-status" style="font-size:13px;font-weight:700;color:#38bdf8"></span>
-          </div>
-        </div>
-
-        <!-- Recent Email Dispatch Logs -->
-        <div class="panel-header" style="margin-top:10px">
-          <div class="panel-title" style="font-size:15px;color:#ffd700">
-            <span>📋</span> Live Email Dispatch Logs & Receipts
-          </div>
-          <button class="btn" onclick="loadEmailConfigAndLogs()" style="padding:6px 12px;font-size:12px">
-            🔄 Refresh Logs
-          </button>
-        </div>
-
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Log ID</th>
-                <th>Recipient</th>
-                <th>Subject / Type</th>
-                <th>Status</th>
-                <th>Dispatched Time</th>
-              </tr>
-            </thead>
-            <tbody id="email-logs-tbody">
-              <tr>
-                <td colspan="5" class="empty-state">
-                  <div class="empty-icon">⏳</div>
-                  <p>Loading email logs...</p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </section>
     </div>
