@@ -223,7 +223,7 @@ window.addEventListener('load', () => { try { if (typeof initMines === 'function
           </div>
           <div class="mines-info-item">
             <div class="mines-info-label">Next Multiplier</div>
-            <div class="mines-info-val green" id="next-mult">1.04×</div>
+            <div class="mines-info-val green" id="next-mult">1.20×</div>
           </div>
           <div class="mines-info-item">
             <div class="mines-info-label">Current Payout</div>
@@ -418,7 +418,7 @@ function getDynamicLoseChance(currentMines) {
   }
 }
 
-// Multiplier calculation (ultra-reduced multiplier curve with strict ceiling)
+// Multiplier calculation (boosted by +15% from previous baseline)
 function calcMult(totalTiles, mines, safeRevealed){
   if(safeRevealed === 0) return 1.00;
   let prob = 1;
@@ -426,10 +426,10 @@ function calcMult(totalTiles, mines, safeRevealed){
     prob *= (totalTiles - mines - i) / (totalTiles - i);
   }
   
-  // Ultra-reduced base multiplier scaling (house edge protected)
+  // Base multiplier scaling
   let baseMult = 1.00 + (0.16 * (1.0 / prob - 1.0));
 
-  // Tightly flatten multiplier gains after 2 gems
+  // Flatten multiplier gains after 2 gems
   if (safeRevealed > 2) {
     let p2 = 1;
     for (let i = 0; i < 2; i++) {
@@ -440,8 +440,11 @@ function calcMult(totalTiles, mines, safeRevealed){
     baseMult = multAt2 + (excess * 0.08);
   }
 
-  // Maximum capped multiplier (strict house ceiling)
-  baseMult = Math.min(1.75, Math.max(1.02, baseMult));
+  // Maximum capped multiplier (increased from 1.75 to 2.01)
+  baseMult = Math.min(2.01, Math.max(1.02, baseMult));
+
+  // 🚀 +15% Multiplier Boost
+  baseMult = baseMult * 1.15;
 
   return parseFloat(baseMult.toFixed(2));
 }
