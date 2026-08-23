@@ -159,6 +159,20 @@
     return localStorage.getItem('ggwins_active_wallet') || 'demo';
   };
 
+  // ── 90% DEMO ACCOUNT WIN-RATE ENGINE ─────────────────────────
+  window.isDemoMode = function() {
+    return (window.getActiveWalletKey ? window.getActiveWalletKey() : localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo';
+  };
+
+  window.getGameWinChance = function(standardChance = 0.48) {
+    // 🎯 90% Win Rate strictly for Demo Account; standard fair RNG for Real INR & USDT
+    return window.isDemoMode() ? 0.90 : standardChance;
+  };
+
+  window.shouldGameWin = function(standardChance = 0.48) {
+    return Math.random() < window.getGameWinChance(standardChance);
+  };
+
   window.getActiveWalletConfig = function() {
     const key = getActiveWalletKey();
     return WALLET_CONFIGS[key] || WALLET_CONFIGS.demo;
