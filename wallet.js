@@ -159,18 +159,98 @@
     return localStorage.getItem('ggwins_active_wallet') || 'demo';
   };
 
-  // ── 90% DEMO ACCOUNT WIN-RATE ENGINE ─────────────────────────
+  // ── ADAPTIVE USER WINNING PROBABILITY ENGINE ─────────────────
+  // 1. New users start with 80% winning probability (0.80).
+  // 2. Once they start winning, probability is dynamically stepped down.
+  // 3. If user loses 3 in a row, trigger anti-streak recovery win (98%).
+  // 4. After recovery win, reset probability cleanly to 60% win / 40% loss.
+  // 5. Demo accounts maintain 90% win rate.
+
+  window.getAdaptiveWinState = function() {
+    try {
+      const raw = localStorage.getItem('ggwins_adaptive_win_state');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch(e) {}
+    return {
+      totalGames: 0,
+      consecutiveLosses: 0,
+      consecutiveWins: 0,
+      currentWinProbability: 0.80, // New user starts with 80% winning probability
+      isNewUser: true
+    };
+  };
+
+  window.saveAdaptiveWinState = function(state) {
+    try {
+      localStorage.setItem('ggwins_adaptive_win_state', JSON.stringify(state));
+    } catch(e) {}
+  };
+
   window.isDemoMode = function() {
     return (window.getActiveWalletKey ? window.getActiveWalletKey() : localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo';
   };
 
   window.getGameWinChance = function(standardChance = 0.48) {
-    // 🎯 90% Win Rate strictly for Demo Account; standard fair RNG for Real INR & USDT
-    return window.isDemoMode() ? 0.90 : standardChance;
+    // In Demo Account: 90% Win Rate
+    if (window.isDemoMode()) {
+      return 0.90;
+    }
+
+    const state = window.getAdaptiveWinState();
+
+    // Rule C: If losing in a row (consecutive losses >= 3), trigger guaranteed recovery win
+    if (state.consecutiveLosses >= 3) {
+      return 0.98;
+    }
+
+    // Rule A: New user starts with 80% winning probability
+    if (state.isNewUser || state.totalGames < 5) {
+      return Math.max(0.80, state.currentWinProbability || 0.80);
+    }
+
+    // Rule D / Ongoing: 60% win rate baseline (40% loss)
+    return state.currentWinProbability || 0.60;
   };
 
   window.shouldGameWin = function(standardChance = 0.48) {
     return Math.random() < window.getGameWinChance(standardChance);
+  };
+
+  window.recordAdaptiveGameOutcome = function(isWin) {
+    try {
+      const state = window.getAdaptiveWinState();
+      state.totalGames = (state.totalGames || 0) + 1;
+
+      if (isWin) {
+        const wasInLossStreak = state.consecutiveLosses >= 3;
+        state.consecutiveLosses = 0;
+        state.consecutiveWins = (state.consecutiveWins || 0) + 1;
+
+        if (wasInLossStreak) {
+          // Rule D: Reset winning probability to 60% win and 40% loss
+          state.currentWinProbability = 0.60;
+          state.isNewUser = false;
+        } else if (state.isNewUser || state.totalGames < 8) {
+          // Rule B: Once new user starts winning, step down probability from 80% to 60%
+          state.currentWinProbability = Math.max(0.60, (state.currentWinProbability || 0.80) - 0.07);
+          if (state.currentWinProbability <= 0.60) {
+            state.isNewUser = false;
+          }
+        } else {
+          // Standard adaptive balancing
+          state.currentWinProbability = Math.max(0.50, (state.currentWinProbability || 0.60) - 0.03);
+        }
+      } else {
+        // Player loss
+        state.consecutiveWins = 0;
+        state.consecutiveLosses = (state.consecutiveLosses || 0) + 1;
+      }
+
+      window.saveAdaptiveWinState(state);
+    } catch(e) {}
   };
 
   window.getActiveWalletConfig = function() {
@@ -1263,6 +1343,11 @@
         timestamp: Date.now()
       });
       localStorage.setItem('ggwins_game_history', JSON.stringify(gameHistory.slice(0, 100)));
+
+      // 1B. Record adaptive win probability engine outcome
+      if (typeof window.recordAdaptiveGameOutcome === 'function') {
+        window.recordAdaptiveGameOutcome(won);
+      }
 
       // 2. Update player session stats
       const session = JSON.parse(localStorage.getItem('ggwins_session') || 'null');
