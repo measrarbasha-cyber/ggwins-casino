@@ -190,6 +190,8 @@ def load_db():
         in_memory_db.setdefault("withdrawals", [])
         in_memory_db.setdefault("vip_requests", [])
         in_memory_db.setdefault("transactions", [])
+        in_memory_db.setdefault("email_logs", [])
+        in_memory_db.setdefault("email_config", {"sender": "ggwinssupport@gmail.com", "receiver": "ggwinssupport@gmail.com"})
         in_memory_db.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
 
         # Automatically assign unique User IDs and unique Referral Codes to any legacy/existing users
