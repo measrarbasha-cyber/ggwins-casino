@@ -473,10 +473,10 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     self.send_json({
                         "success": True,
-                        "wallets": db.get("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0}),
-                        "deposits": db.get("deposits", []),
-                        "withdrawals": db.get("withdrawals", []),
-                        "transactions": db.get("transactions", [])
+                        "isGuest": True,
+                        "deposits": [],
+                        "withdrawals": [],
+                        "transactions": []
                     })
                 return
 

@@ -871,8 +871,8 @@
         }
       }
 
-      // 5. Direct Admin Balance Adjustment Live Sync
-      if (data.wallets && typeof data.wallets === 'object') {
+      // 5. Direct Admin Balance Adjustment Live Sync (only if authenticated user record exists)
+      if (!data.isGuest && data.user && data.wallets && typeof data.wallets === 'object') {
         const sReal = parseFloat(data.wallets.real);
         const sDemo = parseFloat(data.wallets.demo);
         const sUsdt = parseFloat(data.wallets.usdt);
