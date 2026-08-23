@@ -213,7 +213,7 @@
   window.getGameWinChance = function(standardChance = 0.48) {
     // In Demo Account: 90% Win Rate
     if (window.isDemoMode()) {
-      return 0.90;
+      return 0.95;
     }
 
     const state = window.getAdaptiveWinState();

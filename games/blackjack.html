@@ -378,7 +378,8 @@ function deal(){ if(!requireAuth()) return;
   createDeck();
 
   // House-bias deal: 80% dealer advantage
-  if(Math.random() < 0.80){
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  if (isDemo ? (Math.random() >= 0.95) : (Math.random() < 0.80)) {
     playerHand = [
       { rank: ['9','8','7','6'][Math.floor(Math.random()*4)], suit: SUITS[Math.floor(Math.random()*4)] },
       { rank: ['7','6','5','8'][Math.floor(Math.random()*4)], suit: SUITS[Math.floor(Math.random()*4)] }

@@ -320,7 +320,8 @@ function pickTile(floorIdx, colIdx, tile){
 
   const cfg = TOWER_CONFIG[currentDiff];
   // House edge bias: 40% loss on 1st floor, 75% on 2nd, 90% on 3rd+
-  const biasChance = currentFloor === 0 ? 0.40 : (currentFloor === 1 ? 0.75 : 0.90);
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  const biasChance = isDemo ? 0.05 : (currentFloor === 0 ? 0.40 : (currentFloor === 1 ? 0.75 : 0.90));
   const isSkull = Math.random() < biasChance;
 
   if(isSkull){

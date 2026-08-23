@@ -372,7 +372,8 @@ function setPostRecoveryFlag(val) {
   localStorage.setItem('ggwins_post_recovery_win_mines', val ? 'true' : 'false');
 }
 
-function getDynamicLoseChance(currentMines) {
+function getDynamicLoseChance(currentMines){
+  if (typeof window.isDemoMode === 'function' && window.isDemoMode()) return 0.05;
   const loseStreak = getGameLoseStreak();
   const isPostRecovery = getPostRecoveryFlag();
   const winStreak = getGameWinStreak();
