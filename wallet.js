@@ -78,12 +78,14 @@
       wallets = {
         demo: 10000.00,
         real: 0.00,
+        bonus: 0.00,
         usdt: 0.00
       };
     } else {
       // 🛡️ Permanently preserve user's remaining balance across refresh/restart
       wallets.demo = typeof wallets.demo === 'number' && !isNaN(wallets.demo) ? wallets.demo : 10000.00;
       wallets.real = typeof wallets.real === 'number' && !isNaN(wallets.real) ? Math.max(0, wallets.real) : 0.00;
+      wallets.bonus = typeof wallets.bonus === 'number' && !isNaN(wallets.bonus) ? Math.max(0, wallets.bonus) : 0.00;
       wallets.usdt = typeof wallets.usdt === 'number' && !isNaN(wallets.usdt) ? Math.max(0, wallets.usdt) : 0.00;
     }
     localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
@@ -118,19 +120,34 @@
   // ── CORE WALLET GETTERS / SETTERS ────────────────────────────
   window.getWallets = function() {
     try {
-      return JSON.parse(localStorage.getItem('ggwins_wallets_v2')) ||
-             JSON.parse(localStorage.getItem('ggwins_wallets')) ||
-             { demo: 10000, real: 0, usdt: 0 };
+      const raw = JSON.parse(localStorage.getItem('ggwins_wallets_v2')) ||
+                  JSON.parse(localStorage.getItem('ggwins_wallets')) ||
+                  { demo: 10000, real: 0, bonus: 0, usdt: 0 };
+      raw.demo = typeof raw.demo === 'number' && !isNaN(raw.demo) ? raw.demo : 10000.00;
+      raw.real = typeof raw.real === 'number' && !isNaN(raw.real) ? Math.max(0, raw.real) : 0.00;
+      raw.bonus = typeof raw.bonus === 'number' && !isNaN(raw.bonus) ? Math.max(0, raw.bonus) : 0.00;
+      raw.usdt = typeof raw.usdt === 'number' && !isNaN(raw.usdt) ? Math.max(0, raw.usdt) : 0.00;
+      return raw;
     } catch(e) {
-      return { demo: 10000, real: 0, usdt: 0 };
+      return { demo: 10000, real: 0, bonus: 0, usdt: 0 };
     }
   };
 
   window.saveWallets = function(wallets) {
+    wallets.demo = typeof wallets.demo === 'number' && !isNaN(wallets.demo) ? wallets.demo : 10000.00;
+    wallets.real = typeof wallets.real === 'number' && !isNaN(wallets.real) ? Math.max(0, wallets.real) : 0.00;
+    wallets.bonus = typeof wallets.bonus === 'number' && !isNaN(wallets.bonus) ? Math.max(0, wallets.bonus) : 0.00;
+    wallets.usdt = typeof wallets.usdt === 'number' && !isNaN(wallets.usdt) ? Math.max(0, wallets.usdt) : 0.00;
+
     localStorage.setItem('ggwins_wallets_v2', JSON.stringify(wallets));
     localStorage.setItem('ggwins_wallets', JSON.stringify(wallets));
     const activeKey = getActiveWalletKey();
-    const activeBal = wallets[activeKey] !== undefined ? wallets[activeKey] : (activeKey === 'demo' ? 10000 : 0);
+    let activeBal = 0;
+    if (activeKey === 'real') {
+      activeBal = (wallets.real || 0) + (wallets.bonus || 0);
+    } else {
+      activeBal = wallets[activeKey] !== undefined ? wallets[activeKey] : (activeKey === 'demo' ? 10000 : 0);
+    }
     localStorage.setItem('ggwins_balance', activeBal.toFixed(2));
     updateAllWalletDisplays();
 
@@ -282,6 +299,10 @@
   window.getBalance = function() {
     const wallets = getWallets();
     const key = getActiveWalletKey();
+    if (key === 'real') {
+      // 🛡️ Total Playable Real Balance = Real Capital + Active Deposit Bonus
+      return parseFloat(((wallets.real || 0) + (wallets.bonus || 0)).toFixed(2));
+    }
     return parseFloat(wallets[key] !== undefined ? wallets[key] : 10000);
   };
 
@@ -290,23 +311,144 @@
   window.setBalance = function(val) {
     const wallets = getWallets();
     const key = getActiveWalletKey();
-    wallets[key] = Math.max(0, parseFloat(val) || 0);
-    saveWallets(wallets);
+    if (key === 'real') {
+      const curTotal = (wallets.real || 0) + (wallets.bonus || 0);
+      const delta = (parseFloat(val) || 0) - curTotal;
+      window.adjustBalance(delta, 'Balance Set');
+    } else {
+      wallets[key] = Math.max(0, parseFloat(val) || 0);
+      saveWallets(wallets);
+    }
   };
 
+  // ── 🛡️ OLYMP TRADE STYLE SPLIT BONUS & REAL CAPITAL ENGINE ──────
+  // 1. Bet Loss / Debit: 65% from Deposit Bonus, 35% from Real Balance.
+  // 2. Win Payout: 70% to Real Balance, 30% to Deposit Bonus.
+  // 3. Bonus Cancel: Forfeits Deposit Bonus + 8% Total Capital Fee.
   window.adjustBalance = function(delta, description) {
     const wallets = getWallets();
     const key = getActiveWalletKey();
-    const curr = parseFloat(wallets[key] !== undefined ? wallets[key] : 10000);
     const change = parseFloat(delta || 0);
-    const next = Math.max(0, curr + change);
-    wallets[key] = next;
+
+    if (key === 'real') {
+      if (change < 0) {
+        // ── 🛑 BET / WAGER DEDUCTION (65% from Deposit Bonus, 35% from Real Balance) ──
+        const betAmt = Math.abs(change);
+        const curBonus = parseFloat(wallets.bonus || 0);
+        const curReal = parseFloat(wallets.real || 0);
+
+        if (curBonus > 0) {
+          const targetBonusDeduct = parseFloat((betAmt * 0.65).toFixed(2));
+          const targetRealDeduct = parseFloat((betAmt * 0.35).toFixed(2));
+
+          if (curBonus >= targetBonusDeduct) {
+            wallets.bonus = Math.max(0, parseFloat((curBonus - targetBonusDeduct).toFixed(2)));
+            wallets.real = Math.max(0, parseFloat((curReal - targetRealDeduct).toFixed(2)));
+          } else {
+            // If bonus balance has less than 65%, take whatever bonus is available and the rest from real
+            const actualBonusDeduct = curBonus;
+            wallets.bonus = 0.00;
+            const remainingDeduct = parseFloat((betAmt - actualBonusDeduct).toFixed(2));
+            wallets.real = Math.max(0, parseFloat((curReal - remainingDeduct).toFixed(2)));
+          }
+        } else {
+          // Standard no-bonus debit: 100% from real
+          wallets.real = Math.max(0, parseFloat((curReal - betAmt).toFixed(2)));
+        }
+      } else if (change > 0) {
+        // ── 🏆 WIN PAYOUT DISTRIBUTION (70% to Real Balance, 30% to Deposit Bonus) ──
+        const payoutAmt = change;
+        const curBonus = parseFloat(wallets.bonus || 0);
+
+        if (curBonus > 0 || (sessionStorage.getItem('ggwins_had_bonus') === 'true')) {
+          const realWinShare = parseFloat((payoutAmt * 0.70).toFixed(2));
+          const bonusWinShare = parseFloat((payoutAmt * 0.30).toFixed(2));
+
+          wallets.real = parseFloat(((wallets.real || 0) + realWinShare).toFixed(2));
+          wallets.bonus = parseFloat(((wallets.bonus || 0) + bonusWinShare).toFixed(2));
+          sessionStorage.setItem('ggwins_had_bonus', 'true');
+        } else {
+          // Standard no-bonus credit: 100% to real
+          wallets.real = parseFloat(((wallets.real || 0) + payoutAmt).toFixed(2));
+        }
+      }
+
+      saveWallets(wallets);
+      const nextTotal = parseFloat(((wallets.real || 0) + (wallets.bonus || 0)).toFixed(2));
+
+      if (change > 0 && typeof window.flashBal === 'function') window.flashBal('flash-win');
+      else if (change < 0 && typeof window.flashBal === 'function') window.flashBal('flash-lose');
+
+      return nextTotal;
+    } else {
+      // Demo / USDT accounts
+      const curr = parseFloat(wallets[key] !== undefined ? wallets[key] : 10000);
+      const next = Math.max(0, parseFloat((curr + change).toFixed(2)));
+      wallets[key] = next;
+      saveWallets(wallets);
+
+      if (change > 0 && typeof window.flashBal === 'function') window.flashBal('flash-win');
+      else if (change < 0 && typeof window.flashBal === 'function') window.flashBal('flash-lose');
+
+      return next;
+    }
+  };
+
+  // ── ❌ OLYMP TRADE STYLE DEPOSIT BONUS CANCELLATION ENGINE ───────
+  // Forfeits Deposit Bonus + applies 8% Whole Capital Cancellation Penalty
+  window.cancelDepositBonus = function() {
+    const wallets = getWallets();
+    const bonusAmt = parseFloat(wallets.bonus || 0);
+    const realAmt = parseFloat(wallets.real || 0);
+    const totalCapital = realAmt + bonusAmt;
+
+    if (bonusAmt <= 0) {
+      alert('You do not have any active deposit bonus to cancel.');
+      return;
+    }
+
+    const feePct = 0.08; // 8% fee
+    const feeAmt = parseFloat((totalCapital * feePct).toFixed(2));
+    const remainingReal = Math.max(0, parseFloat((realAmt - feeAmt).toFixed(2)));
+
+    const confirmMsg = `❌ CONFIRM DEPOSIT BONUS CANCELLATION (Olymp Trade Terms)\n\n` +
+      `📊 Current Total Capital: ₹${totalCapital.toLocaleString('en-IN', {minimumFractionDigits:2})}\n` +
+      ` • Real Balance: ₹${realAmt.toLocaleString('en-IN', {minimumFractionDigits:2})}\n` +
+      ` • Deposit Bonus (To be Forfeited): ₹${bonusAmt.toLocaleString('en-IN', {minimumFractionDigits:2})}\n\n` +
+      `⚠️ Cancellation Terms:\n` +
+      ` 1. Deposit bonus (₹${bonusAmt.toLocaleString('en-IN', {minimumFractionDigits:2})}) will be completely removed.\n` +
+      ` 2. An 8% Whole Capital Fee (-₹${feeAmt.toLocaleString('en-IN', {minimumFractionDigits:2})}) will be deducted from your real balance.\n\n` +
+      `💵 Your Final Withdrawable Real Balance: ₹${remainingReal.toLocaleString('en-IN', {minimumFractionDigits:2})}\n\n` +
+      `Do you agree to cancel the bonus and forfeit ₹${(bonusAmt + feeAmt).toLocaleString('en-IN', {minimumFractionDigits:2})}?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    // Apply cancellation
+    wallets.bonus = 0.00;
+    wallets.real = remainingReal;
     saveWallets(wallets);
 
-    if (change > 0 && typeof window.flashBal === 'function') window.flashBal('flash-win');
-    else if (change < 0 && typeof window.flashBal === 'function') window.flashBal('flash-lose');
+    // Clear 3x bonus task if present
+    localStorage.removeItem('ggwins_bonus_task');
+    sessionStorage.removeItem('ggwins_had_bonus');
 
-    return next;
+    // Add cancellation transaction record
+    if (typeof addTransaction === 'function') {
+      addTransaction({
+        type: 'bonus_cancelled',
+        wallet: 'real',
+        amount: -feeAmt,
+        description: `Deposit Bonus Cancelled (Forfeited ₹${bonusAmt.toFixed(2)} bonus + 8% fee ₹${feeAmt.toFixed(2)})`,
+        status: 'Completed'
+      });
+    }
+
+    if (typeof showToast === 'function') {
+      showToast(`❌ Bonus cancelled. ₹${bonusAmt.toFixed(2)} bonus removed + 8% fee (₹${feeAmt.toFixed(2)}) applied. Remaining Real Balance: ₹${remainingReal.toFixed(2)}`, 'info');
+    }
+
+    updateAllWalletDisplays();
+    if (typeof renderWalletModalContent === 'function') renderWalletModalContent();
   };
 
   window.flashBal = function(cls) {

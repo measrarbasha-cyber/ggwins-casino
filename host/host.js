@@ -893,19 +893,23 @@
     setElText('user-ref-tab-count', refCount);
 
     // Wallet Balances
-    const w = u.wallets || { demo: 10000, real: 0, usdt: 0 };
+    const w = u.wallets || { demo: 10000, real: 0, bonus: 0, usdt: 0 };
     const realBal = parseFloat(w.real || 0);
+    const bonusBal = parseFloat(w.bonus || 0);
     const demoBal = parseFloat(w.demo || 0);
     const usdtBal = parseFloat(w.usdt || 0);
 
     setElText('current-real-bal-display', `₹${realBal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+    setElText('current-bonus-bal-display', `₹${bonusBal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
     setElText('current-demo-bal-display', `₹${demoBal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
     setElText('current-usdt-bal-display', `${usdtBal.toFixed(2)} ₮`);
 
     const editReal = document.getElementById('edit-real-bal');
+    const editBonus = document.getElementById('edit-bonus-bal');
     const editDemo = document.getElementById('edit-demo-bal');
     const editUsdt = document.getElementById('edit-usdt-bal');
     if (editReal) editReal.value = realBal.toFixed(2);
+    if (editBonus) editBonus.value = bonusBal.toFixed(2);
     if (editDemo) editDemo.value = demoBal.toFixed(2);
     if (editUsdt) editUsdt.value = usdtBal.toFixed(2);
 
@@ -1038,11 +1042,13 @@
     const delta = parseFloat(amountInput?.value || 0);
 
     const editReal = document.getElementById('edit-real-bal');
+    const editBonus = document.getElementById('edit-bonus-bal');
     const editDemo = document.getElementById('edit-demo-bal');
     const editUsdt = document.getElementById('edit-usdt-bal');
 
     let curBal = 0;
     if (targetW === 'real') curBal = parseFloat(editReal?.value || 0);
+    else if (targetW === 'bonus') curBal = parseFloat(editBonus?.value || 0);
     else if (targetW === 'demo') curBal = parseFloat(editDemo?.value || 0);
     else if (targetW === 'usdt') curBal = parseFloat(editUsdt?.value || 0);
 
@@ -1089,15 +1095,19 @@
     }
 
     const editReal = document.getElementById('edit-real-bal');
+    const editBonus = document.getElementById('edit-bonus-bal');
     const editDemo = document.getElementById('edit-demo-bal');
     const editUsdt = document.getElementById('edit-usdt-bal');
 
     let curReal = parseFloat(editReal?.value || 0);
+    let curBonus = parseFloat(editBonus?.value || 0);
     let curDemo = parseFloat(editDemo?.value || 0);
     let curUsdt = parseFloat(editUsdt?.value || 0);
 
     if (targetW === 'real') {
       curReal = currentWalletOperationMode === 'add' ? (curReal + delta) : Math.max(0, curReal - delta);
+    } else if (targetW === 'bonus') {
+      curBonus = currentWalletOperationMode === 'add' ? (curBonus + delta) : Math.max(0, curBonus - delta);
     } else if (targetW === 'demo') {
       curDemo = currentWalletOperationMode === 'add' ? (curDemo + delta) : Math.max(0, curDemo - delta);
     } else if (targetW === 'usdt') {
@@ -1116,6 +1126,7 @@
         body: JSON.stringify({
           userId: activeSelectedUserId,
           real: curReal,
+          bonus: curBonus,
           demo: curDemo,
           usdt: curUsdt,
           reason: `${actionVerb}: ${reason}`
@@ -1128,10 +1139,12 @@
         if (amountInput) amountInput.value = '';
         if (reasonInput) reasonInput.value = '';
         if (editReal) editReal.value = curReal.toFixed(2);
+        if (editBonus) editBonus.value = curBonus.toFixed(2);
         if (editDemo) editDemo.value = curDemo.toFixed(2);
         if (editUsdt) editUsdt.value = curUsdt.toFixed(2);
 
         setElText('current-real-bal-display', `₹${curReal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+        setElText('current-bonus-bal-display', `₹${curBonus.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
         setElText('current-demo-bal-display', `₹${curDemo.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
         setElText('current-usdt-bal-display', `${curUsdt.toFixed(2)} ₮`);
         updateLiveAdjustmentPreview();
@@ -1155,11 +1168,13 @@
     }
 
     const editReal = document.getElementById('edit-real-bal');
+    const editBonus = document.getElementById('edit-bonus-bal');
     const editDemo = document.getElementById('edit-demo-bal');
     const editUsdt = document.getElementById('edit-usdt-bal');
     const editReason = document.getElementById('edit-bal-reason');
 
     const real = parseFloat(editReal?.value || 0);
+    const bonus = parseFloat(editBonus?.value || 0);
     const demo = parseFloat(editDemo?.value || 0);
     const usdt = parseFloat(editUsdt?.value || 0);
     const reason = (editReason?.value || '').trim() || 'Admin Direct Adjustment';
@@ -1169,7 +1184,7 @@
       return;
     }
 
-    if (!confirm(`⚠️ CONFIRM WALLET BALANCE UPDATE\n\nUser ID: ${activeSelectedUserId}\nNew Real INR Balance: ₹${real.toLocaleString('en-IN')}\nNew Demo Balance: ₹${demo.toLocaleString('en-IN')}\nNew USDT Balance: ${usdt} ₮\nReason: ${reason}\n\nThis will immediately update the user's live balance on their screen. Proceed?`)) {
+    if (!confirm(`⚠️ CONFIRM WALLET BALANCE UPDATE\n\nUser ID: ${activeSelectedUserId}\nNew Real INR: ₹${real.toLocaleString('en-IN')}\nNew Bonus: ₹${bonus.toLocaleString('en-IN')}\nNew Demo: ₹${demo.toLocaleString('en-IN')}\nNew USDT: ${usdt} ₮\nReason: ${reason}\n\nProceed?`)) {
       return;
     }
 
@@ -1180,6 +1195,7 @@
         body: JSON.stringify({
           userId: activeSelectedUserId,
           real: real,
+          bonus: bonus,
           demo: demo,
           usdt: usdt,
           reason: reason

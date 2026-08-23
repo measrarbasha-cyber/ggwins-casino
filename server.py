@@ -437,9 +437,10 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 try:
                     c_real = max(0.0, float(query.get("real", [0.0])[0] or 0.0))
                     c_demo = max(0.0, float(query.get("demo", [10000.0])[0] or 10000.0))
+                    c_bonus = max(0.0, float(query.get("bonus", [0.0])[0] or 0.0))
                     c_usdt = max(0.0, float(query.get("usdt", [0.0])[0] or 0.0))
                 except Exception:
-                    c_real, c_demo, c_usdt = 0.0, 10000.0, 0.0
+                    c_real, c_demo, c_bonus, c_usdt = 0.0, 10000.0, 0.0, 0.0
 
                 users = db.get("users", [])
                 target_user = None
@@ -455,7 +456,7 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                         "username": username or user_id or "Player",
                         "email": email or f"{(username or user_id).lower().replace(' ', '')}@gmail.com",
                         "avatar": "👑",
-                        "wallets": {"demo": c_demo, "real": c_real, "usdt": c_usdt},
+                        "wallets": {"demo": c_demo, "real": c_real, "bonus": c_bonus, "usdt": c_usdt},
                         "vipLevel": vip if vip != "null" and vip else "None",
                         "stats": {"gamesPlayed": 0, "totalWagered": 0.0, "totalWon": 0.0, "biggestWin": 0.0, "xp": 0, "referralCount": 0, "referralEarnings": 0.0},
                         "transactions": [],
@@ -466,10 +467,12 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                     save_db(db)
                 elif target_user:
                     # If target_user exists on server with zero balance but client has funds (from recent games / admin adjustment), preserve client funds!
-                    tw = target_user.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
+                    tw = target_user.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "bonus": 0.0, "usdt": 0.0})
                     if float(tw.get("real", 0.0)) == 0.0 and c_real > 0.0:
                         tw["real"] = c_real
-                        save_db(db)
+                    if float(tw.get("bonus", 0.0)) == 0.0 and c_bonus > 0.0:
+                        tw["bonus"] = c_bonus
+                    save_db(db)
 
                 if target_user:
                     target_user["lastLogin"] = int(time.time() * 1000)
@@ -1009,6 +1012,7 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
             username = req_data.get("username")
             real_bal = req_data.get("real")
             demo_bal = req_data.get("demo")
+            bonus_bal = req_data.get("bonus")
             usdt_bal = req_data.get("usdt")
             vip_level = req_data.get("vipLevel")
             reason = req_data.get("reason", "Admin Balance Adjustment")
@@ -1024,11 +1028,14 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_json({"success": False, "message": "User not found."}, status=HTTPStatus.NOT_FOUND)
                 return
 
-            target.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "usdt": 0.0})
+            target.setdefault("wallets", {"demo": 10000.0, "real": 0.0, "bonus": 0.0, "usdt": 0.0})
             old_real = float(target["wallets"].get("real", 0.0))
+            old_bonus = float(target["wallets"].get("bonus", 0.0))
 
             if real_bal is not None:
                 target["wallets"]["real"] = max(0.0, round(float(real_bal), 2))
+            if bonus_bal is not None:
+                target["wallets"]["bonus"] = max(0.0, round(float(bonus_bal), 2))
             if demo_bal is not None:
                 target["wallets"]["demo"] = max(0.0, round(float(demo_bal), 2))
             if usdt_bal is not None:
