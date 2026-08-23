@@ -785,86 +785,128 @@
           </div>
         </section>
 
-        <!-- Balance Modification Editor -->
+        <!-- Balance Modification & Credit/Debit Engine -->
         <section class="panel" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(0,230,118,0.04),rgba(0,0,0,0.4));border:1.5px solid #00e676">
           <div class="panel-header">
             <div class="panel-title">
               <span>💳</span>
-              <span style="color:#00e676;font-family:'Space Grotesk',sans-serif;font-weight:900">ADMIN LIVE BALANCE OVERWRITE ENGINE</span>
+              <span style="color:#00e676;font-family:'Space Grotesk',sans-serif;font-weight:900">ADMIN WALLET MANAGER: ADD &amp; DEDUCT FUNDS</span>
             </div>
             <span style="font-size:11px;background:rgba(0,230,118,0.15);border:1px solid #00e676;color:#00e676;padding:3px 8px;border-radius:6px;font-weight:800">
-              ⚡ Live Sync to User's Screen
+              ⚡ Instant Real-Time Sync to User Screen
             </span>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:10px">
-            <!-- 1. Real INR Balance -->
-            <div style="background:#1e293b;border:1px solid rgba(0,230,118,0.3);border-radius:12px;padding:14px">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <span style="font-size:12px;font-weight:800;color:#00e676">💵 REAL INR CASH (₹)</span>
-                <span id="current-real-bal-display" style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:900;color:#00e676">₹0.00</span>
+          <!-- Quick Credit & Deduct Mode Controller -->
+          <div style="background:rgba(15,23,42,0.85);border:1.5px solid #334155;border-radius:14px;padding:16px;margin-top:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+              <div style="display:flex;gap:10px;align-items:center">
+                <span style="font-size:13px;font-weight:800;color:#94a3b8">OPERATION MODE:</span>
+                <div style="display:inline-flex;background:#0f172a;padding:3px;border-radius:8px;border:1px solid #334155">
+                  <button id="btn-mode-add" onclick="setWalletOperationMode('add')" style="background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900;border:none;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:13px;transition:all 0.2s">
+                    ➕ Add Money (Credit)
+                  </button>
+                  <button id="btn-mode-deduct" onclick="setWalletOperationMode('deduct')" style="background:transparent;color:#94a3b8;font-weight:900;border:none;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:13px;transition:all 0.2s">
+                    ➖ Deduct Money (Debit)
+                  </button>
+                </div>
               </div>
-              <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:4px">Override New Real Balance (₹):</label>
-              <input type="number" step="0.01" id="edit-real-bal" class="form-input" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 10px;color:#fff;font-size:15px;font-weight:800" />
-              
-              <!-- Quick adjust buttons -->
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-                <button class="btn-copy-mini" onclick="quickAdjustReal(500)">+₹500</button>
-                <button class="btn-copy-mini" onclick="quickAdjustReal(1000)">+₹1,000</button>
-                <button class="btn-copy-mini" onclick="quickAdjustReal(5000)">+₹5,000</button>
-                <button class="btn-copy-mini" onclick="quickAdjustReal(10000)">+₹10,000</button>
-                <button class="btn-copy-mini" style="color:#ef4444" onclick="quickAdjustReal(-500)">-₹500</button>
-                <button class="btn-copy-mini" style="color:#f87171" onclick="document.getElementById('edit-real-bal').value=0">Set 0</button>
+
+              <!-- Target Wallet Selector -->
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:12px;font-weight:700;color:#94a3b8">Target Account:</span>
+                <select id="wallet-action-target" onchange="updateLiveAdjustmentPreview()" style="background:#1e293b;border:1px solid #475569;color:#fff;font-weight:800;border-radius:6px;padding:6px 10px;font-size:12.5px;cursor:pointer">
+                  <option value="real">💵 Real INR Cash (₹)</option>
+                  <option value="demo">🎮 Demo Practice (₹)</option>
+                  <option value="usdt">🪙 USDT Crypto (₮)</option>
+                </select>
               </div>
             </div>
 
-            <!-- 2. Demo Practice Balance -->
-            <div style="background:#1e293b;border:1px solid rgba(124,77,255,0.3);border-radius:12px;padding:14px">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <span style="font-size:12px;font-weight:800;color:#c084fc">🎮 DEMO PRACTICE (₹)</span>
-                <span id="current-demo-bal-display" style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:900;color:#c084fc">₹10,000.00</span>
+            <!-- Amount Input & Quick Chips -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#cbd5e1;display:block;margin-bottom:6px" id="lbl-action-amount">Amount to Add (₹):</label>
+                <div style="position:relative">
+                  <input type="number" step="0.01" id="action-amount-input" class="form-input" placeholder="e.g. 500" style="width:100%;background:#0f172a;border:1.5px solid #00e676;border-radius:8px;padding:10px 14px;color:#fff;font-size:16px;font-weight:900" oninput="updateLiveAdjustmentPreview()" />
+                </div>
+                
+                <!-- Quick Amount Chips -->
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px" id="quick-amount-chips">
+                  <button class="btn-copy-mini" style="font-weight:800" onclick="applyQuickAmount(100)">100</button>
+                  <button class="btn-copy-mini" style="font-weight:800" onclick="applyQuickAmount(500)">500</button>
+                  <button class="btn-copy-mini" style="font-weight:800" onclick="applyQuickAmount(1000)">1,000</button>
+                  <button class="btn-copy-mini" style="font-weight:800" onclick="applyQuickAmount(2000)">2,000</button>
+                  <button class="btn-copy-mini" style="font-weight:800" onclick="applyQuickAmount(5000)">5,000</button>
+                  <button class="btn-copy-mini" style="font-weight:800" onclick="applyQuickAmount(10000)">10,000</button>
+                  <button class="btn-copy-mini" style="font-weight:800" onclick="applyQuickAmount(50000)">50,000</button>
+                </div>
               </div>
-              <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:4px">Override New Demo Balance (₹):</label>
-              <input type="number" step="0.01" id="edit-demo-bal" class="form-input" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 10px;color:#fff;font-size:15px;font-weight:800" />
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-                <button class="btn-copy-mini" onclick="document.getElementById('edit-demo-bal').value=10000">Reset ₹10k</button>
-                <button class="btn-copy-mini" onclick="document.getElementById('edit-demo-bal').value=50000">₹50k</button>
-                <button class="btn-copy-mini" onclick="document.getElementById('edit-demo-bal').value=100000">₹100k</button>
+
+              <!-- Reason and Live Preview -->
+              <div>
+                <label style="font-size:12px;font-weight:700;color:#cbd5e1;display:block;margin-bottom:6px">Reason / Reference:</label>
+                <input type="text" id="action-reason-input" class="form-input" placeholder="e.g. Admin Bonus Credit, Correction, Player Penalty..." style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#fff;font-size:13px" />
+                
+                <!-- Live Preview Pill -->
+                <div id="action-preview-pill" style="margin-top:10px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);padding:8px 12px;border-radius:8px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center">
+                  <span style="color:#94a3b8">Balance Preview:</span>
+                  <span id="action-preview-text" style="color:#00e676;font-weight:900;font-family:'Space Grotesk',sans-serif">₹0.00 ➔ ₹0.00</span>
+                </div>
               </div>
             </div>
 
-            <!-- 3. USDT Crypto Balance -->
-            <div style="background:#1e293b;border:1px solid rgba(56,189,248,0.3);border-radius:12px;padding:14px">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <span style="font-size:12px;font-weight:800;color:#38bdf8">🪙 USDT CRYPTO (₮)</span>
-                <span id="current-usdt-bal-display" style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:900;color:#38bdf8">0.00 ₮</span>
-              </div>
-              <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:4px">Override New USDT Balance (₮):</label>
-              <input type="number" step="0.01" id="edit-usdt-bal" class="form-input" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 10px;color:#fff;font-size:15px;font-weight:800" />
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-                <button class="btn-copy-mini" onclick="document.getElementById('edit-usdt-bal').value=50">+50 ₮</button>
-                <button class="btn-copy-mini" onclick="document.getElementById('edit-usdt-bal').value=100">+100 ₮</button>
-                <button class="btn-copy-mini" onclick="document.getElementById('edit-usdt-bal').value=500">+500 ₮</button>
-              </div>
+            <!-- Big Action Execution Button -->
+            <div style="margin-top:14px;display:flex;gap:12px;align-items:center">
+              <button 
+                id="btn-execute-action" 
+                class="btn btn-primary" 
+                style="flex:1;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900;padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-size:14px;box-shadow:0 0 15px rgba(0,230,118,0.2)"
+                onclick="executeWalletAction()"
+              >
+                ➕ Add Funds to User Wallet
+              </button>
             </div>
           </div>
 
-          <!-- Reason and Submit Button -->
-          <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <input 
-              type="text" 
-              id="edit-bal-reason" 
-              placeholder="Reason for adjustment (e.g. Manual bonus credit, Disputed deposit approval, Admin gift)..." 
-              style="flex:1;min-width:260px;background:#1e293b;border:1px solid #334155;border-radius:8px;padding:10px 14px;color:#fff;font-size:13px" 
-            />
-            <button 
-              class="btn btn-primary" 
-              style="background:linear-gradient(135deg,#00e676,#ffd700);color:#000;font-weight:900;padding:10px 24px;border:none;border-radius:8px;cursor:pointer;font-size:14px"
-              onclick="saveUserWalletBalance()"
-            >
-              💾 Save &amp; Update User Balance
-            </button>
-          </div>
+          <!-- Direct Full Balance Override Grid (For Advanced Exact Set) -->
+          <details style="margin-top:14px;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px 14px">
+            <summary style="font-size:12px;font-weight:800;color:#94a3b8;cursor:pointer">⚙️ Advanced: Exact Balance Direct Overwrite (Click to Expand)</summary>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:12px">
+              <!-- Real INR -->
+              <div style="background:#1e293b;border:1px solid rgba(0,230,118,0.3);border-radius:10px;padding:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                  <span style="font-size:11.5px;font-weight:800;color:#00e676">💵 REAL INR (₹)</span>
+                  <span id="current-real-bal-display" style="font-size:15px;font-weight:900;color:#00e676">₹0.00</span>
+                </div>
+                <input type="number" step="0.01" id="edit-real-bal" class="form-input" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#fff;font-weight:800" oninput="updateLiveAdjustmentPreview()" />
+              </div>
+
+              <!-- Demo Practice -->
+              <div style="background:#1e293b;border:1px solid rgba(124,77,255,0.3);border-radius:10px;padding:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                  <span style="font-size:11.5px;font-weight:800;color:#c084fc">🎮 DEMO PRACTICE (₹)</span>
+                  <span id="current-demo-bal-display" style="font-size:15px;font-weight:900;color:#c084fc">₹10,000.00</span>
+                </div>
+                <input type="number" step="0.01" id="edit-demo-bal" class="form-input" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#fff;font-weight:800" oninput="updateLiveAdjustmentPreview()" />
+              </div>
+
+              <!-- USDT -->
+              <div style="background:#1e293b;border:1px solid rgba(56,189,248,0.3);border-radius:10px;padding:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                  <span style="font-size:11.5px;font-weight:800;color:#38bdf8">🪙 USDT (₮)</span>
+                  <span id="current-usdt-bal-display" style="font-size:15px;font-weight:900;color:#38bdf8">0.00 ₮</span>
+                </div>
+                <input type="number" step="0.01" id="edit-usdt-bal" class="form-input" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#fff;font-weight:800" oninput="updateLiveAdjustmentPreview()" />
+              </div>
+            </div>
+            
+            <div style="margin-top:10px;text-align:right">
+              <button class="btn btn-primary" style="background:#334155;color:#fff;font-size:12px;font-weight:800;padding:6px 16px;border:none;border-radius:6px;cursor:pointer" onclick="saveUserWalletBalance()">
+                💾 Apply Exact Override
+              </button>
+            </div>
+          </details>
         </section>
 
         <!-- Sub-Tabs for History (Game History vs Payment History vs Referral Network) -->

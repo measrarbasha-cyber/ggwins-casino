@@ -909,6 +909,10 @@
     if (editDemo) editDemo.value = demoBal.toFixed(2);
     if (editUsdt) editUsdt.value = usdtBal.toFixed(2);
 
+    if (typeof updateLiveAdjustmentPreview === 'function') {
+      updateLiveAdjustmentPreview();
+    }
+
     // Game History
     const games = data.gameWagers || [];
     setElText('user-games-count', games.length);
@@ -964,12 +968,184 @@
     }).join('');
   }
 
-  window.quickAdjustReal = function(amt) {
-    const input = document.getElementById('edit-real-bal');
-    if (!input) return;
-    let cur = parseFloat(input.value || 0);
-    cur = Math.max(0, cur + amt);
-    input.value = cur.toFixed(2);
+  let currentWalletOperationMode = 'add'; // 'add' or 'deduct'
+
+  window.setWalletOperationMode = function(mode) {
+    currentWalletOperationMode = mode === 'deduct' ? 'deduct' : 'add';
+    const btnAdd = document.getElementById('btn-mode-add');
+    const btnDeduct = document.getElementById('btn-mode-deduct');
+    const lblAmount = document.getElementById('lbl-action-amount');
+    const btnExec = document.getElementById('btn-execute-action');
+    const amountInput = document.getElementById('action-amount-input');
+    const targetSelect = document.getElementById('wallet-action-target');
+    const targetW = targetSelect ? targetSelect.value : 'real';
+    const currSym = targetW === 'usdt' ? '₮' : '₹';
+
+    if (currentWalletOperationMode === 'add') {
+      if (btnAdd) {
+        btnAdd.style.background = 'linear-gradient(135deg,#00e676,#00b0ff)';
+        btnAdd.style.color = '#000';
+      }
+      if (btnDeduct) {
+        btnDeduct.style.background = 'transparent';
+        btnDeduct.style.color = '#94a3b8';
+      }
+      if (lblAmount) lblAmount.textContent = `Amount to Add (${currSym}):`;
+      if (btnExec) {
+        btnExec.style.background = 'linear-gradient(135deg,#00e676,#00b0ff)';
+        btnExec.style.color = '#000';
+        btnExec.textContent = `➕ Add Funds to User Wallet`;
+      }
+      if (amountInput) amountInput.style.borderColor = '#00e676';
+    } else {
+      if (btnDeduct) {
+        btnDeduct.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
+        btnDeduct.style.color = '#fff';
+      }
+      if (btnAdd) {
+        btnAdd.style.background = 'transparent';
+        btnAdd.style.color = '#94a3b8';
+      }
+      if (lblAmount) lblAmount.textContent = `Amount to Deduct (${currSym}):`;
+      if (btnExec) {
+        btnExec.style.background = 'linear-gradient(135deg,#ef4444,#dc2626)';
+        btnExec.style.color = '#fff';
+        btnExec.textContent = `➖ Deduct Funds from User Wallet`;
+      }
+      if (amountInput) amountInput.style.borderColor = '#ef4444';
+    }
+
+    updateLiveAdjustmentPreview();
+  };
+
+  window.applyQuickAmount = function(amt) {
+    const input = document.getElementById('action-amount-input');
+    if (input) {
+      input.value = amt;
+      updateLiveAdjustmentPreview();
+    }
+  };
+
+  window.updateLiveAdjustmentPreview = function() {
+    const targetSelect = document.getElementById('wallet-action-target');
+    const amountInput = document.getElementById('action-amount-input');
+    const previewText = document.getElementById('action-preview-text');
+    const previewPill = document.getElementById('action-preview-pill');
+    const btnExec = document.getElementById('btn-execute-action');
+
+    const targetW = targetSelect ? targetSelect.value : 'real';
+    const currSym = targetW === 'usdt' ? '₮' : '₹';
+    const delta = parseFloat(amountInput?.value || 0);
+
+    const editReal = document.getElementById('edit-real-bal');
+    const editDemo = document.getElementById('edit-demo-bal');
+    const editUsdt = document.getElementById('edit-usdt-bal');
+
+    let curBal = 0;
+    if (targetW === 'real') curBal = parseFloat(editReal?.value || 0);
+    else if (targetW === 'demo') curBal = parseFloat(editDemo?.value || 0);
+    else if (targetW === 'usdt') curBal = parseFloat(editUsdt?.value || 0);
+
+    let nextBal = curBal;
+    if (currentWalletOperationMode === 'add') {
+      nextBal = curBal + delta;
+    } else {
+      nextBal = Math.max(0, curBal - delta);
+    }
+
+    if (previewText) {
+      previewText.textContent = `${currSym}${curBal.toLocaleString('en-IN', {minimumFractionDigits: 2})} ➔ ${currSym}${nextBal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      previewText.style.color = currentWalletOperationMode === 'add' ? '#00e676' : '#ef4444';
+    }
+    if (previewPill) {
+      previewPill.style.background = currentWalletOperationMode === 'add' ? 'rgba(0,230,118,0.08)' : 'rgba(239,68,68,0.08)';
+      previewPill.style.borderColor = currentWalletOperationMode === 'add' ? 'rgba(0,230,118,0.3)' : 'rgba(239,68,68,0.3)';
+    }
+    if (btnExec && delta > 0) {
+      btnExec.textContent = currentWalletOperationMode === 'add' 
+        ? `➕ Add ${currSym}${delta.toLocaleString('en-IN')} to ${targetW.toUpperCase()}`
+        : `➖ Deduct ${currSym}${delta.toLocaleString('en-IN')} from ${targetW.toUpperCase()}`;
+    }
+  };
+
+  window.executeWalletAction = async function() {
+    if (!activeSelectedUserId) {
+      alert('Please search and select a user first.');
+      return;
+    }
+
+    const targetSelect = document.getElementById('wallet-action-target');
+    const amountInput = document.getElementById('action-amount-input');
+    const reasonInput = document.getElementById('action-reason-input');
+
+    const targetW = targetSelect ? targetSelect.value : 'real';
+    const currSym = targetW === 'usdt' ? '₮' : '₹';
+    const delta = parseFloat(amountInput?.value || 0);
+    const reason = (reasonInput?.value || '').trim() || (currentWalletOperationMode === 'add' ? 'Admin Deposit Credit' : 'Admin Deduction / Penalty');
+
+    if (isNaN(delta) || delta <= 0) {
+      alert('Please enter a valid amount greater than 0.');
+      return;
+    }
+
+    const editReal = document.getElementById('edit-real-bal');
+    const editDemo = document.getElementById('edit-demo-bal');
+    const editUsdt = document.getElementById('edit-usdt-bal');
+
+    let curReal = parseFloat(editReal?.value || 0);
+    let curDemo = parseFloat(editDemo?.value || 0);
+    let curUsdt = parseFloat(editUsdt?.value || 0);
+
+    if (targetW === 'real') {
+      curReal = currentWalletOperationMode === 'add' ? (curReal + delta) : Math.max(0, curReal - delta);
+    } else if (targetW === 'demo') {
+      curDemo = currentWalletOperationMode === 'add' ? (curDemo + delta) : Math.max(0, curDemo - delta);
+    } else if (targetW === 'usdt') {
+      curUsdt = currentWalletOperationMode === 'add' ? (curUsdt + delta) : Math.max(0, curUsdt - delta);
+    }
+
+    const actionVerb = currentWalletOperationMode === 'add' ? 'ADD' : 'DEDUCT';
+    const confirmMsg = `⚠️ CONFIRM WALLET ${actionVerb}\n\nUser ID: ${activeSelectedUserId}\nAction: ${actionVerb} ${currSym}${delta.toLocaleString('en-IN')}\nAccount: ${targetW.toUpperCase()}\nReason: ${reason}\n\nThis will immediately update the live balance on the user's screen. Proceed?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      const res = await fetch('/api/admin/update-user-wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: activeSelectedUserId,
+          real: curReal,
+          demo: curDemo,
+          usdt: curUsdt,
+          reason: `${actionVerb}: ${reason}`
+        })
+      });
+
+      const json = await res.json();
+      if (res.ok && json.success) {
+        showNotification(json.message || `✅ Successfully ${actionVerb.toLowerCase()}ed ${currSym}${delta.toLocaleString('en-IN')}!`, currentWalletOperationMode === 'add' ? '#00e676' : '#ef4444');
+        if (amountInput) amountInput.value = '';
+        if (reasonInput) reasonInput.value = '';
+        if (editReal) editReal.value = curReal.toFixed(2);
+        if (editDemo) editDemo.value = curDemo.toFixed(2);
+        if (editUsdt) editUsdt.value = curUsdt.toFixed(2);
+
+        setElText('current-real-bal-display', `₹${curReal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+        setElText('current-demo-bal-display', `₹${curDemo.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
+        setElText('current-usdt-bal-display', `${curUsdt.toFixed(2)} ₮`);
+        updateLiveAdjustmentPreview();
+
+        // Reload data
+        loadAllUsersDirectory();
+        searchUserWallet(activeSelectedUserId);
+      } else {
+        alert(json.message || 'Failed to execute wallet action.');
+      }
+    } catch(e) {
+      console.error(e);
+      alert('Error updating user wallet.');
+    }
   };
 
   window.saveUserWalletBalance = async function() {
