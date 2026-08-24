@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -373,15 +373,61 @@ function createBall(betAmt){
   const pegR = Math.max(4, Math.min(7, W/100));
   const rowH = (canvas.height - 60) / (numRows + 1);
 
-  // Simulate house-biased path (85% lands in low center loss slots)
+  // 🛡️ GG PLINKO HOUSE PROBABILITY ENGINE:
+  // - Demo Account: 95% Win Probability
+  // - Real Account: 85% Chance to Lose, 15% Chance to Win (No Golden Ball Jackpots)
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let finalSlot;
   const midSlot = Math.floor(mults.length / 2);
-  if(Math.random() < 0.85){
-    // Target center loss bucket (multiplier < 1.0x)
-    const deviation = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-    finalSlot = Math.max(0, Math.min(mults.length - 1, midSlot + deviation));
+
+  if (isDemo) {
+    // 95% Win Rate in Demo Mode
+    if (Math.random() < 0.95) {
+      const winSlots = [];
+      mults.forEach((m, idx) => { if (m >= 1.1) winSlots.push(idx); });
+      finalSlot = winSlots.length > 0 ? winSlots[Math.floor(Math.random() * winSlots.length)] : 0;
+    } else {
+      const lossSlots = [];
+      mults.forEach((m, idx) => { if (m < 1.0) lossSlots.push(idx); });
+      finalSlot = lossSlots.length > 0 ? lossSlots[Math.floor(Math.random() * lossSlots.length)] : midSlot;
+    }
   } else {
-    finalSlot = Math.floor(Math.random() * mults.length);
+    // Real Account: 85% LOSE, 15% WIN (Excluding Golden Ball Jackpots)
+    const isWin = Math.random() < 0.15; // 15% Win Rate, 85% Loss Rate
+
+    if (!isWin) {
+      // 85% Loss: Target center loss slots (multiplier < 1.0x)
+      const lossSlots = [];
+      mults.forEach((m, idx) => {
+        if (m < 1.0) lossSlots.push(idx);
+      });
+      if (lossSlots.length > 0) {
+        finalSlot = lossSlots[Math.floor(Math.random() * lossSlots.length)];
+      } else {
+        finalSlot = midSlot;
+      }
+    } else {
+      // 15% Win: Modest/Moderate Win Slots ONLY (1.1x to <5.0x, NEVER the extreme Golden Ball edges)
+      const modestWinSlots = [];
+      mults.forEach((m, idx) => {
+        if (m >= 1.1 && m < 5.0 && idx !== 0 && idx !== (mults.length - 1)) {
+          modestWinSlots.push(idx);
+        }
+      });
+
+      if (modestWinSlots.length > 0) {
+        finalSlot = modestWinSlots[Math.floor(Math.random() * modestWinSlots.length)];
+      } else {
+        // Fallback to closest non-golden slot >= 1.0
+        const fallbackSlots = [];
+        mults.forEach((m, idx) => {
+          if (m >= 1.0 && idx !== 0 && idx !== (mults.length - 1)) {
+            fallbackSlots.push(idx);
+          }
+        });
+        finalSlot = fallbackSlots.length > 0 ? fallbackSlots[Math.floor(Math.random() * fallbackSlots.length)] : midSlot;
+      }
+    }
   }
 
   // Construct path that naturally ends at finalSlot
