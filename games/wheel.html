@@ -376,16 +376,25 @@ function spinWheel(){ if(!requireAuth()) return;
   const count = segments.length;
   const arc = (Math.PI * 2) / count;
 
-  // 🎯 Exactly 20% User Win Chance / 80% Loss Chance
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let targetIdx;
-  if(Math.random() < 0.80){
-    const lossIndices = [];
-    segments.forEach((s, idx) => { if(s.mult === 0 || s.mult < 1.0) lossIndices.push(idx); });
-    targetIdx = lossIndices.length > 0 ? lossIndices[Math.floor(Math.random() * lossIndices.length)] : 0;
-  } else {
+  if (isDemo) {
+    // 100% WIN IN DEMO: Target highest winning multipliers (>= 1.5x)
     const winIndices = [];
-    segments.forEach((s, idx) => { if(s.mult >= 1.0) winIndices.push(idx); });
+    segments.forEach((s, idx) => { if(s.mult >= 1.5) winIndices.push(idx); });
     targetIdx = winIndices.length > 0 ? winIndices[Math.floor(Math.random() * winIndices.length)] : 0;
+  } else {
+    // REAL ACCOUNT: 20% Win / 80% Loss
+    const isWin = Math.random() < 0.20;
+    if (!isWin) {
+      const lossIndices = [];
+      segments.forEach((s, idx) => { if(s.mult === 0 || s.mult < 1.0) lossIndices.push(idx); });
+      targetIdx = lossIndices.length > 0 ? lossIndices[Math.floor(Math.random() * lossIndices.length)] : 0;
+    } else {
+      const winIndices = [];
+      segments.forEach((s, idx) => { if(s.mult >= 1.0) winIndices.push(idx); });
+      targetIdx = winIndices.length > 0 ? winIndices[Math.floor(Math.random() * winIndices.length)] : 0;
+    }
   }
 
   const selectedSeg = segments[targetIdx];

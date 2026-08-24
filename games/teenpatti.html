@@ -444,10 +444,28 @@ function startNewHand() {
   document.getElementById('hand-rank-badge').textContent = 'Blind';
 
   const deck = createDeck();
-  playerHand = [deck.pop(), deck.pop(), deck.pop()];
-  bot1Hand   = [deck.pop(), deck.pop(), deck.pop()];
-  bot2Hand   = [deck.pop(), deck.pop(), deck.pop()];
-  bot3Hand   = [deck.pop(), deck.pop(), deck.pop()];
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  const shouldWin = isDemo ? true : (Math.random() < 0.20);
+  if (shouldWin) {
+    // Pure Sequence (Ace High) for player
+    playerHand = [
+      { suit: '♠', val: 14, rank: 'A', color: 'black' },
+      { suit: '♠', val: 13, rank: 'K', color: 'black' },
+      { suit: '♠', val: 12, rank: 'Q', color: 'black' }
+    ];
+    bot1Hand = [deck.pop(), deck.pop(), deck.pop()];
+    bot2Hand = [deck.pop(), deck.pop(), deck.pop()];
+    bot3Hand = [deck.pop(), deck.pop(), deck.pop()];
+  } else {
+    playerHand = [deck.pop(), deck.pop(), deck.pop()];
+    bot1Hand = [
+      { suit: '♥', val: 14, rank: 'A', color: 'red' },
+      { suit: '♦', val: 14, rank: 'A', color: 'red' },
+      { suit: '♣', val: 10, rank: '10', color: 'black' }
+    ];
+    bot2Hand = [deck.pop(), deck.pop(), deck.pop()];
+    bot3Hand = [deck.pop(), deck.pop(), deck.pop()];
+  }
 
   // Render Face Down Cards
   ['player', 'bot1', 'bot2', 'bot3'].forEach(who => {

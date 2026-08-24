@@ -670,20 +670,29 @@ function handleThirdCardRule(playerCards, bankerCards, bet){
 }
 
 function finishRound(playerCards, bankerCards, bet){
-  // 🎯 Exactly 20% User Win Chance / 80% House Win Chance
-  const userWon = (Math.random() < 0.20);
-  if(!userWon){
-    // Invert cards if player was winning
-    let pVal = calculateHandValue(playerCards);
-    let bVal = calculateHandValue(bankerCards);
-    if(selectedBetZone === 'player' && pVal >= bVal){
-      bankerCards[0].val = (pVal + 1) % 10;
-      document.getElementById('score-banker').textContent = calculateHandValue(bankerCards);
-    } else if(selectedBetZone === 'banker' && bVal >= pVal){
-      playerCards[0].val = (bVal + 1) % 10;
-      document.getElementById('score-player').textContent = calculateHandValue(playerCards);
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  const userWon = isDemo ? true : (Math.random() < 0.20);
+  if (userWon) {
+    // Force chosen side to win
+    if (selectedPosition === 'player') {
+      playerCards[0].val = 5; playerCards[1].val = 4; // 9
+      bankerCards[0].val = 2; bankerCards[1].val = 3; // 5
+    } else if (selectedPosition === 'banker') {
+      bankerCards[0].val = 5; bankerCards[1].val = 4; // 9
+      playerCards[0].val = 2; playerCards[1].val = 3; // 5
+    }
+  } else {
+    // Force other side to win
+    if (selectedPosition === 'player') {
+      bankerCards[0].val = 5; bankerCards[1].val = 4; // 9
+      playerCards[0].val = 2; playerCards[1].val = 3; // 5
+    } else if (selectedPosition === 'banker') {
+      playerCards[0].val = 5; playerCards[1].val = 4; // 9
+      bankerCards[0].val = 2; bankerCards[1].val = 3; // 5
     }
   }
+  document.getElementById('score-player').textContent = calculateHandValue(playerCards);
+  document.getElementById('score-banker').textContent = calculateHandValue(bankerCards);
   const pFinal = calculateHandValue(playerCards);
   const bFinal = calculateHandValue(bankerCards);
 

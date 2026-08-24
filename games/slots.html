@@ -389,21 +389,29 @@ function spin(){ if(!requireAuth()) return;
   spinning = true;
   document.getElementById('spin-btn').disabled = true;
   document.getElementById('spin-btn').classList.add('spinning');
-  // Generate house-biased results (85% near-miss / loss, 15% small win)
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let results;
-  if(Math.random() < 0.85){
-    // Force near miss: Pick a symbol for reels 0 and 1, then ensure reel 2 and beyond break the streak
+  if (isDemo) {
+    // 100% GUARANTEED WIN IN DEMO MODE (3 to 5 matching symbols)
     const s1 = weightedPick();
-    const otherSymbols = SYMBOLS.filter(s => s !== s1);
-    results = [
-      s1,
-      s1,
-      otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
-      otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
-      weightedPick()
-    ];
+    const matchCount = Math.random() < 0.5 ? 4 : 3;
+    results = Array(5).fill(null).map((_, idx) => idx < matchCount ? s1 : weightedPick());
   } else {
-    results = Array.from({length:5}, ()=>weightedPick());
+    // REAL ACCOUNT: Exactly 20% Win, 80% Loss (Near-miss)
+    const isWin = Math.random() < 0.20;
+    const s1 = weightedPick();
+    if (isWin) {
+      results = [s1, s1, s1, weightedPick(), weightedPick()];
+    } else {
+      const otherSymbols = SYMBOLS.filter(s => s !== s1);
+      results = [
+        s1,
+        s1,
+        otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
+        otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
+        weightedPick()
+      ];
+    }
   }
 
   const turbo = document.getElementById('turbo-toggle').checked;

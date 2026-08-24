@@ -481,12 +481,20 @@ function spinDiamonds(){
 }
 
 function resolveDiamonds(bet){
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  const isWin = isDemo ? true : (Math.random() < 0.20);
   const finalGems = [];
-  for(let i=0; i<5; i++){
-    finalGems.push(GEMS[Math.floor(Math.random()*GEMS.length)]);
+  if (isWin) {
+    // 3 or 4 matching gems for a guaranteed win
+    const g1 = GEMS[Math.floor(Math.random()*GEMS.length)];
+    const g2 = GEMS[Math.floor(Math.random()*GEMS.length)];
+    finalGems.push(g1, g1, g1, g2, GEMS[Math.floor(Math.random()*GEMS.length)]);
+  } else {
+    // Distinct gems (loss)
+    const shuffled = [...GEMS].sort(() => 0.5 - Math.random());
+    finalGems.push(shuffled[0], shuffled[1], shuffled[2], shuffled[3], shuffled[4]);
   }
 
-  // Animate stop one by one
   finalGems.forEach((g, i)=>{
     setTimeout(()=>{
       const slot = document.getElementById(`slot-${i}`);

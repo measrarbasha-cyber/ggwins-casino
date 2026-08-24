@@ -440,8 +440,18 @@ function startAndarBahar() {
   document.getElementById('andar-cards').innerHTML = '';
   document.getElementById('bahar-cards').innerHTML = '';
 
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  const shouldWin = isDemo ? true : (Math.random() < 0.20);
   const deck = createDeck();
   const joker = deck.pop();
+  // Ensure the matching card appears on the winning side
+  if (shouldWin) {
+    // Insert match in chosen side's upcoming slots
+    deck[deck.length - (chosenSide === 'andar' ? 1 : 2)] = { suit: joker.suit === '♠'?'♣':'♠', rank: joker.rank, color: joker.color };
+  } else {
+    const oppSide = chosenSide === 'andar' ? 'bahar' : 'andar';
+    deck[deck.length - (oppSide === 'andar' ? 1 : 2)] = { suit: joker.suit === '♠'?'♣':'♠', rank: joker.rank, color: joker.color };
+  }
 
   // Show Joker
   const jSlot = document.getElementById('joker-card-slot');

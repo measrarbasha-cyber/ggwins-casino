@@ -569,9 +569,22 @@ function rollSicBo(){
 }
 
 function resolveSicBo(bet){
-  const roll1 = Math.floor(Math.random()*6) + 1;
-  const roll2 = Math.floor(Math.random()*6) + 1;
-  const roll3 = Math.floor(Math.random()*6) + 1;
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  const shouldWin = isDemo ? true : (Math.random() < 0.20);
+  let roll1, roll2, roll3;
+  if(shouldWin){
+    if(selectedSicZone === 'small') { roll1 = 1; roll2 = 2; roll3 = 3; } // sum 6
+    else if(selectedSicZone === 'big') { roll1 = 4; roll2 = 5; roll3 = 5; } // sum 14
+    else if(selectedSicZone === 'odd') { roll1 = 2; roll2 = 3; roll3 = 4; } // sum 9
+    else if(selectedSicZone === 'even') { roll1 = 3; roll2 = 3; roll3 = 4; } // sum 10
+    else { roll1 = 3; roll2 = 3; roll3 = 3; }
+  } else {
+    if(selectedSicZone === 'small') { roll1 = 5; roll2 = 5; roll3 = 4; } // sum 14 (loss)
+    else if(selectedSicZone === 'big') { roll1 = 1; roll2 = 2; roll3 = 3; } // sum 6 (loss)
+    else if(selectedSicZone === 'odd') { roll1 = 2; roll2 = 4; roll3 = 4; } // sum 10 (loss)
+    else if(selectedSicZone === 'even') { roll1 = 1; roll2 = 3; roll3 = 5; } // sum 9 (loss)
+    else { roll1 = 1; roll2 = 2; roll3 = 3; }
+  }
   const sum = roll1 + roll2 + roll3;
   const isTriple = (roll1 === roll2 && roll2 === roll3);
 

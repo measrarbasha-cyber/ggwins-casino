@@ -634,7 +634,8 @@ function shootPenalty(targetSpot){
   setTargetsDisabled(true);
 
   // 68% chance goal
-  const isGoal = Math.random() < 0.68;
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  const isGoal = isDemo ? true : (Math.random() < 0.20);
   
   let gkVendorSpot = targetSpot;
   if(isGoal){
