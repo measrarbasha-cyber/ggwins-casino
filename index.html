@@ -1858,7 +1858,7 @@
       const rEl = document.getElementById('m-bal-txt-real');
       const uEl = document.getElementById('m-bal-txt-usdt');
       const dNum = (wallets && typeof wallets.demo === 'number') ? wallets.demo : 10000;
-      const rNum = (wallets && typeof wallets.real === 'number') ? wallets.real : 0;
+      const rNum = (wallets && typeof wallets.real === 'number') ? ((wallets.real || 0) + (wallets.bonus || 0)) : 0;
       const uNum = (wallets && typeof wallets.usdt === 'number') ? wallets.usdt : 0;
 
       if (dEl) dEl.textContent = '₹' + dNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
@@ -1930,7 +1930,7 @@
       });
 
       const dNum = (wallets && typeof wallets.demo === 'number') ? wallets.demo : 10000;
-      const rNum = (wallets && typeof wallets.real === 'number') ? wallets.real : 0;
+      const rNum = (wallets && typeof wallets.real === 'number') ? ((wallets.real || 0) + (wallets.bonus || 0)) : 0;
       const uNum = (wallets && typeof wallets.usdt === 'number') ? wallets.usdt : 0;
 
       const dEl = document.getElementById('bal-txt-demo');
@@ -1947,13 +1947,13 @@
       if (active === 'demo') {
         if (topIcon) topIcon.textContent = '🎮';
         if (topBal) {
-          topBal.textContent = '₹' + dNum.toLocaleString('en-IN', {minimumFractionDigits: 0});
+          topBal.textContent = '₹' + dNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
           topBal.style.color = '#00e676';
         }
       } else if (active === 'real') {
         if (topIcon) topIcon.textContent = '🇮🇳';
         if (topBal) {
-          topBal.textContent = '₹' + rNum.toLocaleString('en-IN', {minimumFractionDigits: 0});
+          topBal.textContent = '₹' + rNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
           topBal.style.color = '#ffd700';
         }
       } else {

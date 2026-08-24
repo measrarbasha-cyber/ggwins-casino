@@ -877,13 +877,14 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
         # ── 3. UPDATE USER PROGRESS (STATS, WALLETS, VIP) ───────────
         elif url_path == "/api/update-user-progress":
             user_id = req_data.get("userId")
-            username = req_data.get("username")
+            user_id = (req_data.get("userId") or "").strip()
+            username = (req_data.get("username") or "").strip()
             users = db.get("users", [])
             target = None
             if user_id:
-                target = next((u for u in users if u.get("id") == user_id), None)
-            elif username:
-                target = next((u for u in users if u.get("username", "").lower() == username.lower()), None)
+                target = next((u for u in users if u.get("id", "").upper() == user_id.upper()), None)
+            if not target and username:
+                target = next((u for u in users if u.get("username", "").lower() == username.lower() or u.get("id", "").upper() == username.upper()), None)
 
             if target:
                 if "wallets" in req_data and isinstance(req_data["wallets"], dict):

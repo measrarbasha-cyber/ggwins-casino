@@ -865,10 +865,16 @@
 
   // ── BACKGROUND REAL-TIME SYNC WITH SERVER ─────────────────────
   let processedCompletedDepositIds = new Set();
-  // Initialize with already completed deposits in storage so we don't duplicate notifications
+  let processedAdminAdjustmentIds = new Set();
+  // Initialize with already processed transactions in storage so we don't duplicate notifications
   try {
+    const rawAdj = JSON.parse(localStorage.getItem('ggwins_processed_admin_adj_ids') || '[]');
+    rawAdj.forEach(id => processedAdminAdjustmentIds.add(id));
     const existingTxs = JSON.parse(localStorage.getItem('ggwins_transactions') || '[]');
-    existingTxs.forEach(t => { if (t.status === 'Completed') processedCompletedDepositIds.add(t.id); });
+    existingTxs.forEach(t => { 
+      if (t.status === 'Completed') processedCompletedDepositIds.add(t.id);
+      if (t.type === 'adjustment' && t.id) processedAdminAdjustmentIds.add(t.id);
+    });
   } catch (e) {}
 
   window.syncWalletStatusFromServer = async function() {
@@ -1016,42 +1022,50 @@
         }
       }
 
-      // 5. Direct Admin Balance Adjustment Live Sync (only if authenticated user record exists)
+      // 5. Direct Admin Balance Adjustment Live Sync
+      // 🛡️ ONLY update balance if there is a NEW explicit admin adjustment transaction!
+      // This protects player in-game winnings & wager deductions (e.g. ₹3,400) from ever being reverted to ₹4,000!
+      if (data.transactions && Array.isArray(data.transactions)) {
+        data.transactions.forEach(tx => {
+          if (tx.type === 'adjustment' && tx.id && !processedAdminAdjustmentIds.has(tx.id)) {
+            processedAdminAdjustmentIds.add(tx.id);
+            try {
+              localStorage.setItem('ggwins_processed_admin_adj_ids', JSON.stringify(Array.from(processedAdminAdjustmentIds)));
+            } catch(e) {}
+
+            if (tx.newBalance !== undefined && !isNaN(parseFloat(tx.newBalance))) {
+              const targetW = tx.wallet || 'real';
+              wallets[targetW] = parseFloat(tx.newBalance);
+              updated = true;
+            } else if (tx.amount !== undefined && !isNaN(parseFloat(tx.amount))) {
+              const targetW = tx.wallet || 'real';
+              wallets[targetW] = Math.max(0, (parseFloat(wallets[targetW]) || 0) + parseFloat(tx.amount));
+              updated = true;
+            }
+
+            if (typeof showToast === 'function') {
+              showToast(`💳 ${tx.description || tx.method || 'Admin adjusted your wallet balance'}`, 'info');
+            }
+          }
+        });
+      }
+
+      // Keep server record in sync with client's authoritative gameplay balance
       if (!data.isGuest && data.user && data.wallets && typeof data.wallets === 'object') {
         const sReal = parseFloat(data.wallets.real);
-        const sDemo = parseFloat(data.wallets.demo);
-        const sUsdt = parseFloat(data.wallets.usdt);
         const lReal = parseFloat(wallets.real) || 0;
-
-        // 🛡️ RESTART & REDEPLOY PROTECTION:
-        // If local balance has real cash (e.g. ₹500) and server returns 0 without an explicit admin debit transaction, NEVER zero out!
-        if (!isNaN(sReal)) {
-          if (sReal === 0 && lReal > 0 && (!data.transactions || !data.transactions.some(t => t.type === 'adjustment' && t.newBalance === 0))) {
-            // Server restarted with fresh memory: Re-seed server with player's real balance
-            if (session && (session.id || session.username)) {
-              fetch('/api/update-user-progress', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  userId: session.id || '',
-                  username: session.username || '',
-                  wallets: wallets
-                })
-              }).catch(() => {});
-            }
-          } else if (Math.abs(lReal - sReal) > 0.001) {
-            wallets.real = sReal;
-            updated = true;
+        if (!isNaN(sReal) && Math.abs(lReal - sReal) > 0.001) {
+          if (session && (session.id || session.username)) {
+            fetch('/api/update-user-progress', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: session.id || '',
+                username: session.username || '',
+                wallets: wallets
+              })
+            }).catch(() => {});
           }
-        }
-
-        if (!isNaN(sDemo) && Math.abs((parseFloat(wallets.demo) || 0) - sDemo) > 0.001) {
-          wallets.demo = sDemo;
-          updated = true;
-        }
-        if (!isNaN(sUsdt) && Math.abs((parseFloat(wallets.usdt) || 0) - sUsdt) > 0.001) {
-          wallets.usdt = sUsdt;
-          updated = true;
         }
       }
 
@@ -1313,7 +1327,7 @@
     // Update standard balance target elements
     const targets = [
       'lobby-balance-val', 'lobby-balance-val-2', 'bal-display',
-      'nav-balance-val', 'header-balance-val'
+      'nav-balance-val', 'header-balance-val', 'top-bal-display'
     ];
     targets.forEach(id => {
       const el = document.getElementById(id);
@@ -1322,6 +1336,25 @@
         el.title = `${activeCfg.name} (${activeCfg.code})`;
       }
     });
+
+    // Update lobby account breakdown elements
+    const dNum = parseFloat(wallets.demo || 10000);
+    const rNum = (parseFloat(wallets.real || 0) + parseFloat(wallets.bonus || 0));
+    const uNum = parseFloat(wallets.usdt || 0);
+
+    const dEl = document.getElementById('bal-txt-demo');
+    const rEl = document.getElementById('bal-txt-real');
+    const uEl = document.getElementById('bal-txt-usdt');
+    if (dEl) dEl.textContent = '₹' + dNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
+    if (rEl) rEl.textContent = '₹' + rNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
+    if (uEl) uEl.textContent = '$' + uNum.toLocaleString('en-US', {minimumFractionDigits: 2});
+
+    const mdEl = document.getElementById('m-bal-txt-demo');
+    const mrEl = document.getElementById('m-bal-txt-real');
+    const muEl = document.getElementById('m-bal-txt-usdt');
+    if (mdEl) mdEl.textContent = '₹' + dNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
+    if (mrEl) mrEl.textContent = '₹' + rNum.toLocaleString('en-IN', {minimumFractionDigits: 2});
+    if (muEl) muEl.textContent = '$' + uNum.toLocaleString('en-US', {minimumFractionDigits: 2});
 
     // Update currency prefixes
     document.querySelectorAll('.bet-currency').forEach(el => {
