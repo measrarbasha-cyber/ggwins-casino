@@ -360,7 +360,8 @@ function playKeno(){ if(!requireAuth()) return;
 
   // House edge bias: 80% forced 0 hits or low hits
   let drawn = [];
-  const biasLoss = Math.random() < 0.80;
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  const biasLoss = isDemo ? false : (Math.random() >= (typeof window.getGameWinChance === 'function' ? window.getGameWinChance(0.60) : 0.60));
   if(biasLoss){
     const unpicked = [];
     for(let i=1; i<=TOTAL_NUMS; i++){ if(!selected.has(i)) unpicked.push(i); }

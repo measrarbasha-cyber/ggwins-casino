@@ -481,6 +481,8 @@ function spinDiamonds(){
 }
 
 function resolveDiamonds(bet){
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  const isWin = isDemo ? true : (Math.random() < (typeof window.getGameWinChance === 'function' ? window.getGameWinChance(0.60) : 0.60));
   const finalGems = [];
   for(let i=0; i<5; i++){
     finalGems.push(GEMS[Math.floor(Math.random()*GEMS.length)]);
