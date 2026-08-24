@@ -211,16 +211,16 @@
   };
 
   window.getGameWinChance = function(standardChance = 0.20) {
-    // In Demo Account: 100% Guaranteed Win Rate
+    // 🎮 Demo Account: 100% Guaranteed Win Rate on EVERY game
     if (window.isDemoMode()) {
       return 1.00;
     }
 
-    // In Real Account (INR / USDT): Exactly 20% Win Probability / 80% Loss Probability
+    // 🇮🇳 Real Account (INR / USDT): Exactly 20% Win Probability / 80% Loss Probability
     return 0.20;
   };
 
-  window.shouldGameWin = function(standardChance = 0.48) {
+  window.shouldGameWin = function(standardChance = 0.20) {
     return Math.random() < window.getGameWinChance(standardChance);
   };
 
