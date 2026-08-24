@@ -287,10 +287,7 @@ let totalProfit=0, wins=0, losses=0;
 let isPlaying=false, autoMode=false, autoTimer=null;
 
 function genResult(targetMult = 2.00){
-  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  if (isDemo && Math.random() < 0.95) {
-    return parseFloat((targetMult + 0.05 + Math.random() * 2.0).toFixed(2));
-  }
+  // 80% forced loss below target, 20% fair
   if(Math.random() < 0.80){
     const maxVal = Math.max(1.01, targetMult - 0.02);
     return parseFloat((1.00 + Math.random() * (maxVal - 1.00)).toFixed(2));

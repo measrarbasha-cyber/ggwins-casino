@@ -510,8 +510,7 @@ function finishRoll(amt, resEl){
   let result;
   
   // Heavily biased: 80% forced loss, 20% fair roll
-  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const forceLoss = isDemo ? (Math.random() >= 0.95) : (Math.random() < 0.80);
+  const forceLoss = Math.random() < 0.80;
   if(forceLoss){
     if(diceMode === 'under'){
       // Must roll >= target to lose

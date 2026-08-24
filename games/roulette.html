@@ -450,8 +450,7 @@ function spinWheel(){ if(!requireAuth()) return;
 
   // House bias: Pick a number that causes loss 80% of the time
   let result;
-  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  if (isDemo ? (Math.random() >= 0.95) : (Math.random() < 0.75)) {
+  if(Math.random() < 0.75){ // 25% User Win Probability / 75% Loss Probability
     const losingCandidates = WHEEL_ORDER.filter(num => {
       const c = numColor(num);
       return !bets.some(b => {

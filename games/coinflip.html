@@ -441,8 +441,7 @@ function flipCoin(){
   if(typeof playGameSound === 'function') playGameSound('tick');
 
   // 60% chance to win on Coin Flip
-  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const won = isDemo ? (Math.random() < 0.95) : (Math.random() < 0.60);
+  const won = Math.random() < 0.60;
   const outcome = won ? selectedSide : (selectedSide === 'heads' ? 'tails' : 'heads');
 
   setTimeout(() => {
