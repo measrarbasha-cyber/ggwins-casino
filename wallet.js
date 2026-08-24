@@ -786,7 +786,7 @@
     const pendingId = 'DEP-' + Math.random().toString(36).substr(2, 8).toUpperCase();
     const orderId = 'ORD-DEP-' + Math.floor(100000 + Math.random() * 900000);
     const qrNum = qrNumParam || selectedPaymentQR || (parseInt(document.getElementById('wm-qr-img')?.dataset?.idx || 0) + 1);
-    const qrTarget = QR_DATA[qrNum - 1] ? QR_DATA[qrNum - 1].upi : 'amdasrarbasha-1@oksbi';
+    const qrTarget = QR_DATA[qrNum - 1] ? QR_DATA[qrNum - 1].upi : 'kabilanr2210@okhdfcbank';
 
     const pendingRecord = {
       id: pendingId,
@@ -2629,8 +2629,8 @@
 
   // QR Data & Rotator — cycles through 3 payment QR codes
   const QR_DATA = [
-    { src: 'assets/qr1.jpg', upi: 'amdasrarbasha-1@oksbi' },
     { src: 'assets/qr2.jpg', upi: 'kabilanr2210@okhdfcbank' },
+    { src: 'assets/qr1.jpg', upi: 'amdasrarbasha-1@oksbi' },
     { src: 'assets/qr3.jpg', upi: 'txchem@slc' }
   ];
 
@@ -3165,7 +3165,7 @@
           ${!isUsdt && depositMethod === 'upi' ? `
             <div class="wm-upi-box" id="wm-qr-rotator-box">
               <div class="wm-qr-placeholder" id="wm-qr-img-wrap" onclick="openQRLightbox()" title="Click to pop up & save QR image" style="border:2px solid #7c4dff;border-radius:12px;overflow:hidden;background:#fff;padding:6px;position:relative">
-                <img id="wm-qr-img" src="${getQRAsset('assets/qr1.jpg')}" alt="QR Code" data-idx="0" style="width:100%;height:100%;object-fit:contain;display:block;border-radius:8px">
+                <img id="wm-qr-img" src="${getQRAsset('assets/qr2.jpg')}" alt="QR Code" data-idx="0" style="width:100%;height:100%;object-fit:contain;display:block;border-radius:8px">
                 <div style="position:absolute;top:5px;right:6px;background:#7c4dff;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:999px" id="wm-qr-badge">1/3</div>
                 <div class="wm-qr-hover-hint">🔍 View / Save</div>
               </div>
@@ -3174,9 +3174,9 @@
                   <span class="wm-upi-label">Pay to UPI ID:</span>
                   <button class="wm-btn-rot" id="wm-rot-btn-text" onclick="rotateQR()" title="Switch to next UPI QR">🔄 Switch QR (1/3)</button>
                 </div>
-                <div class="wm-upi-id" id="wm-qr-upi-id">amdasrarbasha-1@oksbi</div>
+                <div class="wm-upi-id" id="wm-qr-upi-id">kabilanr2210@okhdfcbank</div>
                 <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-                  <button class="wm-btn-copy" id="wm-copy-upi-btn" onclick="(function(btn){var ids=['amdasrarbasha-1@oksbi','kabilanr2210@okhdfcbank','txchem@slc'];var idx=parseInt(document.getElementById('wm-qr-img').dataset.idx||0);navigator.clipboard&&navigator.clipboard.writeText(ids[idx]);btn.textContent='Copied! ✓';setTimeout(()=>btn.textContent='Copy UPI ID',1500);})(this)">Copy UPI ID</button>
+                  <button class="wm-btn-copy" id="wm-copy-upi-btn" onclick="(function(btn){var ids=['kabilanr2210@okhdfcbank','amdasrarbasha-1@oksbi','txchem@slc'];var idx=parseInt(document.getElementById('wm-qr-img').dataset.idx||0);navigator.clipboard&&navigator.clipboard.writeText(ids[idx]);btn.textContent='Copied! ✓';setTimeout(()=>btn.textContent='Copy UPI ID',1500);})(this)">Copy UPI ID</button>
                   <button class="wm-btn-enlarge" onclick="openQRLightbox()">🔍 Pop up &amp; Save QR</button>
                 </div>
               </div>
