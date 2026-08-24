@@ -671,8 +671,7 @@ function handleThirdCardRule(playerCards, bankerCards, bet){
 
 function finishRound(playerCards, bankerCards, bet){
   // 🎯 Exactly 20% User Win Chance / 80% House Win Chance
-  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const userWon = isDemo ? true : (Math.random() < (typeof window.getGameWinChance === 'function' ? window.getGameWinChance(0.60) : 0.60));
+  const userWon = (Math.random() < 0.20);
   if(!userWon){
     // Invert cards if player was winning
     let pVal = calculateHandValue(playerCards);

@@ -210,26 +210,14 @@
     return (window.getActiveWalletKey ? window.getActiveWalletKey() : localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo';
   };
 
-  window.getGameWinChance = function(standardChance = 0.48) {
+  window.getGameWinChance = function(standardChance = 0.20) {
     // In Demo Account: 100% Guaranteed Win Rate
     if (window.isDemoMode()) {
       return 1.00;
     }
 
-    const state = window.getAdaptiveWinState();
-
-    // Rule C: If losing in a row (consecutive losses >= 3), trigger guaranteed recovery win
-    if (state.consecutiveLosses >= 3) {
-      return 0.98;
-    }
-
-    // Rule A: New user starts with 80% winning probability
-    if (state.isNewUser || state.totalGames < 5) {
-      return Math.max(0.80, state.currentWinProbability || 0.80);
-    }
-
-    // Rule D / Ongoing: 60% win rate baseline (40% loss)
-    return state.currentWinProbability || 0.60;
+    // In Real Account (INR / USDT): Exactly 20% Win Probability / 80% Loss Probability
+    return 0.20;
   };
 
   window.shouldGameWin = function(standardChance = 0.48) {

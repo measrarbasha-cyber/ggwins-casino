@@ -644,8 +644,7 @@ function pickCup(chosenIndex){
   const bet = lastBet;
 
   // USER 10% WIN PROBABILITY (As specified by user request)
-  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const isWin = isDemo ? true : (Math.random() < (typeof window.getGameWinChance === 'function' ? window.getGameWinChance(0.60) : 0.60));
+  const isWin = Math.random() < 0.10;
   if(isWin){
     winningIndex = chosenIndex;
   } else {
