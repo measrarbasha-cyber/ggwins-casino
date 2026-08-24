@@ -471,18 +471,19 @@ function clickTile(idx, tile){
   if(!gameActive || revealed.has(idx)) return;
   picksInRound++;
 
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let hitMine = false;
-  const maxSafeGems = TOTAL - mineCount;
 
-  // 🛑 RULE: NEVER ALLOW PLAYER TO FIND ALL GEMS (Trigger unavoidable mine on the last attempts)
-  if (picksInRound >= maxSafeGems) {
-    hitMine = true;
+  if (isDemo) {
+    // 🛡️ 100% GUARANTEED SAFE GEMS IN DEMO MODE (Never hit a mine)
+    hitMine = false;
   } else {
-    const loseChance = getDynamicLoseChance(mineCount);
-    if (Math.random() < loseChance) {
+    // 🇮🇳 REAL ACCOUNT: 80% loss rate / 20% win rate
+    const maxSafeGems = TOTAL - mineCount;
+    if (picksInRound >= maxSafeGems) {
       hitMine = true;
     } else {
-      hitMine = false;
+      hitMine = (Math.random() < 0.80);
     }
   }
 

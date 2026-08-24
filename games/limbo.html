@@ -287,14 +287,19 @@ let totalProfit=0, wins=0, losses=0;
 let isPlaying=false, autoMode=false, autoTimer=null;
 
 function genResult(targetMult = 2.00){
-  // 80% forced loss below target, 20% fair
-  if(Math.random() < 0.80){
-    const maxVal = Math.max(1.01, targetMult - 0.02);
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  if (isDemo) {
+    // 100% WIN IN DEMO: Always beats the chosen multiplier target
+    return parseFloat((targetMult + 0.50 + Math.random() * 3.0).toFixed(2));
+  }
+
+  // Real account: 80% crash below target, 20% win above
+  const isWin = Math.random() < 0.20;
+  if (!isWin) {
+    const maxVal = Math.max(1.01, targetMult - 0.05);
     return parseFloat((1.00 + Math.random() * (maxVal - 1.00)).toFixed(2));
   }
-  const r = Math.random();
-  if(r < 0.1) return 1.00;
-  return Math.floor(100 / (1 - r * 0.95)) / 100;
+  return parseFloat((targetMult + 0.10 + Math.random() * 2.0).toFixed(2));
 }
 
 function setTarget(v){
