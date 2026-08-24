@@ -211,9 +211,9 @@
   };
 
   window.getGameWinChance = function(standardChance = 0.48) {
-    // In Demo Account: 90% Win Rate
+    // In Demo Account: 100% Guaranteed Win Rate
     if (window.isDemoMode()) {
-      return 0.90;
+      return 1.00;
     }
 
     const state = window.getAdaptiveWinState();
