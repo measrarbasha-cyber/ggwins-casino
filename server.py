@@ -332,7 +332,8 @@ def is_rate_limited(ip, max_requests=120, window_sec=60):
         if len(timestamps) > max_requests:
             ip_banned_until[ip] = now + 120 # 2 minute cooldown for abusive IPs
             return True
-        return False
+# Register Android APK MIME type
+http.server.SimpleHTTPRequestHandler.extensions_map['.apk'] = 'application/vnd.android.package-archive'
 
 class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
