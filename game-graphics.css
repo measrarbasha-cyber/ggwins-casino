@@ -1,0 +1,253 @@
+/* ==========================================================================
+   GG WINS — UNIVERSAL MODERN GAME GRAPHICS & SHADER SYSTEM
+   Stake / Roobet Tier Visual Fidelity, 3D Transforms & Spring Physics
+   ========================================================================== */
+
+/* ── 1. CYBER NEON & METALLIC SHADER TOKENS ── */
+:root {
+  --fx-gold-linear: linear-gradient(135deg, #ffe066 0%, #ffd700 45%, #e6a100 85%, #ffb700 100%);
+  --fx-gold-bevel: inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 0 rgba(0,0,0,0.5), 0 4px 14px rgba(255,215,0,0.3);
+  --fx-green-linear: linear-gradient(135deg, #69f0ae 0%, #00e676 50%, #00b0ff 100%);
+  --fx-cyan-linear: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+  --fx-purple-linear: linear-gradient(135deg, #b388ff 0%, #7c4dff 60%, #651fff 100%);
+  --fx-red-linear: linear-gradient(135deg, #ff5252 0%, #ff1744 60%, #d50000 100%);
+
+  --fx-surface-dark: linear-gradient(180deg, #151d2f 0%, #0d1320 100%);
+  --fx-surface-elevated: linear-gradient(180deg, #1e293b 0%, #111827 100%);
+  --fx-surface-glass: rgba(17, 24, 39, 0.85);
+
+  --fx-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --fx-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── 2. GLOBAL HARDWARE ACCELERATED LIGHTING & SHADOWS ── */
+.fx-glow-gold {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), inset 0 0 10px rgba(255, 215, 0, 0.15);
+}
+.fx-glow-green {
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.4), inset 0 0 10px rgba(0, 230, 118, 0.15);
+}
+.fx-glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.45), inset 0 0 10px rgba(0, 242, 254, 0.15);
+}
+
+/* ── 3. SHIMMER LIGHT SWEEP ANIMATION ── */
+@keyframes fxShimmer {
+  0% { transform: translateX(-150%) skewX(-20deg); }
+  50%, 100% { transform: translateX(250%) skewX(-20deg); }
+}
+.fx-shimmer-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.fx-shimmer-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.22) 50%, transparent 100%);
+  animation: fxShimmer 3.5s infinite var(--fx-ease-out);
+  pointer-events: none;
+}
+
+/* ── 4. PULSING NEON GLOW BORDERS ── */
+@keyframes fxBorderPulse {
+  0%, 100% { border-color: rgba(255, 215, 0, 0.35); box-shadow: 0 0 12px rgba(255, 215, 0, 0.2); }
+  50% { border-color: rgba(0, 230, 118, 0.6); box-shadow: 0 0 24px rgba(0, 230, 118, 0.45); }
+}
+.fx-pulse-border {
+  animation: fxBorderPulse 2.8s infinite ease-in-out;
+}
+
+/* ── 5. SPRING TACTILE BUTTONS & CHIPS ── */
+.btn-wallet-game, .qbtn, .gnav-back, .btn-sound-toggle, .bet-btn-submit {
+  transition: transform 0.18s var(--fx-spring), box-shadow 0.18s ease, filter 0.18s ease !important;
+  will-change: transform;
+}
+.btn-wallet-game:hover, .qbtn:hover, .gnav-back:hover, .btn-sound-toggle:hover {
+  transform: translateY(-2px) scale(1.03);
+  filter: brightness(1.15);
+}
+.btn-wallet-game:active, .qbtn:active, .gnav-back:active, .btn-sound-toggle:active {
+  transform: translateY(1px) scale(0.95) !important;
+}
+
+/* ── 6. 3D VAULT TILE STYLES (MINES, DRAGON TOWER) ── */
+.mine-tile {
+  perspective: 1000px;
+  background: var(--fx-surface-elevated) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s var(--fx-spring) !important;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+.mine-tile::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 9px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+.mine-tile:hover:not(.revealed) {
+  transform: translateY(-4px) scale(1.04);
+  border-color: rgba(0, 242, 254, 0.6) !important;
+  box-shadow: 0 10px 24px rgba(0, 242, 254, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
+}
+.mine-tile:active:not(.revealed) {
+  transform: translateY(1px) scale(0.96);
+}
+
+/* Revealed Gem Style */
+.mine-tile.revealed-gem {
+  background: radial-gradient(circle at 50% 35%, rgba(0, 230, 118, 0.35) 0%, #0d261b 80%, #071610 100%) !important;
+  border-color: #00e676 !important;
+  box-shadow: 0 0 25px rgba(0, 230, 118, 0.45), inset 0 0 15px rgba(0, 230, 118, 0.3) !important;
+  animation: fxSpringFlip 0.4s var(--fx-spring) forwards;
+}
+
+/* Revealed Mine/Bomb Style */
+.mine-tile.revealed-mine {
+  background: radial-gradient(circle at 50% 35%, rgba(255, 23, 68, 0.45) 0%, #260d12 80%, #16070a 100%) !important;
+  border-color: #ff1744 !important;
+  box-shadow: 0 0 25px rgba(255, 23, 68, 0.55), inset 0 0 15px rgba(255, 23, 68, 0.4) !important;
+  animation: fxMineExplode 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fxSpringFlip {
+  0% { transform: scale(0.7) rotateY(90deg); opacity: 0.5; }
+  60% { transform: scale(1.12) rotateY(-8deg); opacity: 1; }
+  100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+}
+
+@keyframes fxMineExplode {
+  0% { transform: scale(0.8); }
+  25% { transform: scale(1.25) rotate(5deg); filter: brightness(2); }
+  50% { transform: scale(0.95) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+}
+
+/* ── 7. SCREEN SHAKE FX ── */
+@keyframes fxScreenShake {
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-6px, 4px); }
+  30% { transform: translate(6px, -4px); }
+  45% { transform: translate(-4px, -3px); }
+  60% { transform: translate(4px, 3px); }
+  75% { transform: translate(-2px, 1px); }
+  90% { transform: translate(2px, -1px); }
+}
+.fx-shake {
+  animation: fxScreenShake 0.45s ease-in-out;
+}
+
+/* ── 8. UNIVERSAL BIG WIN CELEBRATION MODAL ── */
+.fx-celebrate-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 14, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.fx-celebrate-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.fx-celebrate-card {
+  position: relative;
+  background: radial-gradient(circle at 50% 20%, #1f2a44 0%, #0f1527 80%, #090e1a 100%);
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.45), 0 20px 60px rgba(0,0,0,0.9);
+  border-radius: 24px;
+  padding: 36px 40px;
+  text-align: center;
+  max-width: 440px;
+  width: 90%;
+  transform: scale(0.6) translateY(40px);
+  transition: transform 0.45s var(--fx-spring);
+  overflow: hidden;
+}
+.fx-celebrate-overlay.active .fx-celebrate-card {
+  transform: scale(1) translateY(0);
+}
+.fx-celebrate-rays {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 500px; height: 500px;
+  margin-top: -250px; margin-left: -250px;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(255,215,0,0.08) 20deg, transparent 40deg, rgba(255,215,0,0.08) 60deg, transparent 80deg, rgba(255,215,0,0.08) 100deg, transparent 120deg, rgba(255,215,0,0.08) 140deg, transparent 160deg, rgba(255,215,0,0.08) 180deg, transparent 200deg, rgba(255,215,0,0.08) 220deg, transparent 240deg, rgba(255,215,0,0.08) 260deg, transparent 280deg, rgba(255,215,0,0.08) 300deg, transparent 320deg, rgba(255,215,0,0.08) 340deg, transparent 360deg);
+  animation: fxRotateRays 20s linear infinite;
+  pointer-events: none;
+}
+@keyframes fxRotateRays {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.fx-celebrate-badge {
+  display: inline-block;
+  background: var(--fx-gold-linear);
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 6px 18px;
+  border-radius: 20px;
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+}
+.fx-celebrate-amount {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 42px;
+  font-weight: 900;
+  color: #00e676;
+  text-shadow: 0 0 25px rgba(0, 230, 118, 0.6);
+  margin-bottom: 6px;
+  line-height: 1.1;
+}
+.fx-celebrate-mult {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffd700;
+  margin-bottom: 24px;
+}
+.fx-celebrate-btn {
+  background: var(--fx-gold-linear);
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  padding: 12px 36px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  transition: transform 0.2s var(--fx-spring);
+}
+.fx-celebrate-btn:hover {
+  transform: scale(1.05);
+}
+
+/* ── 9. CANVAS PARTICLE OVERLAY ── */
+#fx-canvas-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999998;
+}

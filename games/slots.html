@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -389,29 +389,21 @@ function spin(){ if(!requireAuth()) return;
   spinning = true;
   document.getElementById('spin-btn').disabled = true;
   document.getElementById('spin-btn').classList.add('spinning');
-  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  // Generate house-biased results (85% near-miss / loss, 15% small win)
   let results;
-  if (isDemo) {
-    // 100% GUARANTEED WIN IN DEMO MODE (3 to 5 matching symbols)
+  if(Math.random() < 0.85){
+    // Force near miss: Pick a symbol for reels 0 and 1, then ensure reel 2 and beyond break the streak
     const s1 = weightedPick();
-    const matchCount = Math.random() < 0.5 ? 4 : 3;
-    results = Array(5).fill(null).map((_, idx) => idx < matchCount ? s1 : weightedPick());
+    const otherSymbols = SYMBOLS.filter(s => s !== s1);
+    results = [
+      s1,
+      s1,
+      otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
+      otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
+      weightedPick()
+    ];
   } else {
-    // REAL ACCOUNT: Exactly 20% Win, 80% Loss (Near-miss)
-    const isWin = Math.random() < 0.20;
-    const s1 = weightedPick();
-    if (isWin) {
-      results = [s1, s1, s1, weightedPick(), weightedPick()];
-    } else {
-      const otherSymbols = SYMBOLS.filter(s => s !== s1);
-      results = [
-        s1,
-        s1,
-        otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
-        otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
-        weightedPick()
-      ];
-    }
+    results = Array.from({length:5}, ()=>weightedPick());
   }
 
   const turbo = document.getElementById('turbo-toggle').checked;
@@ -571,6 +563,10 @@ function resolveResults(results, amt){
       setTimeout(() => machine.classList.remove('shake'), 500);
     }
     launchConfetti();
+    if(window.fireGoldCoinShower) window.fireGoldCoinShower(window.innerWidth / 2, window.innerHeight * 0.45, 45);
+    if(window.showBigWinModal && winMult >= 5) {
+      window.showBigWinModal('₹' + payout.toFixed(2), winMult + '×');
+    }
 
     // Highlight winning symbols in middle row
     for(let i=0; i<5; i++){

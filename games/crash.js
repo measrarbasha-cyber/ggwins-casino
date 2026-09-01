@@ -1,4 +1,4 @@
-﻿// ── BALANCE ──────────────────────────────────
+// ── BALANCE ──────────────────────────────────
 function updateBalUI(){ updateAllWalletDisplays(); }
 
 // ── STATE ─────────────────────────────────────
@@ -232,11 +232,39 @@ function drawCanvas(){
       }
     }
 
-    // Draw Rocket
-    ctx.font = '26px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🚀', lastX + 6, lastY - 6);
+    // Draw Sleek Illuminated Supersonic Jet
+    ctx.save();
+    ctx.translate(lastX + 6, lastY - 4);
+    ctx.fillStyle = '#f8fafc';
+    ctx.beginPath();
+    ctx.moveTo(16, 0);
+    ctx.lineTo(-12, -7);
+    ctx.lineTo(-6, 0);
+    ctx.lineTo(-12, 7);
+    ctx.closePath();
+    ctx.fill();
+    // Glowing Cockpit
+    ctx.fillStyle = '#00f2fe';
+    ctx.shadowColor = '#00f2fe';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(3, 0, 3.5, 0, Math.PI*2);
+    ctx.fill();
+    // Delta Wings
+    ctx.fillStyle = '#ff1744';
+    ctx.beginPath();
+    ctx.moveTo(-4, -6);
+    ctx.lineTo(-14, -13);
+    ctx.lineTo(-8, -3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-4, 6);
+    ctx.lineTo(-14, 13);
+    ctx.lineTo(-8, 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
   } else {
     // Render Explosion & Shockwave
     if(shockwaveRadius < 90){
@@ -363,6 +391,8 @@ function crash(){
   if(cb) cb.disabled = true;
 
   if(typeof playGameSound === 'function') playGameSound('bomb');
+  if(window.fxPlayExplosion) window.fxPlayExplosion();
+  if(window.triggerScreenShake) window.triggerScreenShake(document.getElementById('crash-canvas'));
 
   if(betPlaced && !autoCashedOut){
     resolveLoss();
@@ -393,6 +423,10 @@ function cashOut(){
   myBetMultiplier = multiplier;
 
   if(typeof playGameSound === 'function') playGameSound('win');
+  if(window.fireGoldCoinShower) window.fireGoldCoinShower(window.innerWidth / 2, window.innerHeight * 0.45, 45);
+  if(window.showBigWinModal && multiplier >= 1.5) {
+    window.showBigWinModal('₹' + payout.toFixed(2), multiplier.toFixed(2) + '×');
+  }
   if(typeof trackGameWager === 'function') trackGameWager('GG Crash', betAmount, payout, true);
 
   const balEl = document.getElementById('bal-display');

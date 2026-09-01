@@ -1598,6 +1598,28 @@
     } catch(e) {}
   };
 
+  // ── AUTO-INJECT UNIVERSAL GAME VFX & GRAPHICS ENGINE ───────────
+  function injectVisualFxEngine() {
+    try {
+      const isSub = window.location.pathname.includes('/games/');
+      const basePath = isSub ? '../' : '';
+      if (!document.getElementById('ggwins-fx-styles')) {
+        const link = document.createElement('link');
+        link.id = 'ggwins-fx-styles';
+        link.rel = 'stylesheet';
+        link.href = basePath + 'game-graphics.css';
+        document.head.appendChild(link);
+      }
+      if (!document.getElementById('ggwins-fx-engine')) {
+        const script = document.createElement('script');
+        script.id = 'ggwins-fx-engine';
+        script.src = basePath + 'game-fx.js';
+        document.head.appendChild(script);
+      }
+    } catch(e) {}
+  }
+  injectVisualFxEngine();
+
   // ── INJECT WALLET MODAL & CSS ─────────────────────────────────
   function injectWalletStyles() {
     if (document.getElementById('ggwins-wallet-styles')) return;

@@ -461,7 +461,7 @@ function buildGrid(){
     const tile = document.createElement('div');
     tile.className = 'mine-tile';
     tile.dataset.idx = i;
-    tile.textContent = '❓';
+    tile.innerHTML = window.GG_GRAPHICS ? window.GG_GRAPHICS.getVaultPatternSvg() : '❓';
     tile.addEventListener('click', () => clickTile(i, tile));
     grid.appendChild(tile);
   }
@@ -475,10 +475,10 @@ function clickTile(idx, tile){
   let hitMine = false;
 
   if (isDemo) {
-    // 🛡️ 100% GUARANTEED SAFE GEMS IN DEMO MODE (Never hit a mine)
+    // 🛡️ 100% GUARANTEED SAFE GEMS IN DEMO MODE
     hitMine = false;
   } else {
-    // 🇮🇳 REAL ACCOUNT: 80% loss rate / 20% win rate
+    // 🇮🇳 REAL ACCOUNT: Exactly 20% Win / 80% Loss
     const maxSafeGems = TOTAL - mineCount;
     if (picksInRound >= maxSafeGems) {
       hitMine = true;
@@ -490,7 +490,6 @@ function clickTile(idx, tile){
   // Ensure mine positions strictly match mineCount without adding extra mines
   if (hitMine) {
     if (!minePositions.has(idx)) {
-      // Clean swap: Remove an unrevealed mine so minePositions.size ALWAYS strictly equals mineCount!
       const unrevMines = Array.from(minePositions).filter(m => !revealed.has(m) && m !== idx);
       if (unrevMines.length > 0) {
         minePositions.delete(unrevMines[0]);
@@ -500,7 +499,6 @@ function clickTile(idx, tile){
   } else {
     if (minePositions.has(idx)) {
       minePositions.delete(idx);
-      // Relocate mine to an unrevealed tile
       const unrevealed = [];
       for (let i = 0; i < TOTAL; i++) {
         if (!revealed.has(i) && i !== idx && !minePositions.has(i)) unrevealed.push(i);
@@ -512,41 +510,40 @@ function clickTile(idx, tile){
   }
 
   revealed.add(idx);
-  tile.classList.add('flipping');
-
-  const grid = document.getElementById('mines-grid');
+  const rect = tile.getBoundingClientRect();
 
   if(minePositions.has(idx) || hitMine){
-    // 💣 Hit a mine!
-    tile.className = 'mine-tile mine-hit disabled';
-    tile.textContent = '💣';
+    // 💣 Hit a cyber mine!
+    tile.className = 'mine-tile revealed-mine disabled';
+    tile.innerHTML = window.GG_GRAPHICS ? window.GG_GRAPHICS.getMineSvg() : '💣';
     
-    if(grid){
-      grid.classList.add('grid-shake');
-      setTimeout(() => grid.classList.remove('grid-shake'), 600);
-    }
+    if(window.fxPlayExplosion) window.fxPlayExplosion();
+    if(window.triggerScreenShake) window.triggerScreenShake();
 
     setTimeout(() => {
       document.querySelectorAll('.mine-tile').forEach((t, i) => {
         if(minePositions.has(i) && i !== idx){
           setTimeout(() => {
-            t.className = 'mine-tile mine-show disabled';
-            t.textContent = '💣';
+            t.className = 'mine-tile revealed-mine disabled';
+            t.innerHTML = window.GG_GRAPHICS ? window.GG_GRAPHICS.getMineSvg() : '💣';
           }, (i % 5) * 50);
         } else if(!revealed.has(i)){
           t.className = 'mine-tile disabled';
-          t.textContent = '💎';
-          t.style.opacity = '0.25';
+          t.innerHTML = window.GG_GRAPHICS ? window.GG_GRAPHICS.getGemSvg() : '💎';
+          t.style.opacity = '0.35';
         }
       });
-    }, 350);
+    }, 300);
 
     endGame(false);
   } else {
-    // 💎 Safe gem!
+    // 💎 Sparkling 3D Safe Gem!
     gemsFound++;
-    tile.className = 'mine-tile gem disabled';
-    tile.textContent = '💎';
+    tile.className = 'mine-tile revealed-gem disabled';
+    tile.innerHTML = window.GG_GRAPHICS ? window.GG_GRAPHICS.getGemSvg() : '💎';
+
+    if(window.fxPlayGem) window.fxPlayGem(gemsFound);
+    if(window.fireGemSparkles) window.fireGemSparkles(rect.left + rect.width/2, rect.top + rect.height/2, '#00e676', 22);
 
     const mult = calcMult(TOTAL, mineCount, gemsFound);
     document.getElementById('gems-found').textContent = gemsFound;
@@ -620,6 +617,12 @@ function cashOut(){
   wins++;
   addHistory(mult, true);
   showResult(true, payout);
+
+  if(window.fireGoldCoinShower) window.fireGoldCoinShower(window.innerWidth / 2, window.innerHeight * 0.45, 45);
+  if(window.showBigWinModal && mult >= 1.4) {
+    window.showBigWinModal('₹' + payout.toFixed(2), mult.toFixed(2) + '×');
+  }
+
   if(typeof trackGameWager === 'function') trackGameWager('GG Mines', betAmount, payout, true);
   endGame(true, true);
 }
