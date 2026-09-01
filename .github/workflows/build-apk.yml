@@ -31,10 +31,11 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.2.2'
+      - name: Install Official Gradle 8.2.2
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.2.2-bin.zip
+          unzip -q gradle-8.2.2-bin.zip
+          echo "$PWD/gradle-8.2.2/bin" >> $GITHUB_PATH
 
       - name: Build Android Debug & Release APK
         working-directory: ./android
