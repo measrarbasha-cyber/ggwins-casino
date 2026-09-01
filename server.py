@@ -347,6 +347,7 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("X-XSS-Protection", "1; mode=block")
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         self.send_header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+        self.send_header("Service-Worker-Allowed", "/")
         super().end_headers()
     def log_message(self, format, *args):
         pass
