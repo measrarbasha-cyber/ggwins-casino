@@ -39,7 +39,17 @@ jobs:
 
       - name: Build Android Debug APK
         working-directory: ./android
-        run: ./gradlew assembleDebug --stacktrace
+        run: |
+          ./gradlew assembleDebug --stacktrace --no-daemon > ../build_log.txt 2>&1 || true
+
+      - name: Save Log to Repository
+        run: |
+          tail -n 60 build_log.txt
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add build_log.txt
+          git commit -m "Capture build_log.txt [skip ci]" || true
+          git push origin main || true
 
       - name: Prepare Download Folder
         run: |
