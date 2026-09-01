@@ -39,16 +39,24 @@ jobs:
 
       - name: Build Android Debug APK
         working-directory: ./android
-        run: |
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee /tmp/gradle_output.txt || (echo "=== CRITICAL GRADLE OUTPUT ===" && tail -n 120 /tmp/gradle_output.txt && exit 1)
+        run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Prepare Download Folder
         run: |
           mkdir -p download
-          APK_FILE=$(find android -name "*.apk" | head -n 1)
-          echo "Found APK at: $APK_FILE"
-          cp "$APK_FILE" download/ggwins.apk
-          cp "$APK_FILE" download/ggwins-debug.apk
+          echo "Searching for built APK files in workspace..."
+          find . -name "*.apk" -type f
+          FIRST_APK=$(find . -name "*.apk" -type f | head -n 1)
+          if [ -n "$FIRST_APK" ]; then
+            echo "Copying $FIRST_APK to download/ggwins.apk"
+            cp -v "$FIRST_APK" download/ggwins.apk
+            cp -v "$FIRST_APK" download/ggwins-debug.apk
+          else
+            echo "Listing build directories..."
+            ls -la android/app/
+            ls -la android/app/build/ || true
+            exit 1
+          fi
           ls -lh download/
 
       - name: Upload APK Artifact
