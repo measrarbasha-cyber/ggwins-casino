@@ -39,34 +39,15 @@ jobs:
 
       - name: Build Android Debug APK
         working-directory: ./android
-        run: |
-          ./gradlew assembleDebug --stacktrace --no-daemon > ../build_log.txt 2>&1 || true
-
-      - name: Save Log to Repository
-        run: |
-          tail -n 60 build_log.txt
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add build_log.txt
-          git commit -m "Capture build_log.txt [skip ci]" || true
-          git push origin main || true
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Prepare Download Folder
         run: |
           mkdir -p download
-          echo "Searching for built APK files in workspace..."
-          find . -name "*.apk" -type f
-          FIRST_APK=$(find . -name "*.apk" -type f | head -n 1)
-          if [ -n "$FIRST_APK" ]; then
-            echo "Copying $FIRST_APK to download/ggwins.apk"
-            cp -v "$FIRST_APK" download/ggwins.apk
-            cp -v "$FIRST_APK" download/ggwins-debug.apk
-          else
-            echo "Listing build directories..."
-            ls -la android/app/
-            ls -la android/app/build/ || true
-            exit 1
-          fi
+          APK_FILE=$(find android/ -name "*.apk" | head -n 1)
+          echo "Found compiled APK: $APK_FILE"
+          cp -v "$APK_FILE" download/ggwins.apk
+          cp -v "$APK_FILE" download/ggwins-debug.apk
           ls -lh download/
 
       - name: Upload APK Artifact
