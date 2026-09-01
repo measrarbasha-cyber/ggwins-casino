@@ -71,7 +71,7 @@ svg { display: block; flex-shrink: 0; }
 /* ── TOP NAV BAR ─────────────────────────── */
 .gnav {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 14px; height: 46px;
+  padding: 0 10px; height: 46px;
   background: rgba(11, 15, 25, 0.98);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -79,18 +79,19 @@ svg { display: block; flex-shrink: 0; }
   flex-shrink: 0; z-index: 50;
   width: 100%;
   transition: all var(--t);
-}
-.gnav-left {
-  display: flex;
-  align-items: center;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  white-space: nowrap !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
   gap: 8px;
-  flex-shrink: 0;
 }
-.gnav-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+.gnav::-webkit-scrollbar {
+  display: none !important;
+}
+.gnav-left, .gnav-right, .gnav-back, .gnav-brand-block, .gnav-game-name, .gnav-game-badge, .btn-sound-toggle, #wallet-chip-target, .wallet-switcher-container, .wallet-chip-btn, .btn-wallet-game {
+  flex-shrink: 0 !important;
 }
 .gnav-back {
   display: flex; align-items: center; gap: 6px;
