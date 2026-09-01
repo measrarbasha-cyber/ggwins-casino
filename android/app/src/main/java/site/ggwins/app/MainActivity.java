@@ -24,6 +24,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import site.ggwins.app.R;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String APP_URL = "https://ggwins.site";
