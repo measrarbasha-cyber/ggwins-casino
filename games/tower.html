@@ -20,7 +20,7 @@
 .stairs-container {
   display: flex;
   flex-direction: column-reverse;
-  gap: 6px;
+  gap: 8px;
   width: min(420px, 94vw);
 }
 .stairs-row {
@@ -29,7 +29,7 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  padding: 4px;
+  padding: 6px;
   transition: all 0.3s;
   position: relative;
 }
@@ -40,7 +40,7 @@
 }
 .row-mult {
   position: absolute;
-  left: -50px;
+  left: -52px;
   top: 50%;
   transform: translateY(-50%);
   font-family: 'Space Grotesk', sans-serif;
@@ -52,7 +52,7 @@
 }
 .step-stone {
   flex: 1;
-  height: 44px;
+  height: 48px;
   background: linear-gradient(145deg, #1e1b4b, #0f172a);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
@@ -61,7 +61,7 @@
   justify-content: center;
   cursor: pointer;
   user-select: none;
-  font-size: 20px;
+  font-size: 22px;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .step-stone:hover:not(.disabled) {
@@ -82,7 +82,19 @@
 }
 .step-stone.disabled {
   cursor: default;
-  opacity: 0.6;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.status-banner {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #ffd700;
+  color: #ffd700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 18px;
+  border-radius: 20px;
+  margin-bottom: 12px;
 }
 </style>
 <script src="../security-guard.js"></script>
@@ -114,6 +126,7 @@
 
 <div class="game-layout">
   <div class="game-area stairs-area">
+    <div class="status-banner" id="stairs-status">CLICK "CLIMB STAIRS" & PICK A STEP</div>
     <div class="stairs-container" id="stairs-container"></div>
     <div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected.</div>
   </div>
@@ -134,10 +147,11 @@
 
     <div class="bet-section">
       <button class="btn-bet" id="start-btn" onclick="startStairs()">🪜 Climb Stairs</button>
-      
-      <div id="cashout-box" style="display:none;margin-top:10px;text-align:center">
-        <button class="btn-cashout" id="cashout-btn" onclick="cashOut()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900;font-size:15px;border:none;border-radius:10px;cursor:pointer;box-shadow:0 4px 15px rgba(0,230,118,0.4)">💰 CASH OUT (₹0.00)</button>
-      </div>
+    </div>
+
+    <!-- Separate Cashout Section (Kept separated to prevent double-tap misclicks) -->
+    <div class="bet-section" id="cashout-section" style="display:none;margin-top:10px">
+      <button class="btn-cashout" id="cashout-btn" onclick="cashOut()" style="width:100%;padding:14px;background:linear-gradient(135deg,#ffd700,#ff9100);color:#000;font-weight:900;font-size:16px;border:none;border-radius:12px;cursor:pointer;box-shadow:0 6px 20px rgba(255,215,0,0.4)">💰 CASH OUT (₹0.00)</button>
     </div>
 
     <div class="bet-section">
@@ -163,11 +177,12 @@
 
 <script src="../wallet.js"></script>
 <script>
-const MULTS = [1.25, 1.60, 2.10, 2.80, 3.80, 5.20, 7.50, 11.0, 17.0, 28.0, 48.0, 85.0, 150.0];
-let currentRow = 0;
+const MULTS = [1.25, 1.65, 2.25, 3.20, 4.80, 7.50, 12.0, 25.0];
+let currentRow = -1;
 let clearedSteps = 0;
 let gameActive = false;
 let betAmount = 100;
+let rowTraps = []; // Pre-randomized hidden traps
 let totalProfit = 0; let wins = 0; let losses = 0;
 
 function halveBet() {
@@ -183,7 +198,66 @@ function maxBet() {
   document.getElementById('bet-amount').value = Math.min(10000, bal).toFixed(2);
 }
 
-function buildStairs() {
+function buildEmptyStairs() {
+  const container = document.getElementById('stairs-container');
+  container.innerHTML = '';
+  for (let r = 0; r < 8; r++) {
+    const row = document.createElement('div');
+    row.className = 'stairs-row';
+    row.id = 'row-' + r;
+    row.innerHTML = `<div class="row-mult">${MULTS[r].toFixed(2)}×</div>`;
+
+    for (let s = 0; s < 3; s++) {
+      const stone = document.createElement('div');
+      stone.className = 'step-stone disabled';
+      stone.dataset.row = r;
+      stone.dataset.col = s;
+      stone.textContent = '💎';
+      row.appendChild(stone);
+    }
+    container.appendChild(row);
+  }
+}
+buildEmptyStairs();
+
+function startStairs() {
+  if (gameActive) return;
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if (isNaN(amt) || amt <= 0) { showToast('Enter valid bet amount', 'error'); return; }
+  const bal = typeof getBalance === 'function' ? getBalance() : 50000;
+  if (amt > bal) { showToast('Insufficient balance', 'error'); return; }
+
+  if (typeof adjustBalance === 'function') adjustBalance(-amt, 'Neon Stairs Bet');
+  betAmount = amt;
+  gameActive = true;
+  currentRow = 0;
+  clearedSteps = 0;
+
+  // Decide row traps strictly:
+  // Real account: 75% trap rate on every step!
+  // Demo account: 55% trap rate on every step!
+  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
+  rowTraps = [];
+
+  for (let r = 0; r < 8; r++) {
+    // 2 traps out of 3 stones! (Only 1 safe stone per row)
+    const safeCol = Math.floor(Math.random() * 3);
+    const trapProb = isDemo ? 0.55 : 0.75;
+    
+    // Determine whether this row has a safe stone or all traps
+    const hasSafe = Math.random() >= trapProb;
+    rowTraps.push(hasSafe ? safeCol : -1); // -1 means all are traps
+  }
+
+  buildStairsForPlay();
+
+  document.getElementById('result-box').innerHTML = '';
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('cashout-section').style.display = 'none'; // NEVER SHOW ON STEP 0
+  document.getElementById('stairs-status').textContent = 'STEP 1: PICK A STONE ON ROW 1';
+}
+
+function buildStairsForPlay() {
   const container = document.getElementById('stairs-container');
   container.innerHTML = '';
   for (let r = 0; r < 8; r++) {
@@ -204,43 +278,14 @@ function buildStairs() {
     container.appendChild(row);
   }
 }
-buildStairs();
-
-function startStairs() {
-  if (gameActive) return;
-  const amt = parseFloat(document.getElementById('bet-amount').value);
-  if (isNaN(amt) || amt <= 0) { showToast('Enter valid bet amount', 'error'); return; }
-  const bal = typeof getBalance === 'function' ? getBalance() : 50000;
-  if (amt > bal) { showToast('Insufficient balance', 'error'); return; }
-
-  if (typeof adjustBalance === 'function') adjustBalance(-amt, 'Neon Stairs Bet');
-  betAmount = amt;
-  gameActive = true;
-  currentRow = 0;
-  clearedSteps = 0;
-  buildStairs();
-  document.getElementById('result-box').innerHTML = '';
-
-  document.getElementById('start-btn').style.display = 'none';
-  // DO NOT show cashout button until player successfully clears at least 1 step!
-  document.getElementById('cashout-box').style.display = 'none';
-}
 
 function pickStone(r, c, el) {
   if (!gameActive || r !== currentRow) return;
 
-  const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  let safe = false;
+  // Check if chosen column matches safe column
+  const isSafe = (rowTraps[r] === c);
 
-  if (isDemo) {
-    // Demo Mode: 45% chance per step (reduced from 100%)
-    safe = Math.random() < 0.45;
-  } else {
-    // Real Mode: 10% overall probability (tight 25% chance per step)
-    safe = Math.random() < 0.25;
-  }
-
-  if (safe) {
+  if (isSafe) {
     el.className = 'step-stone safe';
     el.textContent = '⭐';
     if (window.fxPlayGem) window.fxPlayGem(currentRow + 1);
@@ -249,29 +294,54 @@ function pickStone(r, c, el) {
     const mult = MULTS[currentRow];
     const payout = betAmount * mult;
 
-    // Enable cashout now that player has actually cleared a step!
-    document.getElementById('cashout-box').style.display = 'block';
-    document.getElementById('cashout-btn').textContent = `💰 CASH OUT (₹${payout.toFixed(2)} / ${mult.toFixed(2)}×)`;
+    // Reveal other stones in current row
+    const curRowEl = document.getElementById('row-' + currentRow);
+    Array.from(curRowEl.querySelectorAll('.step-stone')).forEach((st, idx) => {
+      if (idx !== c) {
+        st.className = 'step-stone trap disabled';
+        st.textContent = '💥';
+      }
+    });
 
-    document.getElementById('row-' + currentRow).classList.remove('active');
+    curRowEl.classList.remove('active');
     currentRow++;
 
+    // Enable cashout now that player has legitimately cleared at least 1 step!
+    document.getElementById('cashout-section').style.display = 'block';
+    document.getElementById('cashout-btn').textContent = `💰 CASH OUT (₹${payout.toFixed(2)} / ${mult.toFixed(2)}×)`;
+    document.getElementById('stairs-status').textContent = `CLEARED ROW ${clearedSteps}! CASH OUT OR CLIMB ROW ${currentRow + 1}`;
+
     if (currentRow >= 8) {
+      // Reached apex!
       cashOut();
     } else {
       const nextRow = document.getElementById('row-' + currentRow);
       nextRow.classList.add('active');
-      Array.from(nextRow.children).forEach(child => child.classList.remove('disabled'));
+      Array.from(nextRow.querySelectorAll('.step-stone')).forEach(st => st.classList.remove('disabled'));
     }
   } else {
-    // Trap hit!
+    // Trap Triggered!
     el.className = 'step-stone trap';
     el.textContent = '💥';
+
+    // Reveal other stones
+    const curRowEl = document.getElementById('row-' + currentRow);
+    Array.from(curRowEl.querySelectorAll('.step-stone')).forEach((st, idx) => {
+      if (idx === rowTraps[r]) {
+        st.className = 'step-stone safe disabled';
+        st.textContent = '⭐';
+      } else {
+        st.classList.add('disabled');
+      }
+    });
+
     totalProfit -= betAmount;
     losses++;
     gameActive = false;
 
-    document.getElementById('result-box').innerHTML = `<div style="padding:10px;background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:8px;color:#ef4444;font-weight:800;text-align:center">TRAP TRIGGERED! LOST AT STEP ${r + 1}</div>`;
+    document.getElementById('result-box').innerHTML = `<div style="padding:10px;background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:8px;color:#ef4444;font-weight:800;text-align:center">💥 TRAP TRIGGERED! LOST AT STEP ${r + 1}</div>`;
+    document.getElementById('stairs-status').textContent = `TRAP ON ROW ${r + 1}! WAGER LOST`;
+
     if (window.triggerScreenShake) window.triggerScreenShake(document.querySelector('.stairs-area'));
     if (window.fxPlayExplosion) window.fxPlayExplosion();
 
@@ -291,6 +361,7 @@ function cashOut() {
   wins++;
 
   document.getElementById('result-box').innerHTML = `<div style="padding:10px;background:rgba(0,230,118,0.15);border:1px solid #00e676;border-radius:8px;color:#00e676;font-weight:800;text-align:center">🎉 WON ₹${payout.toFixed(2)} (${mult.toFixed(2)}×)</div>`;
+  document.getElementById('stairs-status').textContent = `CASHED OUT ₹${payout.toFixed(2)} (${mult.toFixed(2)}×)!`;
 
   if (window.fireGoldCoinShower) window.fireGoldCoinShower(window.innerWidth / 2, window.innerHeight * 0.4, 45);
   if (window.showBigWinModal && mult >= 2.0) window.showBigWinModal('₹' + payout.toFixed(2), mult.toFixed(2) + '×');
@@ -302,7 +373,8 @@ function cashOut() {
 
 function resetUI() {
   document.getElementById('start-btn').style.display = 'block';
-  document.getElementById('cashout-box').style.display = 'none';
+  document.getElementById('cashout-section').style.display = 'none';
+  document.querySelectorAll('.step-stone').forEach(st => st.classList.add('disabled'));
 }
 
 function updateStats() {

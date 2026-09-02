@@ -14,7 +14,7 @@
   justify-content: center;
   position: relative;
   background: radial-gradient(circle at 50% 50%, #15202b 0%, #0c1219 70%, #06090d 100%);
-  padding: 18px;
+  padding: 16px;
   overflow: auto;
 }
 .road-container {
@@ -36,7 +36,7 @@
 }
 .road-lane.active {
   border-color: #ffd700;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
   background: rgba(255, 215, 0, 0.1);
 }
 .road-lane.cleared {
@@ -52,31 +52,56 @@
 }
 .lane-spots {
   display: flex;
-  gap: 12px;
+  gap: 14px;
 }
 .lane-spot {
-  width: 44px;
-  height: 44px;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 26px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.lane-spot:hover:not(.disabled) {
+  border-color: #ffd700;
+  transform: scale(1.08);
 }
 .lane-spot.egg {
   background: rgba(0, 230, 118, 0.25);
-  border: 1.5px solid #00e676;
+  border: 2px solid #00e676;
+  box-shadow: 0 0 15px rgba(0, 230, 118, 0.5);
 }
 .lane-spot.pan {
   background: rgba(239, 68, 68, 0.25);
-  border: 1.5px solid #ef4444;
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+.lane-spot.disabled {
+  cursor: default;
+  opacity: 0.45;
+  pointer-events: none;
 }
 .chicken-avatar {
-  font-size: 28px;
+  font-size: 30px;
   filter: drop-shadow(0 0 8px #ffd700);
   animation: fxSpringFlip 0.35s ease;
+}
+.status-banner {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #ffd700;
+  color: #ffd700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 18px;
+  border-radius: 20px;
+  margin-bottom: 12px;
 }
 </style>
 <script src="../security-guard.js"></script>
@@ -108,6 +133,7 @@
 
 <div class="game-layout">
   <div class="game-area chicken-area">
+    <div class="status-banner" id="chicken-status">START GAME & TAP A SPOT ON LANE 1</div>
     <div class="road-container" id="road-container"></div>
     <div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected.</div>
   </div>
@@ -128,11 +154,10 @@
 
     <div class="bet-section">
       <button class="btn-bet" id="start-btn" onclick="startCrossing()">🐔 Start Cross</button>
-      
-      <div id="hop-section" style="display:none;margin-top:10px;gap:8px">
-        <button class="btn-bet" id="hop-btn" onclick="hopNextLane()" style="margin-bottom:8px">🐾 HOP TO LANE 1</button>
-        <button class="btn-cashout" id="cashout-btn" onclick="cashOut()" style="display:none;width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900;font-size:15px;border:none;border-radius:10px;cursor:pointer;box-shadow:0 4px 15px rgba(0,230,118,0.4)">💰 CASH OUT (₹0.00)</button>
-      </div>
+    </div>
+
+    <div class="bet-section" id="cashout-section" style="display:none;margin-top:10px">
+      <button class="btn-cashout" id="cashout-btn" onclick="cashOut()" style="width:100%;padding:14px;background:linear-gradient(135deg,#ffd700,#ff9100);color:#000;font-weight:900;font-size:16px;border:none;border-radius:12px;cursor:pointer;box-shadow:0 6px 20px rgba(255,215,0,0.4)">💰 CASH OUT (₹0.00)</button>
     </div>
 
     <div class="bet-section">
@@ -162,6 +187,7 @@ const LANE_MULTS = [1.35, 2.10, 3.40, 5.50, 10.00];
 let currentLane = -1;
 let gameActive = false;
 let betAmount = 100;
+let laneTraps = []; // Safe column index for each lane
 let totalProfit = 0; let wins = 0; let losses = 0;
 
 function halveBet() {
@@ -177,25 +203,25 @@ function maxBet() {
   document.getElementById('bet-amount').value = Math.min(10000, bal).toFixed(2);
 }
 
-function buildRoad() {
+function buildEmptyRoad() {
   const container = document.getElementById('road-container');
   container.innerHTML = '';
   for (let i = 0; i < 5; i++) {
     const lane = document.createElement('div');
-    lane.className = 'road-lane' + (i === 0 ? ' active' : '');
+    lane.className = 'road-lane';
     lane.id = 'lane-' + i;
     lane.innerHTML = `
       <div class="lane-mult">${LANE_MULTS[i].toFixed(2)}×</div>
-      <div class="lane-spots" id="spots-${i}">
-        <div class="lane-spot">?</div>
-        <div class="lane-spot">?</div>
-        <div class="lane-spot">?</div>
+      <div class="lane-spots">
+        <div class="lane-spot disabled">?</div>
+        <div class="lane-spot disabled">?</div>
+        <div class="lane-spot disabled">?</div>
       </div>
     `;
     container.appendChild(lane);
   }
 }
-buildRoad();
+buildEmptyRoad();
 
 function startCrossing() {
   if (gameActive) return;
@@ -207,70 +233,119 @@ function startCrossing() {
   if (typeof adjustBalance === 'function') adjustBalance(-amt, 'Chicken Cross Bet');
   betAmount = amt;
   gameActive = true;
-  currentLane = -1;
-  buildRoad();
-  document.getElementById('result-box').innerHTML = '';
+  currentLane = 0;
 
-  document.getElementById('start-btn').style.display = 'none';
-  document.getElementById('hop-section').style.display = 'block';
-  document.getElementById('cashout-btn').style.display = 'none';
-  document.getElementById('hop-btn').textContent = '🐾 HOP TO LANE 1';
-}
-
-function hopNextLane() {
-  if (!gameActive) return;
-  currentLane++;
-
+  // Decide lane traps:
+  // Real account: 75% trap chance per lane!
+  // Demo account: 55% trap chance per lane!
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  let safe = false;
+  laneTraps = [];
 
-  if (isDemo) {
-    // Demo Mode: 45% chance per lane (reduced from 100%)
-    safe = Math.random() < 0.45;
-  } else {
-    // Real Mode: 10% overall probability (tight 25% chance per lane)
-    safe = Math.random() < 0.25;
+  for (let l = 0; l < 5; l++) {
+    const safeCol = Math.floor(Math.random() * 3);
+    const trapProb = isDemo ? 0.55 : 0.75;
+    const hasSafe = Math.random() >= trapProb;
+    laneTraps.push(hasSafe ? safeCol : -1); // -1 means all are frying pans!
   }
 
-  const spotsEl = document.getElementById('spots-' + currentLane);
-  const laneEl = document.getElementById('lane-' + currentLane);
+  buildPlayableRoad();
 
-  if (safe) {
-    spotsEl.children[0].className = 'lane-spot egg';
-    spotsEl.children[0].innerHTML = '<span class="chicken-avatar">🐔</span>';
-    spotsEl.children[1].className = 'lane-spot egg';
-    spotsEl.children[1].textContent = '🥚';
-    spotsEl.children[2].className = 'lane-spot egg';
-    spotsEl.children[2].textContent = '🥚';
+  document.getElementById('result-box').innerHTML = '';
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('cashout-section').style.display = 'none';
+  document.getElementById('chicken-status').textContent = 'TAP ONE OF THE 3 SPOTS ON LANE 1 TO HOP!';
+}
+
+function buildPlayableRoad() {
+  const container = document.getElementById('road-container');
+  container.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const lane = document.createElement('div');
+    lane.className = 'road-lane' + (i === 0 ? ' active' : '');
+    lane.id = 'lane-' + i;
+
+    const spotsWrap = document.createElement('div');
+    spotsWrap.className = 'lane-spots';
+    spotsWrap.id = 'spots-' + i;
+
+    for (let s = 0; s < 3; s++) {
+      const spot = document.createElement('div');
+      spot.className = 'lane-spot' + (i !== 0 ? ' disabled' : '');
+      spot.textContent = '?';
+      spot.onclick = () => pickSpot(i, s, spot);
+      spotsWrap.appendChild(spot);
+    }
+
+    lane.innerHTML = `<div class="lane-mult">${LANE_MULTS[i].toFixed(2)}×</div>`;
+    lane.appendChild(spotsWrap);
+    container.appendChild(lane);
+  }
+}
+
+function pickSpot(laneIdx, spotIdx, spotEl) {
+  if (!gameActive || laneIdx !== currentLane) return;
+
+  const isSafe = (laneTraps[laneIdx] === spotIdx);
+  const laneEl = document.getElementById('lane-' + laneIdx);
+  const spotsEl = document.getElementById('spots-' + laneIdx);
+
+  if (isSafe) {
+    // Chicken lands safely!
+    spotEl.className = 'lane-spot egg';
+    spotEl.innerHTML = '<span class="chicken-avatar">🐔</span>';
+    if (window.fxPlayGem) window.fxPlayGem(laneIdx + 1);
+
+    // Reveal other spots
+    Array.from(spotsEl.children).forEach((sp, idx) => {
+      if (idx !== spotIdx) {
+        sp.className = 'lane-spot pan disabled';
+        sp.textContent = '🍳';
+      }
+    });
+
     laneEl.className = 'road-lane cleared';
 
-    if (window.fxPlayGem) window.fxPlayGem(currentLane + 1);
-
-    const mult = LANE_MULTS[currentLane];
+    const mult = LANE_MULTS[laneIdx];
     const payout = betAmount * mult;
 
-    // Enable cashout now that lane is cleared!
-    document.getElementById('cashout-btn').style.display = 'block';
+    // Reveal cashout button now that player has cleared this lane!
+    document.getElementById('cashout-section').style.display = 'block';
     document.getElementById('cashout-btn').textContent = `💰 CASH OUT (₹${payout.toFixed(2)} / ${mult.toFixed(2)}×)`;
+    document.getElementById('chicken-status').textContent = `CLEARED LANE ${laneIdx + 1}! CASH OUT OR TAP NEXT LANE`;
 
-    if (currentLane >= 4) {
-      // Reached finish line!
+    currentLane++;
+
+    if (currentLane >= 5) {
+      // Reached the other side!
       cashOut();
     } else {
-      document.getElementById('lane-' + (currentLane + 1)).classList.add('active');
-      document.getElementById('hop-btn').textContent = `🐾 HOP TO LANE ${currentLane + 2}`;
+      const nextLane = document.getElementById('lane-' + currentLane);
+      nextLane.classList.add('active');
+      Array.from(nextLane.querySelector('.lane-spots').children).forEach(sp => sp.classList.remove('disabled'));
     }
   } else {
-    // Hit frying pan!
-    spotsEl.children[0].className = 'lane-spot pan';
-    spotsEl.children[0].textContent = '🍳';
+    // Roaster Trap!
+    spotEl.className = 'lane-spot pan';
+    spotEl.textContent = '🍳';
     laneEl.style.borderColor = '#ef4444';
+
+    // Reveal where the safe egg was if any
+    Array.from(spotsEl.children).forEach((sp, idx) => {
+      if (idx === laneTraps[laneIdx]) {
+        sp.className = 'lane-spot egg disabled';
+        sp.textContent = '🥚';
+      } else {
+        sp.classList.add('disabled');
+      }
+    });
 
     totalProfit -= betAmount;
     losses++;
     gameActive = false;
 
     document.getElementById('result-box').innerHTML = `<div style="padding:10px;background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:8px;color:#ef4444;font-weight:800;text-align:center">🍳 ROASTED IN THE PAN! LOST WAGER</div>`;
+    document.getElementById('chicken-status').textContent = `PAN ROASTED ON LANE ${laneIdx + 1}! WAGER LOST`;
+
     if (window.triggerScreenShake) window.triggerScreenShake(document.querySelector('.chicken-area'));
     if (window.fxPlayExplosion) window.fxPlayExplosion();
 
@@ -280,9 +355,9 @@ function hopNextLane() {
 }
 
 function cashOut() {
-  if (!gameActive || currentLane < 0) return;
+  if (!gameActive || currentLane <= 0) return;
   gameActive = false;
-  const mult = LANE_MULTS[currentLane];
+  const mult = LANE_MULTS[currentLane - 1];
   const payout = betAmount * mult;
 
   if (typeof adjustBalance === 'function') adjustBalance(payout, `Chicken Cross Win (${mult.toFixed(2)}×)`);
@@ -290,6 +365,7 @@ function cashOut() {
   wins++;
 
   document.getElementById('result-box').innerHTML = `<div style="padding:10px;background:rgba(0,230,118,0.15);border:1px solid #00e676;border-radius:8px;color:#00e676;font-weight:800;text-align:center">🎉 WON ₹${payout.toFixed(2)} (${mult.toFixed(2)}×)</div>`;
+  document.getElementById('chicken-status').textContent = `CASHED OUT ₹${payout.toFixed(2)} (${mult.toFixed(2)}×)!`;
 
   if (window.fireGoldCoinShower) window.fireGoldCoinShower(window.innerWidth / 2, window.innerHeight * 0.4, 45);
   if (window.showBigWinModal && mult >= 2.0) window.showBigWinModal('₹' + payout.toFixed(2), mult.toFixed(2) + '×');
@@ -301,7 +377,8 @@ function cashOut() {
 
 function resetUI() {
   document.getElementById('start-btn').style.display = 'block';
-  document.getElementById('hop-section').style.display = 'none';
+  document.getElementById('cashout-section').style.display = 'none';
+  document.querySelectorAll('.lane-spot').forEach(sp => sp.classList.add('disabled'));
 }
 
 function updateStats() {
