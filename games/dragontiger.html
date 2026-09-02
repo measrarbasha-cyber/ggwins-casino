@@ -279,19 +279,16 @@ function dealCards() {
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let winner = '';
 
-  if (isDemo) {
-    // 100% Win in Demo
+  // Reduced win probability: 45% in Demo, 10% in Real
+  const winRate = isDemo ? 0.45 : 0.10;
+  const isWin = Math.random() < winRate;
+
+  if (isWin) {
     winner = selectedSector;
   } else {
-    // 20% Win / 80% Loss in Real
-    const isWin = Math.random() < 0.20;
-    if (isWin) {
-      winner = selectedSector;
-    } else {
-      if (selectedSector === 'dragon') winner = 'tiger';
-      else if (selectedSector === 'tiger') winner = 'dragon';
-      else winner = Math.random() < 0.5 ? 'dragon' : 'tiger';
-    }
+    if (selectedSector === 'dragon') winner = 'tiger';
+    else if (selectedSector === 'tiger') winner = 'dragon';
+    else winner = Math.random() < 0.5 ? 'dragon' : 'tiger';
   }
 
   // Pick ranks according to winner

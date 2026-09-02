@@ -310,24 +310,19 @@ function rollDice() {
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let outcome;
 
-  if (isDemo) {
-    // 100% Guaranteed Win in Demo
-    if (selectedZone === 'down') outcome = Math.floor(Math.random() * 5) + 2; // 2..6
+  // Reduced win probability: 45% in Demo, 10% in Real
+  const winRate = isDemo ? 0.45 : 0.10;
+  const isWin = Math.random() < winRate;
+
+  if (isWin) {
+    if (selectedZone === 'down') outcome = Math.floor(Math.random() * 5) + 2;
     else if (selectedZone === 'seven') outcome = 7;
-    else outcome = Math.floor(Math.random() * 5) + 8; // 8..12
+    else outcome = Math.floor(Math.random() * 5) + 8;
   } else {
-    // 20% Win / 80% Loss in Real
-    const isWin = Math.random() < 0.20;
-    if (isWin) {
-      if (selectedZone === 'down') outcome = Math.floor(Math.random() * 5) + 2;
-      else if (selectedZone === 'seven') outcome = 7;
-      else outcome = Math.floor(Math.random() * 5) + 8;
-    } else {
-      // Pick opposing zone
-      if (selectedZone === 'down') outcome = Math.random() < 0.5 ? 7 : Math.floor(Math.random() * 5) + 8;
-      else if (selectedZone === 'seven') outcome = Math.random() < 0.5 ? 4 : 9;
-      else outcome = Math.random() < 0.5 ? 7 : Math.floor(Math.random() * 5) + 2;
-    }
+    // Pick losing zone
+    if (selectedZone === 'down') outcome = Math.random() < 0.5 ? 7 : Math.floor(Math.random() * 5) + 8;
+    else if (selectedZone === 'seven') outcome = Math.random() < 0.5 ? 4 : 9;
+    else outcome = Math.random() < 0.5 ? 7 : Math.floor(Math.random() * 5) + 2;
   }
 
   // Split outcome into 2 dice

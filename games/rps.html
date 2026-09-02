@@ -270,19 +270,16 @@ function playRps() {
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let dealerChoice;
 
-  if (isDemo) {
-    // 100% Win in Demo: dealer throws losing move
+  // Reduced win probability: 45% in Demo, 10% in Real
+  const winRate = isDemo ? 0.45 : 0.10;
+  const isWin = Math.random() < winRate;
+
+  if (isWin) {
     dealerChoice = WINS_AGAINST[selectedChoice];
   } else {
-    // 20% Win / 80% Loss in Real:
-    const isWin = Math.random() < 0.20;
-    if (isWin) {
-      dealerChoice = WINS_AGAINST[selectedChoice];
-    } else {
-      // Dealer counters or ties
-      const counterMoves = Object.keys(HANDS).filter(k => WINS_AGAINST[k] === selectedChoice);
-      dealerChoice = counterMoves[0];
-    }
+    // Dealer counters
+    const counterMoves = Object.keys(HANDS).filter(k => WINS_AGAINST[k] === selectedChoice);
+    dealerChoice = counterMoves[0];
   }
 
   setTimeout(() => {

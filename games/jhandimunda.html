@@ -261,29 +261,21 @@ function rollJhandi() {
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let rolled = [];
 
-  if (isDemo) {
-    // 100% Win in Demo: at least 3 matching dice
-    const matchCount = Math.floor(Math.random() * 2) + 3; // 3 or 4 matches
+  // Reduced win probability: 45% in Demo, 10% in Real
+  const winRate = isDemo ? 0.45 : 0.10;
+  const isWin = Math.random() < winRate;
+
+  if (isWin) {
+    const matchCount = Math.floor(Math.random() * 2) + 2; // 2 or 3 matches
     for (let i = 0; i < 6; i++) {
       if (i < matchCount) rolled.push(selectedSymbol);
       else rolled.push(SYMBOLS.filter(s => s !== selectedSymbol)[Math.floor(Math.random() * 5)]);
     }
     rolled.sort(() => Math.random() - 0.5);
   } else {
-    // 20% Win / 80% Loss in Real
-    const isWin = Math.random() < 0.20;
-    if (isWin) {
-      const matchCount = Math.floor(Math.random() * 2) + 2; // 2 or 3 matches
-      for (let i = 0; i < 6; i++) {
-        if (i < matchCount) rolled.push(selectedSymbol);
-        else rolled.push(SYMBOLS.filter(s => s !== selectedSymbol)[Math.floor(Math.random() * 5)]);
-      }
-      rolled.sort(() => Math.random() - 0.5);
-    } else {
-      // Zero matches for player symbol
-      const otherSymbols = SYMBOLS.filter(s => s !== selectedSymbol);
-      rolled = Array.from({ length: 6 }, () => otherSymbols[Math.floor(Math.random() * otherSymbols.length)]);
-    }
+    // Zero matches for player symbol
+    const otherSymbols = SYMBOLS.filter(s => s !== selectedSymbol);
+    rolled = Array.from({ length: 6 }, () => otherSymbols[Math.floor(Math.random() * otherSymbols.length)]);
   }
 
   setTimeout(() => {

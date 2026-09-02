@@ -308,8 +308,7 @@ function startPoolGame() {
   initBalls();
   document.getElementById('result-box').innerHTML = '';
   document.getElementById('start-btn').style.display = 'none';
-  document.getElementById('cashout-btn').style.display = 'block';
-  document.getElementById('cashout-btn').textContent = `💰 CASH OUT (₹${amt.toFixed(2)})`;
+  document.getElementById('cashout-btn').style.display = 'none';
   document.getElementById('pool-status').textContent = 'GAME LIVE: POT BALLS INTO POCKETS!';
 }
 
@@ -352,6 +351,7 @@ function updatePhysics() {
 
           const mult = 1.0 + (pottedCount * 0.45);
           const payout = betAmount * mult;
+          document.getElementById('cashout-btn').style.display = 'block';
           document.getElementById('cashout-btn').textContent = `💰 CASH OUT (₹${payout.toFixed(2)} / ${mult.toFixed(2)}×)`;
 
           // Mode win check
@@ -479,7 +479,7 @@ function loop() {
 }
 
 function cashOut() {
-  if (!gameActive) return;
+  if (!gameActive || pottedCount === 0) return;
   gameActive = false;
 
   const mult = 1.0 + (pottedCount * 0.45);

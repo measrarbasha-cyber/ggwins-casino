@@ -108,9 +108,7 @@
 
 <div class="game-layout">
   <div class="game-area chicken-area">
-    <div class="road-container" id="road-container">
-      <!-- 5 Lanes -->
-    </div>
+    <div class="road-container" id="road-container"></div>
     <div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected.</div>
   </div>
 
@@ -132,8 +130,8 @@
       <button class="btn-bet" id="start-btn" onclick="startCrossing()">🐔 Start Cross</button>
       
       <div id="hop-section" style="display:none;margin-top:10px;gap:8px">
-        <button class="btn-bet" id="hop-btn" onclick="hopNextLane()" style="margin-bottom:8px">🐾 HOP TO NEXT LANE</button>
-        <button class="btn-cashout" id="cashout-btn" onclick="cashOut()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900;font-size:15px;border:none;border-radius:10px;cursor:pointer;box-shadow:0 4px 15px rgba(0,230,118,0.4)">💰 CASH OUT (₹0.00)</button>
+        <button class="btn-bet" id="hop-btn" onclick="hopNextLane()" style="margin-bottom:8px">🐾 HOP TO LANE 1</button>
+        <button class="btn-cashout" id="cashout-btn" onclick="cashOut()" style="display:none;width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900;font-size:15px;border:none;border-radius:10px;cursor:pointer;box-shadow:0 4px 15px rgba(0,230,118,0.4)">💰 CASH OUT (₹0.00)</button>
       </div>
     </div>
 
@@ -215,8 +213,8 @@ function startCrossing() {
 
   document.getElementById('start-btn').style.display = 'none';
   document.getElementById('hop-section').style.display = 'block';
-
-  hopNextLane();
+  document.getElementById('cashout-btn').style.display = 'none';
+  document.getElementById('hop-btn').textContent = '🐾 HOP TO LANE 1';
 }
 
 function hopNextLane() {
@@ -224,14 +222,14 @@ function hopNextLane() {
   currentLane++;
 
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  let safe = true;
+  let safe = false;
 
   if (isDemo) {
-    safe = true; // 100% Win in Demo
+    // Demo Mode: 45% chance per lane (reduced from 100%)
+    safe = Math.random() < 0.45;
   } else {
-    // 20% Win / 80% Loss in Real
-    if (currentLane === 0) safe = true;
-    else safe = (Math.random() < 0.35);
+    // Real Mode: 10% overall probability (tight 25% chance per lane)
+    safe = Math.random() < 0.25;
   }
 
   const spotsEl = document.getElementById('spots-' + currentLane);
@@ -250,6 +248,9 @@ function hopNextLane() {
 
     const mult = LANE_MULTS[currentLane];
     const payout = betAmount * mult;
+
+    // Enable cashout now that lane is cleared!
+    document.getElementById('cashout-btn').style.display = 'block';
     document.getElementById('cashout-btn').textContent = `💰 CASH OUT (₹${payout.toFixed(2)} / ${mult.toFixed(2)}×)`;
 
     if (currentLane >= 4) {
@@ -257,6 +258,7 @@ function hopNextLane() {
       cashOut();
     } else {
       document.getElementById('lane-' + (currentLane + 1)).classList.add('active');
+      document.getElementById('hop-btn').textContent = `🐾 HOP TO LANE ${currentLane + 2}`;
     }
   } else {
     // Hit frying pan!
@@ -278,7 +280,7 @@ function hopNextLane() {
 }
 
 function cashOut() {
-  if (!gameActive) return;
+  if (!gameActive || currentLane < 0) return;
   gameActive = false;
   const mult = LANE_MULTS[currentLane];
   const payout = betAmount * mult;

@@ -283,15 +283,20 @@ function hitShot() {
 
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   if (isDemo) {
-    // 100% Win in Demo: big smash up to 4.5x
-    crashPoint = parseFloat((2.50 + Math.random() * 4.00).toFixed(2));
-  } else {
-    // 20% Win / 80% Loss in Real:
-    const isWin = Math.random() < 0.20;
+    // Demo Mode: 45% win probability (reduced from 100%)
+    const isWin = Math.random() < 0.45;
     if (isWin) {
-      crashPoint = parseFloat((2.00 + Math.random() * 3.50).toFixed(2));
+      crashPoint = parseFloat((2.10 + Math.random() * 3.00).toFixed(2));
     } else {
-      crashPoint = parseFloat((1.05 + Math.random() * 0.45).toFixed(2));
+      crashPoint = parseFloat((1.05 + Math.random() * 0.40).toFixed(2));
+    }
+  } else {
+    // Real Mode: 10% Win / 90% Loss (reduced from 20%)
+    const isWin = Math.random() < 0.10;
+    if (isWin) {
+      crashPoint = parseFloat((2.00 + Math.random() * 2.50).toFixed(2));
+    } else {
+      crashPoint = parseFloat((1.02 + Math.random() * 0.35).toFixed(2));
     }
   }
 

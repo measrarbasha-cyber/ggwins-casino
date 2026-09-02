@@ -74,7 +74,7 @@
   position: absolute;
   top: -45px;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 900;
   color: #ffd700;
   text-shadow: 0 0 15px rgba(255,215,0,0.6);
@@ -82,30 +82,52 @@
 }
 
 .pump-btn {
-  width: min(340px, 90vw);
-  height: 64px;
-  background: linear-gradient(135deg, #00e676, #00b0ff);
+  width: 100%;
+  height: 56px;
+  background: linear-gradient(135deg, #00b0ff, #00e676);
   color: #000;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 900;
-  border-radius: 16px;
+  border-radius: 14px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 8px 25px rgba(0, 230, 118, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 176, 255, 0.35);
   user-select: none;
   touch-action: manipulation;
   transition: transform 0.1s;
 }
 .pump-btn:active {
-  transform: scale(0.96);
-  box-shadow: 0 4px 15px rgba(0, 230, 118, 0.6);
+  transform: scale(0.97);
 }
 .pump-btn.disabled {
   background: #334155;
   color: #64748b;
   box-shadow: none;
   cursor: not-allowed;
+}
+
+.cashout-btn {
+  width: 100%;
+  height: 56px;
+  background: linear-gradient(135deg, #ffd700, #ff9100);
+  color: #000;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  margin-top: 10px;
+  transition: all 0.2s;
+}
+.cashout-btn:disabled {
+  background: #1e293b;
+  color: #64748b;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 </style>
 <script src="../security-guard.js"></script>
@@ -162,8 +184,13 @@
       </div>
     </div>
 
-    <div class="bet-section" style="text-align:center">
-      <button class="pump-btn" id="pump-btn">HOLD TO PUMP & RELEASE TO CASHOUT</button>
+    <div class="bet-section">
+      <button class="btn-bet" id="start-btn" onclick="startRound()">🎈 Start Wager</button>
+
+      <div id="active-controls" style="display:none;margin-top:10px">
+        <button class="pump-btn" id="pump-btn" onclick="pumpStep()">💨 PUMP BALLOON (+0.12×)</button>
+        <button class="cashout-btn" id="cashout-btn" onclick="cashOut()" disabled>💰 CASH OUT (Pump to 1.15×)</button>
+      </div>
     </div>
 
     <div class="bet-section">
@@ -189,17 +216,19 @@
 
 <script src="../wallet.js"></script>
 <script>
-let pumping = false;
 let roundActive = false;
 let currentMult = 1.00;
-let burstPoint = 2.50;
-let pumpTimer = null;
+let burstPoint = 1.50;
 let betAmount = 100;
+let pumpCount = 0;
 let totalProfit = 0; let wins = 0; let losses = 0;
 
-const pumpBtn = document.getElementById('pump-btn');
 const balloonWrap = document.getElementById('balloon-wrapper');
 const multEl = document.getElementById('balloon-mult');
+const cashoutBtn = document.getElementById('cashout-btn');
+const startBtn = document.getElementById('start-btn');
+const activeControls = document.getElementById('active-controls');
+const resultBox = document.getElementById('result-box');
 
 function halveBet() {
   const el = document.getElementById('bet-amount');
@@ -214,10 +243,8 @@ function maxBet() {
   document.getElementById('bet-amount').value = Math.min(10000, bal).toFixed(2);
 }
 
-function startPump(e) {
-  if (e) e.preventDefault();
-  if (pumping) return;
-
+function startRound() {
+  if (roundActive) return;
   const amt = parseFloat(document.getElementById('bet-amount').value);
   if (isNaN(amt) || amt <= 0) { showToast('Enter valid bet amount', 'error'); return; }
   const bal = typeof getBalance === 'function' ? getBalance() : 50000;
@@ -225,67 +252,84 @@ function startPump(e) {
 
   if (typeof adjustBalance === 'function') adjustBalance(-amt, 'Balloon Wager');
   betAmount = amt;
-  pumping = true;
   roundActive = true;
   currentMult = 1.00;
-  document.getElementById('result-box').innerHTML = '';
+  pumpCount = 0;
+  resultBox.innerHTML = '';
 
+  resetBalloonVisual();
+
+  // Reduced winning probability:
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   if (isDemo) {
-    // 100% Win in Demo: bursts very late
-    burstPoint = parseFloat((3.50 + Math.random() * 5.00).toFixed(2));
+    // Demo Mode: Reduced to 45% win probability
+    const win = Math.random() < 0.45;
+    if (win) {
+      burstPoint = parseFloat((2.20 + Math.random() * 3.50).toFixed(2));
+    } else {
+      burstPoint = parseFloat((1.12 + Math.random() * 0.45).toFixed(2));
+    }
   } else {
-    // 20% Win / 80% Loss in Real:
-    const isWin = Math.random() < 0.20;
-    if (isWin) burstPoint = parseFloat((2.50 + Math.random() * 4.00).toFixed(2));
-    else burstPoint = parseFloat((1.10 + Math.random() * 0.40).toFixed(2));
+    // Real Mode: Reduced to 10% win probability (90% loss rate)
+    const win = Math.random() < 0.10;
+    if (win) {
+      burstPoint = parseFloat((2.00 + Math.random() * 2.50).toFixed(2));
+    } else {
+      // Tight bust range
+      burstPoint = parseFloat((1.05 + Math.random() * 0.35).toFixed(2));
+    }
   }
 
-  let step = 0;
-  pumpTimer = setInterval(() => {
-    if (!pumping) return;
-    step++;
-    currentMult += 0.04 * (1 + currentMult * 0.05);
-    multEl.textContent = currentMult.toFixed(2) + '×';
-
-    const scale = Math.min(3.2, 1.0 + (currentMult - 1.0) * 0.4);
-    balloonWrap.style.transform = `scale(${scale})`;
-
-    if (window.fxPlayGem) window.fxPlayGem(step % 8);
-
-    if (currentMult >= burstPoint) {
-      popBalloon();
-    }
-  }, 90);
+  startBtn.style.display = 'none';
+  activeControls.style.display = 'block';
+  cashoutBtn.disabled = true;
+  cashoutBtn.textContent = '💰 CASH OUT (Pump to 1.15×)';
 }
 
-function releasePump(e) {
-  if (e) e.preventDefault();
-  if (!pumping || !roundActive) return;
-  pumping = false;
-  roundActive = false;
-  clearInterval(pumpTimer);
+function pumpStep() {
+  if (!roundActive) return;
+  pumpCount++;
+  currentMult = parseFloat((currentMult + 0.12).toFixed(2));
+  multEl.textContent = currentMult.toFixed(2) + '×';
 
-  // Safe Cashout!
+  const scale = Math.min(3.0, 1.0 + (currentMult - 1.0) * 0.35);
+  balloonWrap.style.transform = `scale(${scale})`;
+
+  if (window.fxPlayGem) window.fxPlayGem(pumpCount % 8);
+
+  if (currentMult >= 1.15) {
+    const curPayout = betAmount * currentMult;
+    cashoutBtn.disabled = false;
+    cashoutBtn.textContent = `💰 CASH OUT (₹${curPayout.toFixed(2)} / ${currentMult.toFixed(2)}×)`;
+  }
+
+  // Check burst
+  if (currentMult >= burstPoint) {
+    popBalloon();
+  }
+}
+
+function cashOut() {
+  if (!roundActive || currentMult < 1.15) return;
+  roundActive = false;
+
   const payout = betAmount * currentMult;
   if (typeof adjustBalance === 'function') adjustBalance(payout, `Balloon Cashed Out (${currentMult.toFixed(2)}×)`);
   totalProfit += payout - betAmount;
   wins++;
 
-  document.getElementById('result-box').innerHTML = `<div style="padding:10px;background:rgba(0,230,118,0.15);border:1px solid #00e676;border-radius:8px;color:#00e676;font-weight:800;text-align:center">🎉 WON ₹${payout.toFixed(2)} (${currentMult.toFixed(2)}×)</div>`;
+  resultBox.innerHTML = `<div style="padding:10px;background:rgba(0,230,118,0.15);border:1px solid #00e676;border-radius:8px;color:#00e676;font-weight:800;text-align:center">🎉 WON ₹${payout.toFixed(2)} (${currentMult.toFixed(2)}×)</div>`;
 
   if (window.fireGoldCoinShower) window.fireGoldCoinShower(window.innerWidth / 2, window.innerHeight * 0.4, 40);
   if (window.showBigWinModal && currentMult >= 2.0) window.showBigWinModal('₹' + payout.toFixed(2), currentMult.toFixed(2) + '×');
   if (window.fxPlayWin) window.fxPlayWin();
 
   updateStats();
-  setTimeout(resetBalloon, 1200);
+  endRoundUI();
 }
 
 function popBalloon() {
-  pumping = false;
   roundActive = false;
-  clearInterval(pumpTimer);
   totalProfit -= betAmount;
   losses++;
 
@@ -293,16 +337,22 @@ function popBalloon() {
   multEl.style.color = '#ef4444';
   balloonWrap.style.transform = 'scale(0)';
 
-  document.getElementById('result-box').innerHTML = `<div style="padding:10px;background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:8px;color:#ef4444;font-weight:800;text-align:center">💥 POPPED AT ${burstPoint.toFixed(2)}×</div>`;
+  resultBox.innerHTML = `<div style="padding:10px;background:rgba(239,68,68,0.15);border:1px solid #ef4444;border-radius:8px;color:#ef4444;font-weight:800;text-align:center">💥 POPPED AT ${burstPoint.toFixed(2)}×</div>`;
 
   if (window.triggerScreenShake) window.triggerScreenShake(document.querySelector('.balloon-area'));
   if (window.fxPlayExplosion) window.fxPlayExplosion();
 
   updateStats();
-  setTimeout(resetBalloon, 1400);
+  endRoundUI();
 }
 
-function resetBalloon() {
+function endRoundUI() {
+  startBtn.style.display = 'block';
+  activeControls.style.display = 'none';
+  setTimeout(resetBalloonVisual, 1500);
+}
+
+function resetBalloonVisual() {
   balloonWrap.style.transform = 'scale(1)';
   multEl.textContent = '1.00×';
   multEl.style.color = '#ffd700';
@@ -314,12 +364,6 @@ function updateStats() {
   document.getElementById('stat-wins').textContent = wins;
   document.getElementById('stat-losses').textContent = losses;
 }
-
-// Support desktop mouse and mobile touch
-pumpBtn.addEventListener('mousedown', startPump);
-window.addEventListener('mouseup', releasePump);
-pumpBtn.addEventListener('touchstart', startPump, { passive: false });
-window.addEventListener('touchend', releasePump);
 </script>
 </body>
 </html>
