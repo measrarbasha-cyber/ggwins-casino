@@ -283,27 +283,33 @@ function hitShot() {
 
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   if (isDemo) {
-    // Demo Mode: 45% win probability (reduced from 100%)
-    const isWin = Math.random() < 0.45;
-    if (isWin) {
-      crashPoint = parseFloat((2.10 + Math.random() * 3.00).toFixed(2));
+    // Demo Mode: 30% chance of clearing 1.40x, 70% early wicket (1.02x - 1.25x)
+    const survives = Math.random() < 0.30;
+    if (survives) {
+      crashPoint = parseFloat((1.30 + Math.random() * 1.50).toFixed(2));
     } else {
-      crashPoint = parseFloat((1.05 + Math.random() * 0.40).toFixed(2));
+      crashPoint = parseFloat((1.02 + Math.random() * 0.22).toFixed(2));
     }
   } else {
-    // Real Mode: 10% Win / 90% Loss (reduced from 20%)
-    const isWin = Math.random() < 0.10;
-    if (isWin) {
-      crashPoint = parseFloat((2.00 + Math.random() * 2.50).toFixed(2));
+    // Real Mode: VERY HARD (8% Win Rate / 92% Loss Rate)
+    const roll = Math.random();
+    if (roll < 0.08) {
+      crashPoint = parseFloat((1.45 + Math.random() * 1.80).toFixed(2));
+    } else if (roll < 0.40) {
+      // Clean bowled or slip catch on pitch!
+      crashPoint = parseFloat((1.01 + Math.random() * 0.05).toFixed(2));
     } else {
-      crashPoint = parseFloat((1.02 + Math.random() * 0.35).toFixed(2));
+      // Caught at 30-yard circle or boundary
+      crashPoint = parseFloat((1.06 + Math.random() * 0.16).toFixed(2));
     }
   }
 
   document.getElementById('bet-btn').style.display = 'none';
   document.getElementById('cashout-box').style.display = 'block';
+  document.getElementById('cashout-btn').disabled = true;
+  document.getElementById('cashout-val').textContent = 'Locked (<1.15×)';
   document.getElementById('result-box').innerHTML = '';
-  document.getElementById('cricket-status').textContent = 'BALL SOARING OVER THE BOUNDARY...';
+  document.getElementById('cricket-status').textContent = 'BALL SOARING FAST INTO THE AIR...';
   const multEl = document.getElementById('cricket-mult');
   multEl.className = 'cricket-mult';
   multEl.textContent = '1.00×';
@@ -313,13 +319,27 @@ function hitShot() {
   function loop() {
     if (!gameActive) return;
     const elapsed = Date.now() - startTime;
-    currentMult = Math.pow(Math.E, 0.000075 * elapsed);
-    multEl.textContent = currentMult.toFixed(2) + '×';
-    document.getElementById('cashout-val').textContent = '₹' + (betAmount * currentMult).toFixed(2);
 
-    const progress = Math.min(1, elapsed / 8000);
-    const ballX = canvas.width * 0.2 + progress * (canvas.width * 0.6);
-    const ballY = canvas.height * 0.75 - Math.sin(progress * Math.PI * 0.8) * (canvas.height * 0.55);
+    // Fast-paced supersonic cricket smash curve
+    currentMult = Math.pow(Math.E, 0.00038 * elapsed);
+    multEl.textContent = currentMult.toFixed(2) + '×';
+
+    // Lock cashout until ball reaches at least 1.15x
+    if (currentMult >= 1.15) {
+      document.getElementById('cashout-btn').disabled = false;
+      document.getElementById('cashout-btn').style.opacity = '1';
+      document.getElementById('cashout-btn').style.cursor = 'pointer';
+      document.getElementById('cashout-val').textContent = '₹' + (betAmount * currentMult).toFixed(2);
+    } else {
+      document.getElementById('cashout-btn').disabled = true;
+      document.getElementById('cashout-btn').style.opacity = '0.5';
+      document.getElementById('cashout-btn').style.cursor = 'not-allowed';
+      document.getElementById('cashout-val').textContent = 'Locked (<1.15×)';
+    }
+
+    const progress = Math.min(1, elapsed / 2800);
+    const ballX = canvas.width * 0.2 + progress * (canvas.width * 0.65);
+    const ballY = canvas.height * 0.75 - Math.sin(progress * Math.PI * 0.8) * (canvas.height * 0.6);
 
     drawStadium(progress, ballX, ballY, false);
 
@@ -334,7 +354,7 @@ function hitShot() {
 }
 
 function cashOut() {
-  if (!gameActive) return;
+  if (!gameActive || currentMult < 1.15) return;
   gameActive = false;
   cancelAnimationFrame(animId);
 
