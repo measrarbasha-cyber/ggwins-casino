@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Android APK
+    name: Build Android Player & Admin APKs
     runs-on: ubuntu-latest
 
     steps:
@@ -37,29 +37,46 @@ jobs:
       - name: Grant Execute Permission to gradlew
         run: chmod +x android/gradlew
 
-      - name: Build Android Debug APK
+      - name: Build Android Debug APKs (Player and Admin)
         working-directory: ./android
         run: ./gradlew assembleDebug --stacktrace
 
       - name: Prepare Download Folder
         run: |
           mkdir -p download
-          APK_FILE=$(find android/ -name "*.apk" | head -n 1)
-          echo "Found compiled APK: $APK_FILE"
-          cp -v "$APK_FILE" download/ggwins.apk
-          cp -v "$APK_FILE" download/ggwins-debug.apk
+          PLAYER_APK=$(find android/ -name "*player*debug*.apk" -o -name "app-player-debug.apk" | head -n 1)
+          ADMIN_APK=$(find android/ -name "*admin*debug*.apk" -o -name "app-admin-debug.apk" | head -n 1)
+          echo "Found Player APK: $PLAYER_APK"
+          echo "Found Admin APK: $ADMIN_APK"
+          
+          if [ -n "$PLAYER_APK" ]; then
+            cp -v "$PLAYER_APK" download/ggwins.apk
+            cp -v "$PLAYER_APK" download/ggwins-debug.apk
+          fi
+          
+          if [ -n "$ADMIN_APK" ]; then
+            cp -v "$ADMIN_APK" download/ggwins-admin.apk
+          fi
+          
           ls -lh download/
 
-      - name: Upload APK Artifact
+      - name: Upload Player APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ggwins-apk
+          name: ggwins-player-apk
           path: download/ggwins.apk
           retention-days: 30
 
-      - name: Commit & Push APK to Repository
+      - name: Upload Admin APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ggwins-admin-apk
+          path: download/ggwins-admin.apk
+          retention-days: 30
+
+      - name: Commit & Push APKs to Repository
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add download/ggwins.apk download/ggwins-debug.apk
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-build & deploy Android APK: download/ggwins.apk [skip ci]" && git push origin main)
+          git add download/ggwins.apk download/ggwins-debug.apk download/ggwins-admin.apk
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-build & deploy Android Player & Admin APKs [skip ci]" && git push origin main)

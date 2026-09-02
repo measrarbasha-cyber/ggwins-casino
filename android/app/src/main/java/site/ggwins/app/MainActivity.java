@@ -3,7 +3,6 @@ package site.ggwins.app;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -17,6 +16,8 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -24,17 +25,19 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import site.ggwins.app.R;
-
 public class MainActivity extends AppCompatActivity {
 
-    private static final String APP_URL = "https://ggwins.site";
+    private static final String DEFAULT_URL = BuildConfig.START_URL;
+    private static final String HOST_URL = "https://ggwins.site/host/index.html";
+    private static final String CASINO_URL = "https://ggwins.site";
     private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
 
     private WebView webView;
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private LinearLayout adminDock;
     private ValueCallback<Uri[]> filePathCallback;
+    private long lastBackgroundTime = 0;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -53,17 +56,82 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webView);
         progressBar = findViewById(R.id.progressBar);
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
+        adminDock = findViewById(R.id.adminDock);
 
         swipeRefreshLayout.setColorSchemeColors(0xFFFFD700, 0xFF00E676);
         swipeRefreshLayout.setProgressBackgroundColorSchemeColor(0xFF0F1527);
         swipeRefreshLayout.setOnRefreshListener(() -> webView.reload());
+
+        // Setup Admin controls if this is the Admin App flavor
+        if (BuildConfig.IS_ADMIN_APP) {
+            adminDock.setVisibility(View.VISIBLE);
+            setupAdminDock();
+        } else {
+            adminDock.setVisibility(View.GONE);
+        }
 
         configureWebView();
 
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState);
         } else {
-            webView.loadUrl(APP_URL);
+            webView.loadUrl(DEFAULT_URL);
+        }
+    }
+
+    private void setupAdminDock() {
+        Button btnTerminal = findViewById(R.id.btnNavTerminal);
+        Button btnCasino = findViewById(R.id.btnNavCasino);
+        Button btnLock = findViewById(R.id.btnNavLock);
+        Button btnReload = findViewById(R.id.btnNavReload);
+
+        btnTerminal.setOnClickListener(v -> {
+            webView.loadUrl(HOST_URL);
+            Toast.makeText(this, "👑 Switching to Host Terminal", Toast.LENGTH_SHORT).show();
+        });
+
+        btnCasino.setOnClickListener(v -> {
+            webView.loadUrl(CASINO_URL);
+            Toast.makeText(this, "🎰 Switching to Casino Lobby", Toast.LENGTH_SHORT).show();
+        });
+
+        btnLock.setOnClickListener(v -> {
+            lockTerminal();
+        });
+
+        btnReload.setOnClickListener(v -> {
+            webView.reload();
+            Toast.makeText(this, "🔄 Syncing Terminal", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void lockTerminal() {
+        if (webView != null) {
+            webView.evaluateJavascript(
+                "if(typeof logoutAdmin==='function'){ logoutAdmin(); } " +
+                "else if(typeof lockAdminUI==='function'){ lockAdminUI(); } " +
+                "else { window.location.href='https://ggwins.site/host/index.html'; }",
+                null
+            );
+            Toast.makeText(this, "🔒 Admin Terminal Locked", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        lastBackgroundTime = System.currentTimeMillis();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (BuildConfig.IS_ADMIN_APP && lastBackgroundTime > 0) {
+            long elapsed = System.currentTimeMillis() - lastBackgroundTime;
+            // Auto-lock security policy: lock terminal if app was backgrounded for > 45 seconds
+            if (elapsed > 45000) {
+                lockTerminal();
+            }
         }
     }
 
@@ -86,9 +154,10 @@ public class MainActivity extends AppCompatActivity {
             s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         }
 
-        // Custom User Agent to identify GG Wins Native Android App
+        // Custom User Agent identification
         String defaultUA = s.getUserAgentString();
-        s.setUserAgentString(defaultUA + " GGWinsApp/1.0 (Android)");
+        String appTag = BuildConfig.IS_ADMIN_APP ? " GGWinsAdminApp/1.1 (Android)" : " GGWinsApp/1.1 (Android)";
+        s.setUserAgentString(defaultUA + appTag);
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -104,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
             private boolean handleCustomUri(String url) {
                 if (url == null) return false;
 
-                // Handle UPI payment links (GPay, PhonePe, Paytm, BHIM)
+                // Handle UPI payment links
                 if (url.startsWith("upi://") || url.startsWith("whatsapp://") || 
                     url.startsWith("intent://") || url.startsWith("phonepe://") || 
                     url.startsWith("paytmmp://") || url.startsWith("gpay://")) {
@@ -113,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                         return true;
                     } catch (Exception e) {
-                        Toast.makeText(MainActivity.this, "No UPI App found for this payment request.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "No external app found for this request.", Toast.LENGTH_SHORT).show();
                         return true;
                     }
                 }
@@ -156,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // File Chooser for UTR screenshot uploads
+            // File Chooser for UTR screenshot proof uploads
             @Override
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
                 if (MainActivity.this.filePathCallback != null) {
