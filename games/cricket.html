@@ -283,34 +283,34 @@ function hitShot() {
 
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   if (isDemo) {
-    // Demo Mode: Reduced multiplier, strictly capped at max 1.35x
-    const survives = Math.random() < 0.25;
-    if (survives) {
-      crashPoint = parseFloat((1.16 + Math.random() * 0.19).toFixed(2)); // 1.16x to 1.35x
+    // Demo Mode: 50% high flight (2.00x - 3.50x), 50% mid catch (1.35x - 1.85x)
+    const fliesHigh = Math.random() < 0.50;
+    if (fliesHigh) {
+      crashPoint = parseFloat((2.00 + Math.random() * 1.50).toFixed(2));
     } else {
-      crashPoint = parseFloat((1.01 + Math.random() * 0.08).toFixed(2)); // 1.01x to 1.09x
+      crashPoint = parseFloat((1.35 + Math.random() * 0.50).toFixed(2));
     }
   } else {
-    // Real Mode: Strictly reduced cash multiplier, capped at max 1.25x
+    // Real Mode: Ball soars high with controlled cash multiplier
+    // 30% High flight (1.80x - 2.80x)
+    // 45% Mid-air boundary catch (1.35x - 1.75x)
+    // 25% Early catch (1.18x - 1.30x) — No instant wickets!
     const roll = Math.random();
-    if (roll < 0.08) {
-      // Strict capped win between 1.15x and 1.25x
-      crashPoint = parseFloat((1.15 + Math.random() * 0.10).toFixed(2));
-    } else if (roll < 0.45) {
-      // Clean bowled or slip catch on pitch!
-      crashPoint = parseFloat((1.00 + Math.random() * 0.04).toFixed(2));
+    if (roll < 0.30) {
+      crashPoint = parseFloat((1.80 + Math.random() * 1.00).toFixed(2)); // 1.80x - 2.80x
+    } else if (roll < 0.75) {
+      crashPoint = parseFloat((1.35 + Math.random() * 0.40).toFixed(2)); // 1.35x - 1.75x
     } else {
-      // Caught at 30-yard circle or boundary
-      crashPoint = parseFloat((1.05 + Math.random() * 0.05).toFixed(2));
+      crashPoint = parseFloat((1.18 + Math.random() * 0.12).toFixed(2)); // 1.18x - 1.30x
     }
   }
 
   document.getElementById('bet-btn').style.display = 'none';
   document.getElementById('cashout-box').style.display = 'block';
   document.getElementById('cashout-btn').disabled = true;
-  document.getElementById('cashout-val').textContent = 'Locked (<1.10×)';
+  document.getElementById('cashout-val').textContent = 'Locked (<1.12×)';
   document.getElementById('result-box').innerHTML = '';
-  document.getElementById('cricket-status').textContent = 'BALL SOARING INTO THE AIR...';
+  document.getElementById('cricket-status').textContent = 'BALL SOARING HIGH INTO THE NIGHT SKY...';
   const multEl = document.getElementById('cricket-mult');
   multEl.className = 'cricket-mult';
   multEl.textContent = '1.00×';
@@ -321,12 +321,12 @@ function hitShot() {
     if (!gameActive) return;
     const elapsed = Date.now() - startTime;
 
-    // Reduced multiplier scaling curve
-    currentMult = Math.pow(Math.E, 0.00010 * elapsed);
+    // Smooth, moderate cash multiplier climb
+    currentMult = Math.pow(Math.E, 0.00018 * elapsed);
     multEl.textContent = currentMult.toFixed(2) + '×';
 
-    // Lock cashout until ball reaches at least 1.10x
-    if (currentMult >= 1.10) {
+    // Unlock cashout once ball reaches 1.12x
+    if (currentMult >= 1.12) {
       document.getElementById('cashout-btn').disabled = false;
       document.getElementById('cashout-btn').style.opacity = '1';
       document.getElementById('cashout-btn').style.cursor = 'pointer';
@@ -335,12 +335,13 @@ function hitShot() {
       document.getElementById('cashout-btn').disabled = true;
       document.getElementById('cashout-btn').style.opacity = '0.5';
       document.getElementById('cashout-btn').style.cursor = 'not-allowed';
-      document.getElementById('cashout-val').textContent = 'Locked (<1.10×)';
+      document.getElementById('cashout-val').textContent = 'Locked (<1.12×)';
     }
 
-    const progress = Math.min(1, elapsed / 2800);
-    const ballX = canvas.width * 0.2 + progress * (canvas.width * 0.65);
-    const ballY = canvas.height * 0.75 - Math.sin(progress * Math.PI * 0.8) * (canvas.height * 0.6);
+    // High soaring ball trajectory (lasts up to 4.2s across the full arc)
+    const progress = Math.min(1, elapsed / 4200);
+    const ballX = canvas.width * 0.18 + progress * (canvas.width * 0.68);
+    const ballY = canvas.height * 0.80 - Math.sin(progress * Math.PI * 0.9) * (canvas.height * 0.68);
 
     drawStadium(progress, ballX, ballY, false);
 
@@ -355,7 +356,7 @@ function hitShot() {
 }
 
 function cashOut() {
-  if (!gameActive || currentMult < 1.10) return;
+  if (!gameActive || currentMult < 1.12) return;
   gameActive = false;
   cancelAnimationFrame(animId);
 
