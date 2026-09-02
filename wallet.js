@@ -447,6 +447,21 @@
       el.classList.add(cls);
       setTimeout(() => el.classList.remove(cls), 600);
     });
+
+    try {
+      if (cls === 'flash-win') {
+        if (typeof window.fireGoldCoinShower === 'function') {
+          window.fireGoldCoinShower(window.innerWidth / 2, window.innerHeight * 0.38, 36);
+        }
+        if (typeof window.fxPlayWin === 'function') {
+          window.fxPlayWin();
+        }
+      } else if (cls === 'flash-lose') {
+        if (typeof window.triggerScreenShake === 'function') {
+          window.triggerScreenShake();
+        }
+      }
+    } catch(e) {}
   };
 
   // Cross-tab and return-to-page balance synchronizer
@@ -1532,6 +1547,23 @@
       // 1B. Record adaptive win probability engine outcome
       if (typeof window.recordAdaptiveGameOutcome === 'function') {
         window.recordAdaptiveGameOutcome(won);
+      }
+
+      // 1C. Universal Visual Particles & Celebration Audio
+      if (won) {
+        if (typeof window.fireGoldCoinShower === 'function') {
+          window.fireGoldCoinShower(window.innerWidth / 2, window.innerHeight * 0.4, 40);
+        }
+        if (typeof window.showBigWinModal === 'function' && payout >= wager * 2.5) {
+          window.showBigWinModal('₹' + payout.toFixed(2), (payout / Math.max(1, wager)).toFixed(1) + '×');
+        }
+        if (typeof window.fxPlayWin === 'function') {
+          window.fxPlayWin();
+        }
+      } else {
+        if (typeof window.triggerScreenShake === 'function') {
+          window.triggerScreenShake();
+        }
       }
 
       // 2. Update player session stats

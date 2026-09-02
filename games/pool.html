@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>8 Ball Pool 3D – GG Wins</title>
+<link rel="stylesheet" href="../game-shell.css">
+<style>
+.pool-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: radial-gradient(circle at 50% 50%, #0d2818 0%, #05140b 70%, #020704 100%);
+  overflow: hidden;
+  padding: 16px;
+}
+.pool-table-wrap {
+  position: relative;
+  width: min(720px, 96vw);
+  aspect-ratio: 2 / 1;
+  background: #3b1d11;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.85), inset 0 2px 8px rgba(255,255,255,0.2);
+  border: 12px solid #5c2d16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+#pool-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 12px;
+  cursor: crosshair;
+}
+.cue-power-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(540px, 92vw);
+  margin-top: 14px;
+}
+.power-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffd700;
+}
+.power-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 10px;
+  background: linear-gradient(90deg, #00e676, #ffd700, #ef4444);
+  border-radius: 6px;
+  outline: none;
+}
+.power-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.6);
+  cursor: pointer;
+}
+.pool-status-tag {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #ffd700;
+  color: #ffd700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 4px 16px;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 10;
+}
+</style>
+<script src="../security-guard.js"></script>
+</head>
+<body>
+
+<nav class="gnav">
+  <div class="gnav-left">
+    <button class="gnav-back" onclick="window.location.href='../index.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+      Lobby
+    </button>
+    <div class="gnav-title">🎱 8 Ball Pool 3D</div>
+  </div>
+  <div class="gnav-right">
+    <div class="wallet-switcher-container">
+      <button class="wallet-chip-btn" onclick="toggleWalletMenu()">
+        <span class="wallet-chip-icon">🪙</span>
+        <span id="bal-display" style="color:#00e676;font-weight:800">₹50,000.00</span>
+        <span class="wallet-active-badge" style="background:#7c4dff">DEMO</span>
+        <svg class="chevron-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+  </div>
+  <button class="btn-wallet-game" onclick="openWalletModal('deposit')">
+    💳 Deposit
+  </button>
+</nav>
+
+<div class="game-layout">
+  <div class="game-area pool-area">
+    <div class="pool-status-tag" id="pool-status">AIM CUE & SHOOT BALLS INTO POCKETS</div>
+    <div class="pool-table-wrap">
+      <canvas id="pool-canvas"></canvas>
+    </div>
+    <div class="cue-power-wrap">
+      <span class="power-label">SHOT POWER</span>
+      <input type="range" class="power-slider" id="shot-power" min="10" max="100" value="65">
+      <button class="qbtn" onclick="shootCue()" style="padding:6px 18px;font-size:14px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900">🎱 SHOOT</button>
+    </div>
+    <div class="copyright-footer">© 2026 GG Wins. Proprietary Algorithm & Code Protected.</div>
+  </div>
+
+  <div class="bet-panel">
+    <div class="bet-section">
+      <div class="bet-label">Bet Amount</div>
+      <div class="bet-input-row">
+        <div class="bet-currency">₹</div>
+        <input class="bet-input" id="bet-amount" type="number" value="100.00" min="1" step="1">
+        <div class="bet-quick-btns">
+          <button class="qbtn" onclick="halveBet()">½</button>
+          <button class="qbtn" onclick="doubleBet()">2×</button>
+          <button class="qbtn" onclick="maxBet()">Max</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <div class="bet-label">Game Mode</div>
+      <div class="seg-ctrl" id="mode-ctrl">
+        <div class="seg-btn active" onclick="setMode('clear')">Clear Table (3x)</div>
+        <div class="seg-btn" onclick="setMode('8ball')">Pot 8-Ball (5x)</div>
+      </div>
+    </div>
+
+    <div class="bet-section">
+      <button class="btn-bet" id="start-btn" onclick="startPoolGame()">🎱 Start Pool Match</button>
+      <button class="btn-cashout" id="cashout-btn" onclick="cashOut()" style="display:none;margin-top:8px;width:100%;padding:12px;background:linear-gradient(135deg,#00e676,#00b0ff);color:#000;font-weight:900;font-size:15px;border:none;border-radius:10px;cursor:pointer;box-shadow:0 4px 15px rgba(0,230,118,0.4)">💰 CASH OUT (₹0.00)</button>
+    </div>
+
+    <div class="bet-section">
+      <div id="result-box"></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box-label">Profit</div>
+        <div class="stat-box-val" id="stat-profit">₹0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Wins</div>
+        <div class="stat-box-val green" id="stat-wins">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Losses</div>
+        <div class="stat-box-val red" id="stat-losses">0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../wallet.js"></script>
+<script>
+let canvas = document.getElementById('pool-canvas');
+let ctx = canvas.getContext('2d');
+let gameActive = false;
+let gameMode = 'clear';
+let betAmount = 100;
+let pottedCount = 0;
+let totalProfit = 0; let wins = 0; let losses = 0;
+
+let balls = [];
+let pockets = [];
+let cueBall = null;
+let aimAngle = 0;
+let isMoving = false;
+
+const BALL_COLORS = ['#ffffff', '#facc15', '#3b82f6', '#ef4444', '#a855f7', '#f97316', '#22c55e', '#b91c1c', '#000000'];
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  initPockets();
+  if (!gameActive) initBalls();
+}
+window.addEventListener('resize', resizeCanvas);
+
+function initPockets() {
+  const w = canvas.width, h = canvas.height;
+  const pr = 18;
+  pockets = [
+    { x: pr + 4, y: pr + 4, r: pr },
+    { x: w / 2, y: pr + 2, r: pr },
+    { x: w - pr - 4, y: pr + 4, r: pr },
+    { x: pr + 4, y: h - pr - 4, r: pr },
+    { x: w / 2, y: h - pr - 2, r: pr },
+    { x: w - pr - 4, y: h - pr - 4, r: pr }
+  ];
+}
+
+function initBalls() {
+  const w = canvas.width, h = canvas.height;
+  const r = Math.min(w, h) * 0.038;
+  balls = [];
+
+  // Cue ball
+  cueBall = { x: w * 0.25, y: h * 0.5, vx: 0, vy: 0, r: r, color: '#ffffff', num: 0, isCue: true, active: true };
+  balls.push(cueBall);
+
+  // Rack of balls
+  const startX = w * 0.65;
+  const startY = h * 0.5;
+  let idx = 1;
+
+  for (let col = 0; col < 4; col++) {
+    for (let row = 0; row <= col; row++) {
+      const bx = startX + col * (r * 1.85);
+      const by = startY + (row - col / 2) * (r * 2.1);
+      balls.push({
+        x: bx,
+        y: by,
+        vx: 0,
+        vy: 0,
+        r: r,
+        color: BALL_COLORS[idx % BALL_COLORS.length],
+        num: idx,
+        isCue: false,
+        active: true
+      });
+      idx++;
+    }
+  }
+}
+
+function setMode(m) {
+  if (gameActive) return;
+  gameMode = m;
+  document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (window.fxPlayClick) window.fxPlayClick();
+}
+
+function halveBet() {
+  const el = document.getElementById('bet-amount');
+  el.value = Math.max(1, (parseFloat(el.value) / 2).toFixed(2));
+}
+function doubleBet() {
+  const el = document.getElementById('bet-amount');
+  el.value = (parseFloat(el.value) * 2).toFixed(2);
+}
+function maxBet() {
+  const bal = typeof getBalance === 'function' ? getBalance() : 50000;
+  document.getElementById('bet-amount').value = Math.min(10000, bal).toFixed(2);
+}
+
+// Mouse / Touch Aiming
+canvas.addEventListener('mousemove', (e) => {
+  if (!cueBall || isMoving) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+  aimAngle = Math.atan2(my - cueBall.y, mx - cueBall.x);
+});
+
+canvas.addEventListener('touchmove', (e) => {
+  if (!cueBall || isMoving || !e.touches[0]) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+  const my = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
+  aimAngle = Math.atan2(my - cueBall.y, mx - cueBall.x);
+}, { passive: true });
+
+function shootCue() {
+  if (!cueBall || isMoving || !gameActive) return;
+  const power = parseFloat(document.getElementById('shot-power').value) / 100 * 22;
+  cueBall.vx = Math.cos(aimAngle) * power;
+  cueBall.vy = Math.sin(aimAngle) * power;
+  isMoving = true;
+  if (window.fxPlayCoin) window.fxPlayCoin();
+}
+
+function startPoolGame() {
+  if (gameActive) return;
+  const amt = parseFloat(document.getElementById('bet-amount').value);
+  if (isNaN(amt) || amt <= 0) { showToast('Enter valid bet amount', 'error'); return; }
+  const bal = typeof getBalance === 'function' ? getBalance() : 50000;
+  if (amt > bal) { showToast('Insufficient balance', 'error'); return; }
+
+  if (typeof adjustBalance === 'function') adjustBalance(-amt, '8 Ball Pool Wager');
+  betAmount = amt;
+  gameActive = true;
+  pottedCount = 0;
+  initBalls();
+  document.getElementById('result-box').innerHTML = '';
+  document.getElementById('start-btn').style.display = 'none';
+  document.getElementById('cashout-btn').style.display = 'block';
+  document.getElementById('cashout-btn').textContent = `💰 CASH OUT (₹${amt.toFixed(2)})`;
+  document.getElementById('pool-status').textContent = 'GAME LIVE: POT BALLS INTO POCKETS!';
+}
+
+function updatePhysics() {
+  const friction = 0.985;
+  let anyMoving = false;
+
+  balls.forEach(b => {
+    if (!b.active) return;
+    b.x += b.vx;
+    b.y += b.vy;
+    b.vx *= friction;
+    b.vy *= friction;
+
+    if (Math.abs(b.vx) < 0.05) b.vx = 0;
+    if (Math.abs(b.vy) < 0.05) b.vy = 0;
+    if (b.vx !== 0 || b.vy !== 0) anyMoving = true;
+
+    // Cushion bounces
+    if (b.x - b.r < 18) { b.x = 18 + b.r; b.vx = -b.vx * 0.8; }
+    if (b.x + b.r > canvas.width - 18) { b.x = canvas.width - 18 - b.r; b.vx = -b.vx * 0.8; }
+    if (b.y - b.r < 18) { b.y = 18 + b.r; b.vy = -b.vy * 0.8; }
+    if (b.y + b.r > canvas.height - 18) { b.y = canvas.height - 18 - b.r; b.vy = -b.vy * 0.8; }
+
+    // Pocket checks
+    pockets.forEach(p => {
+      const dist = Math.hypot(b.x - p.x, b.y - p.y);
+      if (dist < p.r + 4) {
+        if (b.isCue) {
+          // Scratch! Reset cue ball
+          b.x = canvas.width * 0.25;
+          b.y = canvas.height * 0.5;
+          b.vx = 0; b.vy = 0;
+        } else {
+          // Potted!
+          b.active = false;
+          b.vx = 0; b.vy = 0;
+          pottedCount++;
+          if (window.fxPlayGem) window.fxPlayGem(pottedCount);
+
+          const mult = 1.0 + (pottedCount * 0.45);
+          const payout = betAmount * mult;
+          document.getElementById('cashout-btn').textContent = `💰 CASH OUT (₹${payout.toFixed(2)} / ${mult.toFixed(2)}×)`;
+
+          // Mode win check
+          if (gameMode === '8ball' && b.num === 8) {
+            cashOut();
+          } else if (pottedCount >= 6) {
+            cashOut();
+          }
+        }
+      }
+    });
+  });
+
+  // Ball-to-ball collisions
+  for (let i = 0; i < balls.length; i++) {
+    for (let j = i + 1; j < balls.length; j++) {
+      const b1 = balls[i], b2 = balls[j];
+      if (!b1.active || !b2.active) continue;
+
+      const dx = b2.x - b1.x;
+      const dy = b2.y - b1.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist < b1.r + b2.r && dist > 0) {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const kx = b1.vx - b2.vx;
+        const ky = b1.vy - b2.vy;
+        const p = 2 * (nx * kx + ny * ky) / 2;
+
+        b1.vx -= p * nx * 0.95;
+        b1.vy -= p * ny * 0.95;
+        b2.vx += p * nx * 0.95;
+        b2.vy += p * ny * 0.95;
+
+        // Separate
+        const overlap = (b1.r + b2.r - dist) / 2;
+        b1.x -= nx * overlap;
+        b1.y -= ny * overlap;
+        b2.x += nx * overlap;
+        b2.y += ny * overlap;
+      }
+    }
+  }
+
+  isMoving = anyMoving;
+}
+
+function drawTable() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const w = canvas.width, h = canvas.height;
+
+  // Green felt baize
+  const feltGrad = ctx.createRadialGradient(w / 2, h / 2, 50, w / 2, h / 2, w * 0.6);
+  feltGrad.addColorStop(0, '#135c34');
+  feltGrad.addColorStop(1, '#0b3920');
+  ctx.fillStyle = feltGrad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Table markings
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.25, 18); ctx.lineTo(w * 0.25, h - 18);
+  ctx.stroke();
+
+  // Pockets
+  pockets.forEach(p => {
+    ctx.fillStyle = '#050706';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+
+  // Aiming line
+  if (cueBall && !isMoving && gameActive) {
+    ctx.strokeStyle = 'rgba(0, 242, 254, 0.7)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(cueBall.x, cueBall.y);
+    ctx.lineTo(cueBall.x + Math.cos(aimAngle) * 200, cueBall.y + Math.sin(aimAngle) * 200);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Draw balls
+  balls.forEach(b => {
+    if (!b.active) return;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 4;
+
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Specular 3D shine
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath();
+    ctx.arc(b.x - b.r * 0.35, b.y - b.r * 0.35, b.r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Number tag
+    if (b.num > 0) {
+      ctx.fillStyle = '#0f172a';
+      ctx.font = `bold ${b.r * 0.9}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(b.num, b.x, b.y + 1);
+    }
+    ctx.restore();
+  });
+}
+
+function loop() {
+  updatePhysics();
+  drawTable();
+  requestAnimationFrame(loop);
+}
+
+function cashOut() {
+  if (!gameActive) return;
+  gameActive = false;
+
+  const mult = 1.0 + (pottedCount * 0.45);
+  const payout = betAmount * mult;
+
+  if (typeof adjustBalance === 'function') adjustBalance(payout, `8 Ball Pool Win (${mult.toFixed(2)}×)`);
+  totalProfit += payout - betAmount;
+  wins++;
+
+  document.getElementById('result-box').innerHTML = `<div style="padding:10px;background:rgba(0,230,118,0.15);border:1px solid #00e676;border-radius:8px;color:#00e676;font-weight:800;text-align:center">🎉 WON ₹${payout.toFixed(2)} (${mult.toFixed(2)}×)</div>`;
+
+  if (window.fireGoldCoinShower) window.fireGoldCoinShower(window.innerWidth / 2, window.innerHeight * 0.4, 45);
+  if (window.showBigWinModal && mult >= 2.0) window.showBigWinModal('₹' + payout.toFixed(2), mult.toFixed(2) + '×');
+  if (window.fxPlayWin) window.fxPlayWin();
+
+  updateStats();
+  document.getElementById('start-btn').style.display = 'block';
+  document.getElementById('cashout-btn').style.display = 'none';
+  document.getElementById('pool-status').textContent = 'TABLE CLEARED! PLACE BET TO RE-RACK';
+}
+
+function updateStats() {
+  document.getElementById('stat-profit').textContent = (totalProfit >= 0 ? '+' : '') + '₹' + totalProfit.toFixed(2);
+  document.getElementById('stat-profit').className = 'stat-box-val ' + (totalProfit >= 0 ? 'green' : 'red');
+  document.getElementById('stat-wins').textContent = wins;
+  document.getElementById('stat-losses').textContent = losses;
+}
+
+resizeCanvas();
+loop();
+</script>
+</body>
+</html>

@@ -1474,24 +1474,38 @@
           </div>
         </div>
 
+        <!-- ── LIVE PROGRESSIVE JACKPOT POOL BANNER ── -->
+        <div class="jackpot-pool-banner" style="display:flex;align-items:center;justify-content:space-between;background:radial-gradient(ellipse at 50% 50%, rgba(255,215,0,0.18) 0%, rgba(17,24,39,0.95) 100%);border:2px solid #ffd700;border-radius:18px;padding:16px 24px;margin-bottom:18px;box-shadow:0 0 35px rgba(255,215,0,0.25);position:relative;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:14px">
+            <span style="font-size:38px;filter:drop-shadow(0 0 10px #ffd700)">🏆</span>
+            <div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:900;color:#ffd700;letter-spacing:0.15em;text-transform:uppercase">★ LIVE GRAND JACKPOT POOL ★</div>
+              <div id="live-jackpot-pool-counter" style="font-family:'Space Grotesk',sans-serif;font-size:clamp(24px,5vw,36px);font-weight:900;color:#00e676;text-shadow:0 0 25px rgba(0,230,118,0.6);line-height:1.1">₹1,485,290.00</div>
+            </div>
+          </div>
+          <button class="tab-btn" onclick="if(window.fireGoldCoinShower) window.fireGoldCoinShower(window.innerWidth/2, window.innerHeight*0.3, 50)" style="background:var(--fx-gold-linear);color:#000;font-weight:900;font-size:13px;padding:8px 18px;border-radius:12px;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(255,215,0,0.4)">
+            🪙 Shower Coins
+          </button>
+        </div>
+
         <!-- Filter tabs & Live Game Search Bar -->
         <div class="lobby-controls-bar">
           <div class="filter-tabs" id="filter-tabs" style="margin:0">
-            <button class="tab-btn active" onclick="filterGames('all', this)">🎮 All (25)</button>
-            <button class="tab-btn" onclick="filterGames('originals', this)">🔥 Originals (8)</button>
-            <button class="tab-btn" onclick="filterGames('table', this)">🃏 Cards (8)</button>
-            <button class="tab-btn" onclick="filterGames('arcade', this)">🎯 Arcade (9)</button>
+            <button class="tab-btn active" onclick="filterGames('all', this)">🎮 All (34)</button>
+            <button class="tab-btn" onclick="filterGames('originals', this)">🔥 Originals (12)</button>
+            <button class="tab-btn" onclick="filterGames('table', this)">🃏 Cards (9)</button>
+            <button class="tab-btn" onclick="filterGames('arcade', this)">🎯 Arcade (13)</button>
           </div>
 
           <!-- Live Game Search Bar -->
           <div class="game-search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="game-search-input" class="game-search-input" placeholder="Search 25+ games..." oninput="handleGameSearch(this.value)">
+            <input type="text" id="game-search-input" class="game-search-input" placeholder="Search 34+ games..." oninput="handleGameSearch(this.value)">
             <button class="search-clear-btn" id="search-clear-btn" onclick="clearGameSearch()" style="display:none">✕</button>
           </div>
         </div>
 
-        <!-- ── ALL 25 GAMES GRID ── -->
+        <!-- ── ALL 34 GAMES GRID ── -->
         <div class="games-grid" id="games-grid">
           <!-- 1. GG Crash -->
           <div class="game-card" data-category="originals" onclick="launchGame('games/crash.html')">
@@ -1690,6 +1704,12 @@
             <div class="game-card-top"><div class="game-icon-box">✂️</div><div><div class="game-name">RPS Arena</div><div class="game-tag"><span class="badge-pill badge-orig">STREAK</span> • 16x Hands</div></div></div>
             <div class="game-card-stats"><span>Active</span><span style="color:#ffd700;font-weight:800">7.5k</span></div>
             <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/rps.html')">▶ Play</button>
+          </div>
+          <!-- 33. 8 Ball Pool 3D -->
+          <div class="game-card" data-category="arcade originals" onclick="launchGame('games/pool.html')">
+            <div class="game-card-top"><div class="game-icon-box">🎱</div><div><div class="game-name">8 Ball Pool 3D</div><div class="game-tag"><span class="badge-pill badge-hot">PHYSICS</span> • Billiards</div></div></div>
+            <div class="game-card-stats"><span>Active</span><span style="color:#00e676;font-weight:800">22.4k</span></div>
+            <button class="btn-play" onclick="event.stopPropagation(); launchGame('games/pool.html')">▶ Play</button>
           </div>
         </div>
       </div>
@@ -3345,6 +3365,18 @@
       if (banner) banner.style.display = 'none';
       localStorage.setItem('ggwins_pwa_dismissed', Date.now().toString());
     };
+
+    // Live Grand Jackpot Pool Ticker
+    (function() {
+      let poolVal = 1485290.45;
+      const poolEl = document.getElementById('live-jackpot-pool-counter');
+      if (poolEl) {
+        setInterval(() => {
+          poolVal += Math.random() * 4.5 + 0.5;
+          poolEl.textContent = '₹' + poolVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }, 2800);
+      }
+    })();
   </script>
 </body>
 </html>
