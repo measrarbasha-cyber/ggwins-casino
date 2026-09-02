@@ -172,17 +172,40 @@
     approvedVips.forEach(v => { totalVipRev += parseFloat(v.amount) || 0; });
     setElText('stat-vip-revenue', `₹${totalVipRev.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
 
-    // Notification Triggers on New Requests
+    // Real-Time Notification Triggers on New Incoming Requests
     if (!isFirstLoad) {
       if (pendingVips.length > lastPendingVipCount) {
-        playAlertTone();
-        showNotification('👑 NEW VIP MEMBERSHIP REQUEST RECEIVED!', '#ffd700');
+        const latestVip = pendingVips[0] || {};
+        const u = latestVip.username || 'Player';
+        const tier = latestVip.tier || 'VIP';
+        showWhatsAppNotification({
+          type: 'vip',
+          title: `👑 New VIP Request: ${tier}`,
+          subtitle: `@${u} requested upgrade • Tap to review`,
+          targetTab: 'vip'
+        });
       } else if (pendingDeps.length > lastPendingDepCount) {
-        playAlertTone();
-        showNotification('📥 NEW DEPOSIT REQUEST RECEIVED!', '#00e676');
+        const latestDep = pendingDeps[0] || {};
+        const amt = latestDep.amount ? `₹${parseFloat(latestDep.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}` : 'New Amount';
+        const u = latestDep.username || 'Player';
+        const utr = latestDep.utr || 'Proof Attached';
+        showWhatsAppNotification({
+          type: 'deposit',
+          title: `💰 New Deposit: ${amt}`,
+          subtitle: `From @${u} • UTR: ${utr} • Tap to approve`,
+          targetTab: 'deposits'
+        });
       } else if (pendingWths.length > lastPendingWthCount) {
-        playAlertTone();
-        showNotification('📤 NEW WITHDRAWAL REQUEST RECEIVED!', '#38bdf8');
+        const latestWth = pendingWths[0] || {};
+        const amt = latestWth.amount ? `₹${parseFloat(latestWth.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}` : 'New Amount';
+        const u = latestWth.username || 'Player';
+        const upi = latestWth.accountNo || latestWth.upiId || 'UPI';
+        showWhatsAppNotification({
+          type: 'withdraw',
+          title: `📤 New Withdrawal: ${amt}`,
+          subtitle: `Payout to @${u} (${upi}) • Tap to process`,
+          targetTab: 'withdrawals'
+        });
       }
     }
 
@@ -656,18 +679,90 @@
   function playAlertTone() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.12); // A5
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.35);
+      // WhatsApp signature chime (800Hz followed by 1050Hz)
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(800, audioCtx.currentTime);
+      gain1.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.10);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start();
+      osc1.stop(audioCtx.currentTime + 0.10);
+
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1050, audioCtx.currentTime + 0.12);
+      gain2.gain.setValueAtTime(0.40, audioCtx.currentTime + 0.12);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.38);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(audioCtx.currentTime + 0.12);
+      osc2.stop(audioCtx.currentTime + 0.38);
     } catch (e) {}
+  }
+
+  function showWhatsAppNotification(data) {
+    const { type, title, subtitle, targetTab } = data;
+    playAlertTone();
+
+    // 1. Android Native System Notification (heads-up status bar alert like WhatsApp)
+    if (window.AndroidBridge && typeof window.AndroidBridge.notifyAdmin === 'function') {
+      window.AndroidBridge.notifyAdmin(title, subtitle, type);
+    }
+
+    // 2. Browser Web Notification API
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(title, {
+          body: subtitle,
+          icon: '/download/ggwins.apk'
+        });
+      } catch(e) {}
+    }
+
+    // 3. Floating in-app WhatsApp notification card
+    const container = document.getElementById('whatsapp-toast-container');
+    if (container) {
+      const card = document.createElement('div');
+      card.className = 'whatsapp-card';
+      card.style.cursor = 'pointer';
+      
+      const iconEmoji = type === 'deposit' ? '💰' : (type === 'withdraw' ? '📤' : '👑');
+
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="font-size:16px">💬</span>
+            <span style="font-size:11.5px;font-weight:900;color:#25D366;text-transform:uppercase;letter-spacing:0.5px">WHATSAPP ALERT • GG WINS</span>
+          </div>
+          <button onclick="event.stopPropagation(); this.closest('.whatsapp-card').remove()" style="background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer;line-height:1">✕</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:2px">
+          <div style="width:40px;height:40px;border-radius:50%;background:radial-gradient(circle,#25D366,#128C7E);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 0 15px rgba(37,211,102,0.4)">
+            ${iconEmoji}
+          </div>
+          <div style="flex:1;text-align:left">
+            <div style="font-size:13.5px;font-weight:800;color:#fff">${title}</div>
+            <div style="font-size:12px;color:#cbd5e1;margin-top:2px">${subtitle}</div>
+          </div>
+          <button style="padding:6px 12px;background:#25D366;color:#000;border:none;border-radius:8px;font-weight:900;font-size:11.5px;cursor:pointer;flex-shrink:0;box-shadow:0 2px 10px rgba(37,211,102,0.4)">OPEN</button>
+        </div>
+      `;
+
+      card.onclick = () => {
+        if (typeof switchMainTab === 'function') switchMainTab(targetTab);
+        card.remove();
+      };
+
+      container.appendChild(card);
+      setTimeout(() => {
+        card.classList.add('closing');
+        setTimeout(() => card.remove(), 320);
+      }, 7500);
+    }
   }
 
   window.clearAllData = async function() {
@@ -1598,11 +1693,26 @@
     }
   };
 
-  // ── 9. BOOTSTRAP (MANUAL REFRESH ONLY • NO AUTO-RELOAD) ─────────────────────────
+  // ── 9. BOOTSTRAP (REAL-TIME AUTO-SYNC & NOTIFICATION ENGINE) ─────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     const isUnlocked = checkAdminSession();
     if (isUnlocked) {
       fetchAllData();
+    }
+
+    // Real-Time Background Auto-Sync Engine (polls every 3.5 seconds)
+    setInterval(async () => {
+      const unlocked = checkAdminSession();
+      if (unlocked) {
+        await fetchAllData();
+      }
+    }, 3500);
+
+    // Request browser notification permission for background alerts
+    if ('Notification' in window && Notification.permission === 'default') {
+      try {
+        Notification.requestPermission();
+      } catch(e) {}
     }
 
     const refreshBtn = document.getElementById('refresh-btn');

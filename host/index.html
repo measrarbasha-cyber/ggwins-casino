@@ -142,7 +142,51 @@
       transition: all 0.2s;
       text-decoration: none;
     }
-    .btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+    .btn-install-app {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #000;
+      background: linear-gradient(135deg, #ffd700, #ff9100);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(255, 215, 0, 0.4);
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-install-app:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 24px rgba(255, 215, 0, 0.6);
+    }
+    .whatsapp-card {
+      pointer-events: auto;
+      background: rgba(17, 24, 39, 0.95);
+      border: 1.5px solid #25D366;
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(37, 211, 102, 0.35);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      animation: waSlideDown 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: all 0.3s;
+    }
+    .whatsapp-card.closing {
+      animation: waSlideUp 0.3s ease forwards;
+    }
+    @keyframes waSlideDown {
+      from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes waSlideUp {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-30px); }
+    }
 
     .main-container {
       flex: 1;
@@ -378,6 +422,29 @@
 </style>
 </head>
 <body>
+  <!-- 💬 WHATSAPP-STYLE HEADS-UP ALERT CONTAINER -->
+  <div id="whatsapp-toast-container" style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:99999999;width:min(440px,94vw);pointer-events:none;display:flex;flex-direction:column;gap:10px"></div>
+
+  <!-- 📱 DEDICATED ADMIN APP DOWNLOAD MODAL -->
+  <div id="admin-app-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(3,7,18,0.85);backdrop-filter:blur(12px);z-index:99999999;align-items:center;justify-content:center;padding:16px">
+    <div style="max-width:440px;width:100%;background:#111827;border:1.5px solid rgba(255,215,0,0.4);border-radius:18px;padding:26px;box-shadow:0 25px 60px rgba(0,0,0,0.8),0 0 35px rgba(255,215,0,0.25);text-align:center;position:relative">
+      <button onclick="closeAdminAppModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;line-height:1">✕</button>
+      <div style="width:68px;height:68px;margin:0 auto 12px;background:radial-gradient(circle,#ffd700,#ff9100);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 6px 20px rgba(255,215,0,0.4)">👑</div>
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:900;color:#fff;margin-bottom:6px">GG Wins Official Admin App</h3>
+      <p style="font-size:12.5px;color:#94a3b8;margin-bottom:20px;line-height:1.4">Dedicated Android application for Admins with instant WhatsApp-style heads-up alerts, live deposit/withdrawal approvals, and Master Admin Lock.</p>
+      <a href="/download/ggwins-admin.apk" download="ggwins-admin.apk" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(255,215,0,0.18),rgba(255,145,0,0.08));border:1.5px solid #ffd700;border-radius:12px;padding:14px 16px;color:#fff;text-decoration:none;transition:all 0.2s" onmouseover="this.style.background='rgba(255,215,0,0.28)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,215,0,0.18),rgba(255,145,0,0.08))'">
+        <div style="display:flex;align-items:center;gap:12px;text-align:left">
+          <span style="font-size:28px">🤖</span>
+          <div>
+            <div style="font-size:14px;font-weight:900;color:#ffd700">Download Admin APK</div>
+            <div style="font-size:11px;color:#94a3b8">v1.1.0 • 6.1 MB • Native Android APK</div>
+          </div>
+        </div>
+        <span style="background:#ffd700;color:#000;font-weight:900;font-size:12px;padding:6px 12px;border-radius:6px">GET APK</span>
+      </a>
+    </div>
+  </div>
+
   <!-- ── 🔐 ADMIN TERMINAL SECURITY LOCK SCREEN ── -->
   <div id="admin-lock-overlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:radial-gradient(ellipse at center,#111827 0%,#030712 100%);z-index:9999999;display:flex;align-items:center;justify-content:center;padding:16px">
     <div style="max-width:420px;width:100%;background:rgba(17,24,39,0.92);border:1.5px solid rgba(239,68,68,0.4);border-radius:18px;padding:32px 28px;box-shadow:0 25px 70px rgba(0,0,0,0.8),0 0 35px rgba(239,68,68,0.25);backdrop-filter:blur(20px);text-align:center">
@@ -470,9 +537,9 @@
         <button class="btn" style="color:#ef4444;border-color:rgba(239,68,68,0.3)" onclick="clearAllData()" title="Clear old/test records">
           <span>🗑️</span> Reset
         </button>
-        <a href="/download/ggwins-admin.apk" class="btn" download style="background:linear-gradient(135deg,#ffd700,#ff9100);color:#000;font-weight:900" title="Download Dedicated Admin App (APK)">
-          <span>📱</span> Admin App
-        </a>
+        <button class="btn-install-app" onclick="openAdminAppModal()" title="Download Dedicated Admin App (APK)">
+          <span style="font-size:15px">📱</span> Admin App
+        </button>
         <a href="/" class="btn" target="_blank" title="Open User Website">
           <span>🎮</span> User Site
         </a>
@@ -1141,6 +1208,16 @@
   </main>
   </div>
 
+  <script>
+    function openAdminAppModal() {
+      const m = document.getElementById('admin-app-modal');
+      if (m) m.style.display = 'flex';
+    }
+    function closeAdminAppModal() {
+      const m = document.getElementById('admin-app-modal');
+      if (m) m.style.display = 'none';
+    }
+  </script>
   <script src="host.js"></script>
 </body>
 </html>

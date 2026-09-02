@@ -1,15 +1,21 @@
 package site.ggwins.app;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -23,6 +29,10 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,7 +40,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String DEFAULT_URL = BuildConfig.START_URL;
     private static final String HOST_URL = "https://ggwins.site/host/index.html";
     private static final String CASINO_URL = "https://ggwins.site";
+    private static final String CHANNEL_ID = "ggwins_admin_whatsapp_channel";
     private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
+    private static final int NOTIFICATION_PERMISSION_CODE = 1002;
 
     private WebView webView;
     private ProgressBar progressBar;
@@ -38,6 +50,18 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout adminDock;
     private ValueCallback<Uri[]> filePathCallback;
     private long lastBackgroundTime = 0;
+
+    public class AndroidNotificationBridge {
+        @JavascriptInterface
+        public void notifyAdmin(String title, String message, String type) {
+            runOnUiThread(() -> showWhatsAppSystemNotification(title, message, type));
+        }
+
+        @JavascriptInterface
+        public boolean isAndroidApp() {
+            return true;
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -62,6 +86,16 @@ public class MainActivity extends AppCompatActivity {
         swipeRefreshLayout.setProgressBackgroundColorSchemeColor(0xFF0F1527);
         swipeRefreshLayout.setOnRefreshListener(() -> webView.reload());
 
+        // Setup notification channel
+        createNotificationChannel();
+
+        // Request notification permissions on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_CODE);
+            }
+        }
+
         // Setup Admin controls if this is the Admin App flavor
         if (BuildConfig.IS_ADMIN_APP) {
             adminDock.setVisibility(View.VISIBLE);
@@ -76,6 +110,47 @@ public class MainActivity extends AppCompatActivity {
             webView.restoreState(savedInstanceState);
         } else {
             webView.loadUrl(DEFAULT_URL);
+        }
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "GG Wins Admin WhatsApp Alerts";
+            String description = "High-priority instant notifications for deposits, withdrawals, and VIP requests";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            channel.enableLights(true);
+            channel.setLightColor(0xFF00E676);
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 200, 100, 200}); // WhatsApp double-vibe
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    private void showWhatsAppSystemNotification(String title, String message, String type) {
+        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setSound(defaultSoundUri)
+                .setVibrate(new long[]{0, 200, 100, 200})
+                .setAutoCancel(true)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            try {
+                notificationManager.notify((int) System.currentTimeMillis(), builder.build());
+            } catch (Exception ignored) {}
         }
     }
 
@@ -158,6 +233,9 @@ public class MainActivity extends AppCompatActivity {
         String defaultUA = s.getUserAgentString();
         String appTag = BuildConfig.IS_ADMIN_APP ? " GGWinsAdminApp/1.1 (Android)" : " GGWinsApp/1.1 (Android)";
         s.setUserAgentString(defaultUA + appTag);
+
+        // Bind native notification bridge for real-time WhatsApp-style alerts
+        webView.addJavascriptInterface(new AndroidNotificationBridge(), "AndroidBridge");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
