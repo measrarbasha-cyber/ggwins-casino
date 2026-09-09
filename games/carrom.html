@@ -214,6 +214,7 @@
       <button class="btn-cam-opt active" data-cam="3d">🎥 3D Table</button>
       <button class="btn-cam-opt" data-cam="topdown">📐 Top-Down</button>
       <button class="btn-cam-opt" data-cam="striker">🎯 Striker Cam</button>
+      <span id="autoheal-badge" style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:800;color:#00e676;background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.3);padding:4px 10px;border-radius:6px">🛡️ AutoHeal: ACTIVE</span>
     </div>
 
     <!-- 3D WebGL Arena -->
@@ -1042,62 +1043,176 @@ class CarromBoard3D {
   }
 }
 
-// ── BOT MASTER AI ──
+// ── BOT MASTER AI (Crash-Proof & Intelligent) ──
 class BotAI {
   calculateBestShot(physics) {
-    const activeP = physics.pieces.filter(p => !p.isPocketed && !p.isDropping);
-    if (activeP.length === 0) return { baselineX: 0, angle: Math.PI / 2, power: 22 };
+    try {
+      const activeP = physics.pieces.filter(p => !p.isPocketed && !p.isDropping);
+      if (!activeP || activeP.length === 0) return { baselineX: 0, angle: Math.PI / 2, power: 22 };
 
-    let best = null, maxScore = -99999;
-    for (let p of activeP) {
-      let basePri = (p.type === 'queen') ? 500 : (p.type === 'black' ? 300 : 100);
+      let best = null, maxScore = -99999;
+      for (let p of activeP) {
+        if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.z)) continue;
+        let basePri = (p.type === 'queen') ? 600 : (p.type === 'black' ? 400 : 150);
 
-      for (let pkt of physics.pockets) {
-        const dx = pkt.x - p.x, dz = pkt.z - p.z;
-        const pDist = Math.hypot(dx, dz) || 1;
-        const normX = dx / pDist, normZ = dz / pDist;
+        for (let pkt of physics.pockets) {
+          const dx = pkt.x - p.x, dz = pkt.z - p.z;
+          const pDist = Math.hypot(dx, dz);
+          if (pDist < 0.1 || !Number.isFinite(pDist)) continue;
+          const normX = dx / pDist, normZ = dz / pDist;
 
-        // Ghost impact position
-        const contactX = p.x - normX * (p.r + physics.strikerRadius);
-        const contactZ = p.z - normZ * (p.r + physics.strikerRadius);
+          // Ghost impact point behind target coin
+          const contactX = p.x - normX * (p.r + physics.strikerRadius);
+          const contactZ = p.z - normZ * (p.r + physics.strikerRadius);
 
-        // Baseline at z = -130
-        let idealX = contactX;
-        if (Math.abs(normZ) > 0.02) {
-          idealX = contactX - (contactZ - (-130)) * (normX / normZ);
+          // Baseline at z = -130 (Top Baseline for AI)
+          let idealX = contactX;
+          if (Math.abs(normZ) > 0.04) {
+            idealX = contactX - (contactZ - (-130)) * (normX / normZ);
+          }
+          if (!Number.isFinite(idealX)) idealX = 0;
+          const clampedX = Math.max(-100, Math.min(100, idealX));
+
+          const shotAngle = Math.atan2(contactZ - (-130), contactX - clampedX);
+          if (!Number.isFinite(shotAngle)) continue;
+          const sDist = Math.hypot(contactX - clampedX, contactZ - (-130));
+
+          const score = basePri - pDist * 0.4 - sDist * 0.25;
+          if (score > maxScore) {
+            maxScore = score;
+            const pwr = Math.min(28, Math.max(18, 17.5 + pDist * 0.03 + sDist * 0.02));
+            best = { baselineX: clampedX, angle: shotAngle, power: pwr };
+          }
         }
-        const clampedX = Math.max(-100, Math.min(100, idealX));
-        const clampPenalty = Math.abs(clampedX - idealX) * 2.5;
+      }
 
-        const shotAngle = Math.atan2(contactZ - (-130), contactX - clampedX);
-        const sDist = Math.hypot(contactX - clampedX, contactZ - (-130));
+      if (best && Number.isFinite(best.baselineX) && Number.isFinite(best.angle) && Number.isFinite(best.power)) {
+        return best;
+      }
+    } catch (e) {
+      console.warn('[BotAI Recovery]', e);
+    }
+    const fallbackP = physics.pieces.find(p => !p.isPocketed) || { x: 0, z: 0 };
+    const fbAngle = Math.atan2((fallbackP.z || 0) - (-130), (fallbackP.x || 0));
+    return { baselineX: 0, angle: Number.isFinite(fbAngle) ? fbAngle : Math.PI / 2, power: 22 };
+  }
+}
 
-        let obstPenalty = 0;
-        for (let other of activeP) {
-          if (other.id === p.id) continue;
-          const ldx = contactX - clampedX, ldz = contactZ - (-130);
-          const len = Math.hypot(ldx, ldz) || 1;
-          const t = Math.max(0, Math.min(1, ((other.x - clampedX) * ldx + (other.z - (-130)) * ldz) / (len * len)));
-          const projX = clampedX + t * ldx, projZ = -130 + t * ldz;
-          if (Math.hypot(other.x - projX, other.z - projZ) < (physics.strikerRadius + other.r - 2)) {
-            obstPenalty += 400;
+// ── 🛡️ AUTO-HEALING & ANTI-CRASH RECOVERY ENGINE ──
+class GameAutoHealer {
+  constructor() {
+    this.active = true;
+    this.healCount = 0;
+    this.lastState = 'IDLE';
+    this.stateStartTime = performance.now();
+    this.botStartTime = 0;
+  }
+
+  start() {
+    setInterval(() => this.heartbeat(), 350);
+  }
+
+  notifyHeal(reason) {
+    this.healCount++;
+    console.log(`[🛡️ AutoHeal #${this.healCount}] Recovered from: ${reason}`);
+    const badge = document.getElementById('autoheal-badge');
+    if (badge) {
+      badge.textContent = `🛡️ AutoHeal (${this.healCount})`;
+      badge.style.borderColor = '#00e676';
+      badge.style.color = '#00e676';
+    }
+  }
+
+  heartbeat() {
+    if (!matchActive) return;
+    const now = performance.now();
+
+    try {
+      // 1. Sanitize all Physics Data (Zero NaN / Infinity Tolerance)
+      if (physics) {
+        if (physics.striker) {
+          if (!Number.isFinite(physics.striker.x) || !Number.isFinite(physics.striker.z)) {
+            physics.striker.x = 0;
+            physics.striker.z = (currentTurn === 'player') ? 130 : -130;
+            physics.striker.vx = 0; physics.striker.vz = 0;
+            this.notifyHeal('NaN in striker coordinates');
+          }
+          if (!Number.isFinite(physics.striker.vx) || !Number.isFinite(physics.striker.vz)) {
+            physics.striker.vx = 0; physics.striker.vz = 0;
           }
         }
 
-        const score = basePri - pDist * 0.4 - sDist * 0.3 - clampPenalty - obstPenalty;
-        if (score > maxScore) {
-          maxScore = score;
-          const pwr = Math.min(30, Math.max(18, 17.5 + pDist * 0.035 + sDist * 0.025));
-          best = { baselineX: clampedX, angle: shotAngle, power: pwr };
+        for (let p of physics.pieces) {
+          if (!Number.isFinite(p.x) || !Number.isFinite(p.z)) {
+            p.x = (Math.random() - 0.5) * 40;
+            p.z = (Math.random() - 0.5) * 40;
+            p.vx = 0; p.vz = 0;
+            this.notifyHeal(`Corrupted piece #${p.id}`);
+          }
+          if (!Number.isFinite(p.vx) || !Number.isFinite(p.vz)) {
+            p.vx = 0; p.vz = 0;
+          }
         }
       }
+
+      // 2. Auto-Heal Stuck Simulation (> 2.8s)
+      if (turnState === 'SIMULATING') {
+        const simElapsed = now - simulationStartTime;
+        if (simElapsed > 2800) {
+          this.notifyHeal(`Simulation stalled (${simElapsed.toFixed(0)}ms)`);
+          if (physics) physics.freezeAll();
+          handleShotSettled();
+        }
+      }
+
+      // 3. Auto-Heal Stuck Bot AI (> 3.0s in BOT_AIM)
+      if (turnState === 'BOT_AIM') {
+        if (!this.botStartTime) this.botStartTime = now;
+        if (now - this.botStartTime > 3000) {
+          this.notifyHeal('Bot AI stalled during aim');
+          this.botStartTime = 0;
+          if (physics) {
+            physics.resetStriker('bot', 0);
+            simulationStartTime = now;
+            turnState = 'SIMULATING';
+            physics.shootStriker(Math.PI / 2, 22);
+          }
+        }
+      } else {
+        this.botStartTime = 0;
+      }
+
+      // 4. Auto-Heal Stuck Player Aim
+      if (turnState === 'PLAYER_AIM' && currentTurn === 'player') {
+        const strikeBtn = document.getElementById('btn-strike');
+        if (strikeBtn && strikeBtn.disabled) {
+          strikeBtn.disabled = false;
+          this.notifyHeal('Player strike button was disabled');
+        }
+        if (physics && physics.striker && Math.abs(physics.striker.z - 130) > 3) {
+          physics.resetStriker('player', playerBaselineX);
+          if (board3d) board3d.syncPieces(physics);
+          this.notifyHeal('Player striker misplaced from baseline');
+        }
+      }
+
+      // 5. Auto-Heal Match Completion
+      if (physics && !isMatchSettled) {
+        const remaining = physics.pieces.filter(p => !p.isPocketed).length;
+        if (remaining === 0) {
+          this.notifyHeal('All coins cleared, ending match');
+          endCarromMatch();
+        }
+      }
+    } catch (err) {
+      console.error('[AutoHeal Heartbeat Error]', err);
     }
-    return best || { baselineX: 0, angle: Math.PI / 2, power: 22 };
   }
 }
 
 // ── MAIN GAME CONTROLLER & GG WINS MATCH LIFECYCLE ──
 let physics, board3d, botAI;
+let autoHealer = new GameAutoHealer();
 let currentTurn = 'player';
 let playerAimAngle = -Math.PI / 2;
 let playerPower = 22;
@@ -1105,6 +1220,7 @@ let playerBaselineX = 0;
 let isDraggingAim = false;
 let raycaster, groundPlane, intersectPoint;
 let turnState = 'IDLE';
+let simulationStartTime = 0;
 
 function selectCarromPool(poolKey) {
   if (matchActive) {
@@ -1175,11 +1291,9 @@ function updateTurnDisplay() {
     return;
   }
   ts.innerHTML = (currentTurn === 'player')
-    ? `👑 <strong>Your Turn</strong> • Drag to Aim &amp; Shoot!`
-    : `⚔️ <strong>Bot AI is Calculating Shot...</strong>`;
+    ? `👑 <strong>Your Turn</strong> • Drag aim &amp; Shoot! (White Coins)`
+    : `🤖 <strong>AI Opponent Turn</strong> • Calculating bank shot... (Black Coins)`;
 }
-
-let simulationStartTime = 0;
 
 function executePlayerShot() {
   if (!matchActive || currentTurn !== 'player' || turnState !== 'PLAYER_AIM') return;
@@ -1202,66 +1316,87 @@ function triggerBotShot() {
 
   setTimeout(() => {
     if (!matchActive) return;
-    const shot = botAI.calculateBestShot(physics);
-    physics.resetStriker('bot', shot.baselineX);
-    board3d.syncPieces(physics);
-    board3d.updateAimGuide(physics, true, shot.angle, shot.power);
+    try {
+      const shot = botAI.calculateBestShot(physics);
+      physics.resetStriker('bot', shot.baselineX);
+      board3d.syncPieces(physics);
+      board3d.updateAimGuide(physics, true, shot.angle, shot.power);
 
-    setTimeout(() => {
-      board3d.updateAimGuide(physics, false, shot.angle, shot.power);
+      setTimeout(() => {
+        if (!matchActive) return;
+        board3d.updateAimGuide(physics, false, shot.angle, shot.power);
+        simulationStartTime = performance.now();
+        turnState = 'SIMULATING';
+        physics.shootStriker(shot.angle, shot.power);
+      }, 750);
+    } catch (e) {
+      console.error('[BotShot Recovery]', e);
+      physics.resetStriker('bot', 0);
       simulationStartTime = performance.now();
       turnState = 'SIMULATING';
-      physics.shootStriker(shot.angle, shot.power);
-    }, 700);
-  }, 600);
+      physics.shootStriker(Math.PI / 2, 22);
+    }
+  }, 650);
 }
 
 function handleShotSettled() {
-  physics.freezeAll();
-  const pocketed = [...physics.pocketedThisShot];
-  physics.pocketedThisShot = [];
-  let pottedCoin = false;
-  let foul = false;
+  try {
+    physics.freezeAll();
+    const pocketed = [...physics.pocketedThisShot];
+    physics.pocketedThisShot = [];
+    let pottedCoin = false;
+    let foul = false;
 
-  for (let p of pocketed) {
-    if (p.type === 'striker') {
-      foul = true;
-    } else {
-      pottedCoin = true;
-      if (currentTurn === 'player') playerPts += p.val;
-      else botPts += p.val;
+    for (let p of pocketed) {
+      if (p.type === 'striker') {
+        foul = true;
+      } else {
+        pottedCoin = true;
+        if (currentTurn === 'player') playerPts += p.val;
+        else botPts += p.val;
+      }
     }
-  }
 
-  document.getElementById('score-player').textContent = `${playerPts} pts`;
-  document.getElementById('score-bot').textContent = `${botPts} pts`;
+    document.getElementById('score-player').textContent = `${playerPts} pts`;
+    document.getElementById('score-bot').textContent = `${botPts} pts`;
 
-  // Check if all coins are pocketed
-  const remaining = physics.pieces.filter(p => !p.isPocketed).length;
-  if (remaining === 0) {
-    endCarromMatch();
-    return;
-  }
+    // Strict Rule: ONLY end the match when ALL coins are pocketed!
+    const remaining = physics.pieces.filter(p => !p.isPocketed).length;
+    if (remaining === 0) {
+      endCarromMatch();
+      return;
+    }
 
-  if (foul) {
-    showToast(`⚠️ FOUL! Striker pocketed! Turn given to ${currentTurn === 'player' ? 'Bot' : 'You'}.`, 'error');
-    currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
-  } else if (pottedCoin) {
-    showToast(`🎯 Pocketed! Extra shot awarded!`, 'success');
-  } else {
-    currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
-  }
+    if (foul) {
+      showToast(`⚠️ FOUL! Striker pocketed! Turn given to ${currentTurn === 'player' ? 'AI Opponent' : 'You'}.`, 'error');
+      currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
+    } else if (pottedCoin) {
+      showToast(`🎯 Pocketed! ${currentTurn === 'player' ? 'You get' : 'AI Opponent gets'} an extra shot!`, 'success');
+      // Player who potted gets an extra shot
+    } else {
+      currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
+    }
 
-  updateTurnDisplay();
+    updateTurnDisplay();
 
-  if (currentTurn === 'player') {
+    if (currentTurn === 'player') {
+      turnState = 'PLAYER_AIM';
+      physics.resetStriker('player', playerBaselineX);
+      board3d.syncPieces(physics);
+      const strikeBtn = document.getElementById('btn-strike');
+      if (strikeBtn) strikeBtn.disabled = false;
+    } else {
+      triggerBotShot();
+    }
+  } catch (err) {
+    console.error('[handleShotSettled Error]', err);
     turnState = 'PLAYER_AIM';
-    physics.resetStriker('player', playerBaselineX);
+    currentTurn = 'player';
+    physics.resetStriker('player', 0);
     board3d.syncPieces(physics);
     const strikeBtn = document.getElementById('btn-strike');
     if (strikeBtn) strikeBtn.disabled = false;
-  } else {
-    triggerBotShot();
+    updateTurnDisplay();
   }
 }
 
@@ -1403,6 +1538,7 @@ function initCarrom() {
   physics = new CarromPhysics();
   board3d = new CarromBoard3D(canvas);
   botAI = new BotAI();
+  autoHealer.start();
 
   raycaster = new THREE.Raycaster();
   groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
