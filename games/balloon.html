@@ -279,9 +279,9 @@ function startRound() {
   // Demo Mode: 55% chance of bursting early!
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   if (isDemo) {
-    const isWin = Math.random() < 0.45;
+    const isWin = Math.random() < 0.90;
     if (isWin) {
-      burstPoint = parseFloat((1.45 + Math.random() * 2.50).toFixed(2));
+      burstPoint = parseFloat((1.80 + Math.random() * 4.50).toFixed(2));
     } else {
       burstPoint = parseFloat((1.05 + Math.random() * 0.25).toFixed(2));
     }

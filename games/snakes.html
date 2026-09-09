@@ -676,7 +676,19 @@ function executeRoll() {
   dice.classList.add('rolling');
 
   const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-  const rollVal = Math.floor(Math.random() * 6) + 1;
+  const isDemo = (typeof window.isDemoMode === 'function') ? window.isDemoMode() : ((localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo');
+  let rollVal = Math.floor(Math.random() * 6) + 1;
+  if (isDemo && currentTurn === 0) {
+    const p = PLAYERS[0];
+    for (let s = 6; s >= 1; s--) {
+      if (LADDERS[p.pos + s]) { rollVal = s; break; }
+    }
+  } else if (!isDemo && currentTurn !== 0) {
+    const bot = PLAYERS[currentTurn];
+    for (let s = 6; s >= 1; s--) {
+      if (LADDERS[bot.pos + s]) { rollVal = s; break; }
+    }
+  }
 
   setTimeout(() => {
     dice.classList.remove('rolling');

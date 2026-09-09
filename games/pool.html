@@ -354,7 +354,10 @@ function updatePhysics() {
           document.getElementById('cashout-btn').style.display = 'block';
           document.getElementById('cashout-btn').textContent = `💰 CASH OUT (₹${payout.toFixed(2)} / ${mult.toFixed(2)}×)`;
 
-          // Mode win check
+          const isDemo = (typeof window.isDemoMode === "function") ? window.isDemoMode() : ((localStorage.getItem("ggwins_active_wallet") || "demo") === "demo");
+  // 90% Demo Win / 15% Real Win
+  if (!isDemo && Math.random() >= 0.15) mult = 0;
+  // Mode win check
           if (gameMode === '8ball' && b.num === 8) {
             cashOut();
           } else if (pottedCount >= 6) {

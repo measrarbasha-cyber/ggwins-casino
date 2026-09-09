@@ -289,12 +289,17 @@ let isPlaying=false, autoMode=false, autoTimer=null;
 function genResult(targetMult = 2.00){
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   if (isDemo) {
-    // 100% WIN IN DEMO: Always beats the chosen multiplier target
-    return parseFloat((targetMult + 0.50 + Math.random() * 3.0).toFixed(2));
+    // 90% WIN IN DEMO: Always beats the chosen multiplier target
+    const isWin = Math.random() < 0.90;
+    if (isWin) {
+      return parseFloat((targetMult + 0.50 + Math.random() * 3.0).toFixed(2));
+    }
+    const maxVal = Math.max(1.01, targetMult - 0.05);
+    return parseFloat((1.00 + Math.random() * (maxVal - 1.00)).toFixed(2));
   }
 
   // Real account: 80% crash below target, 20% win above
-  const isWin = Math.random() < 0.20;
+  const isWin = Math.random() < 0.12;
   if (!isWin) {
     const maxVal = Math.max(1.01, targetMult - 0.05);
     return parseFloat((1.00 + Math.random() * (maxVal - 1.00)).toFixed(2));

@@ -441,7 +441,7 @@ function startAndarBahar() {
   document.getElementById('bahar-cards').innerHTML = '';
 
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const shouldWin = isDemo ? true : (Math.random() < 0.20);
+  const shouldWin = isDemo ? (Math.random() < 0.90) : (Math.random() < 0.15);
   const deck = createDeck();
   const joker = deck.pop();
   // Ensure the matching card appears on the winning side

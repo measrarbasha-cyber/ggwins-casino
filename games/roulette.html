@@ -448,28 +448,46 @@ function spinWheel(){ if(!requireAuth()) return;
   spinning = true;
   document.getElementById('spin-btn').disabled = true;
 
-  // House bias: Pick a number that causes loss 80% of the time
+  const isDemo = (typeof window.isDemoMode === 'function') ? window.isDemoMode() : ((localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo');
   let result;
-  if(Math.random() < 0.75){ // 25% User Win Probability / 75% Loss Probability
-    const losingCandidates = WHEEL_ORDER.filter(num => {
-      const c = numColor(num);
-      return !bets.some(b => {
-        if(b.type === 'straight' && parseInt(b.value) === num) return true;
-        if(b.type === 'color' && b.value === c && num !== 0) return true;
-        if(b.type === 'even' && num !== 0 && ((b.value==='even'&&num%2===0)||(b.value==='odd'&&num%2===1))) return true;
-        if(b.type === 'half' && num !== 0 && ((b.value==='low'&&num<=18)||(b.value==='high'&&num>=19))) return true;
-        if(b.type === 'dozen' && num !== 0 && ((b.value===1&&num<=12)||(b.value===2&&num>=13&&num<=24)||(b.value===3&&num>=25))) return true;
-        if(b.type === 'column' && num !== 0 && (num%3 === (b.value===3?0:b.value))) return true;
-        return false;
+  if (isDemo) {
+    // 🎮 Demo Mode: 90% Win Rate
+    if (Math.random() < 0.90) {
+      const winningCandidates = WHEEL_ORDER.filter(num => {
+        const c = numColor(num);
+        return bets.some(b => {
+          if(b.type === 'straight' && parseInt(b.value) === num) return true;
+          if(b.type === 'color' && b.value === c && num !== 0) return true;
+          if(b.type === 'even' && num !== 0 && ((b.value==='even'&&num%2===0)||(b.value==='odd'&&num%2===1))) return true;
+          if(b.type === 'half' && num !== 0 && ((b.value==='low'&&num<=18)||(b.value==='high'&&num>=19))) return true;
+          if(b.type === 'dozen' && num !== 0 && ((b.value===1&&num<=12)||(b.value===2&&num>=13&&num<=24)||(b.value===3&&num>=25))) return true;
+          if(b.type === 'column' && num !== 0 && (num%3 === (b.value===3?0:b.value))) return true;
+          return false;
+        });
       });
-    });
-    if(losingCandidates.length > 0){
-      result = losingCandidates[Math.floor(Math.random() * losingCandidates.length)];
+      result = winningCandidates.length > 0 ? winningCandidates[Math.floor(Math.random() * winningCandidates.length)] : WHEEL_ORDER[Math.floor(Math.random() * WHEEL_ORDER.length)];
     } else {
       result = WHEEL_ORDER[Math.floor(Math.random() * WHEEL_ORDER.length)];
     }
   } else {
-    result = WHEEL_ORDER[Math.floor(Math.random() * WHEEL_ORDER.length)];
+    // 🇮🇳 Real Mode: 85% Loss, 15% Win
+    if (Math.random() < 0.85) {
+      const losingCandidates = WHEEL_ORDER.filter(num => {
+        const c = numColor(num);
+        return !bets.some(b => {
+          if(b.type === 'straight' && parseInt(b.value) === num) return true;
+          if(b.type === 'color' && b.value === c && num !== 0) return true;
+          if(b.type === 'even' && num !== 0 && ((b.value==='even'&&num%2===0)||(b.value==='odd'&&num%2===1))) return true;
+          if(b.type === 'half' && num !== 0 && ((b.value==='low'&&num<=18)||(b.value==='high'&&num>=19))) return true;
+          if(b.type === 'dozen' && num !== 0 && ((b.value===1&&num<=12)||(b.value===2&&num>=13&&num<=24)||(b.value===3&&num>=25))) return true;
+          if(b.type === 'column' && num !== 0 && (num%3 === (b.value===3?0:b.value))) return true;
+          return false;
+        });
+      });
+      result = losingCandidates.length > 0 ? losingCandidates[Math.floor(Math.random() * losingCandidates.length)] : WHEEL_ORDER[Math.floor(Math.random() * WHEEL_ORDER.length)];
+    } else {
+      result = WHEEL_ORDER[Math.floor(Math.random() * WHEEL_ORDER.length)];
+    }
   }
 
   const resultIdx = WHEEL_ORDER.indexOf(result);

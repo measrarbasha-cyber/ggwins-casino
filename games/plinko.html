@@ -382,7 +382,7 @@ function createBall(betAmt){
 
   if (isDemo) {
     // 95% Win Rate in Demo Mode
-    if (Math.random() < 0.95) {
+    if (Math.random() < 0.90) {
       const winSlots = [];
       mults.forEach((m, idx) => { if (m >= 1.1) winSlots.push(idx); });
       finalSlot = winSlots.length > 0 ? winSlots[Math.floor(Math.random() * winSlots.length)] : 0;

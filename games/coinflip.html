@@ -441,7 +441,7 @@ function flipCoin(){
   if(typeof playGameSound === 'function') playGameSound('tick');
 
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const won = isDemo ? true : (Math.random() < 0.20);
+  const won = isDemo ? (Math.random() < 0.90) : (Math.random() < 0.15);
   const outcome = won ? selectedSide : (selectedSide === 'heads' ? 'tails' : 'heads');
 
   setTimeout(() => {

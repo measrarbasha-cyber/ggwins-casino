@@ -242,7 +242,7 @@ function startStairs() {
   for (let r = 0; r < 8; r++) {
     // 2 traps out of 3 stones! (Only 1 safe stone per row)
     const safeCol = Math.floor(Math.random() * 3);
-    const trapProb = isDemo ? 0.55 : 0.75;
+    const trapProb = isDemo ? 0.10 : 0.75;
     
     // Determine whether this row has a safe stone or all traps
     const hasSafe = Math.random() >= trapProb;

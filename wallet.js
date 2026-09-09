@@ -207,20 +207,27 @@
   };
 
   window.isDemoMode = function() {
-    return (window.getActiveWalletKey ? window.getActiveWalletKey() : localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo';
+    try {
+      const k = (typeof window.getActiveWalletKey === 'function') 
+        ? window.getActiveWalletKey() 
+        : (localStorage.getItem('ggwins_active_wallet') || 'demo');
+      return String(k).trim().toLowerCase() === 'demo';
+    } catch(e) {
+      return true;
+    }
   };
 
-  window.getGameWinChance = function(standardChance = 0.20) {
-    // 🎮 Demo Account: 100% Guaranteed Win Rate on EVERY game
+  window.getGameWinChance = function(standardChance = 0.12) {
+    // 🎮 Demo Account: Exactly 90% Winning Probability (0.90)
     if (window.isDemoMode()) {
-      return 1.00;
+      return 0.90;
     }
 
-    // 🇮🇳 Real Account (INR / USDT): Exactly 20% Win Probability / 80% Loss Probability
-    return 0.20;
+    // 🇮🇳 Real Account (INR / USDT): Strictly 10% to 12% Win Probability / 90% House Edge
+    return 0.12;
   };
 
-  window.shouldGameWin = function(standardChance = 0.20) {
+  window.shouldGameWin = function(standardChance = 0.12) {
     return Math.random() < window.getGameWinChance(standardChance);
   };
 

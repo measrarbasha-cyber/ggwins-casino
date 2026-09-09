@@ -635,7 +635,7 @@ function shootPenalty(targetSpot){
 
   // 68% chance goal
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const isGoal = isDemo ? true : (Math.random() < 0.20);
+  const isGoal = isDemo ? (Math.random() < 0.90) : (Math.random() < 0.15);
   
   let gkVendorSpot = targetSpot;
   if(isGoal){

@@ -284,9 +284,9 @@ function hitShot() {
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   if (isDemo) {
     // Demo Mode: 50% high flight (2.00x - 3.50x), 50% mid catch (1.35x - 1.85x)
-    const fliesHigh = Math.random() < 0.50;
+    const fliesHigh = Math.random() < 0.90;
     if (fliesHigh) {
-      crashPoint = parseFloat((2.00 + Math.random() * 1.50).toFixed(2));
+      crashPoint = parseFloat((2.40 + Math.random() * 3.60).toFixed(2));
     } else {
       crashPoint = parseFloat((1.35 + Math.random() * 0.50).toFixed(2));
     }

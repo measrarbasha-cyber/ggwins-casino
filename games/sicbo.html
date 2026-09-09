@@ -570,7 +570,7 @@ function rollSicBo(){
 
 function resolveSicBo(bet){
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const shouldWin = isDemo ? true : (Math.random() < 0.20);
+  const shouldWin = isDemo ? (Math.random() < 0.90) : (Math.random() < 0.15);
   let roll1, roll2, roll3;
   if(shouldWin){
     if(selectedSicZone === 'small') { roll1 = 1; roll2 = 2; roll3 = 3; } // sum 6

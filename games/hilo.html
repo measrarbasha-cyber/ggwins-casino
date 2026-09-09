@@ -428,7 +428,7 @@ function guess(choice){
   // House edge bias: 75% forced opposite / loss on next card
   let nextCard;
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const forceLoss = isDemo ? false : (Math.random() >= 0.20);
+  const forceLoss = isDemo ? (Math.random() >= 0.90) : (Math.random() >= 0.15);
   if(forceLoss){
     if(choice === 'higher' && currentCard.val > 1){
       const lowerRanks = RANKS.filter(r => r.val < currentCard.val);

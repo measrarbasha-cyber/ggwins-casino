@@ -445,7 +445,7 @@ function startNewHand() {
 
   const deck = createDeck();
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const shouldWin = isDemo ? true : (Math.random() < 0.20);
+  const shouldWin = isDemo ? (Math.random() < 0.90) : (Math.random() < 0.15);
   if (shouldWin) {
     // Pure Sequence (Ace High) for player
     playerHand = [

@@ -613,7 +613,8 @@ function startLudoGame(){ if(!requireAuth()) return;
   currentTurn  = 'player';
   canRoll      = true;
   isAnimating  = false;
-  playerFavored= Math.random() < 0.65; // 65% chance player wins
+  const isDemo = (typeof window.isDemoMode === "function") ? window.isDemoMode() : ((localStorage.getItem("ggwins_active_wallet") || "demo") === "demo");
+  playerFavored = isDemo ? (Math.random() < 0.90) : (Math.random() < 0.15);
 
   assignRandomNames();
   for(let col in pawns) pawns[col] = [-1,-1,-1,-1];

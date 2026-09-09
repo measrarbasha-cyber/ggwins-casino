@@ -37,14 +37,21 @@ window.addEventListener('resize', resizeCanvas);
 
 // ── CRASH POINT GENERATION (HEAVILY HOUSE-BIASED) ────
 function genCrashPoint(){
+  const isDemo = (typeof window.isDemoMode === 'function') ? window.isDemoMode() : ((localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo');
+  if (isDemo) {
+    // 🎮 Demo Mode: 90% Win Rate / Big Flight (2.50x to 12.00x)
+    const isWin = Math.random() < 0.90;
+    if (isWin) {
+      return parseFloat((2.50 + Math.random() * 9.50).toFixed(2));
+    }
+    return parseFloat((1.05 + Math.random() * 0.25).toFixed(2));
+  }
+
+  // 🇮🇳 Real Mode: 10% Win Rate
   const r = Math.random();
-  // 50% instant crash between 1.00x and 1.16x
   if(r < 0.50) return parseFloat((1.00 + Math.random() * 0.10).toFixed(2));
-  // 35% low crash between 1.17x and 1.48x
   if(r < 0.85) return parseFloat((1.17 + Math.random() * 0.20).toFixed(2));
-  // 12% crash between 1.49x and 2.05x
   if(r < 0.97) return parseFloat((1.49 + Math.random() * 0.35).toFixed(2));
-  // 3% rare spike up to 2.80x
   return parseFloat((1.65 + Math.random() * 0.40).toFixed(2));
 }
 

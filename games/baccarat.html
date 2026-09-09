@@ -671,7 +671,7 @@ function handleThirdCardRule(playerCards, bankerCards, bet){
 
 function finishRound(playerCards, bankerCards, bet){
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const userWon = isDemo ? true : (Math.random() < 0.20);
+  const userWon = isDemo ? (Math.random() < 0.90) : (Math.random() < 0.15);
   if (userWon) {
     // Force chosen side to win
     if (selectedPosition === 'player') {

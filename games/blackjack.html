@@ -441,10 +441,21 @@ function stand(){
     if(dv < 17 || (dv < pv && dv <= 17)){
       setTimeout(()=>{
         // House bias: dealer draws safe card if possible
-        if(dv + 10 <= 21 && Math.random() < 0.85){
-          dealerHand.push({ rank: String(Math.min(10, Math.max(2, (pv >= 17 ? pv : 19) - dv))), suit: SUITS[0] });
+        const isDemo = (typeof window.isDemoMode === 'function') ? window.isDemoMode() : ((localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo');
+        if (isDemo) {
+          // 🎮 Demo Mode: 90% Player Win (Dealer busts or stays low)
+          if (dv >= 15 && Math.random() < 0.90) {
+            dealerHand.push({ rank: '10', suit: SUITS[0] }); // Dealer busts over 21
+          } else {
+            dealerHand.push(deck.pop());
+          }
         } else {
-          dealerHand.push(deck.pop());
+          // 🇮🇳 Real Mode: 85% Dealer Advantage
+          if(dv + 10 <= 21 && Math.random() < 0.85){
+            dealerHand.push({ rank: String(Math.min(10, Math.max(2, (pv >= 17 ? pv : 19) - dv))), suit: SUITS[0] });
+          } else {
+            dealerHand.push(deck.pop());
+          }
         }
         if(typeof playGameSound === 'function') playGameSound('card');
         renderHands(true);

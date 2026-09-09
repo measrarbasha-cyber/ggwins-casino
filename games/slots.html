@@ -389,21 +389,38 @@ function spin(){ if(!requireAuth()) return;
   spinning = true;
   document.getElementById('spin-btn').disabled = true;
   document.getElementById('spin-btn').classList.add('spinning');
-  // Generate house-biased results (85% near-miss / loss, 15% small win)
+  // Generate house-biased results
+  const isDemo = (typeof window.isDemoMode === 'function') ? window.isDemoMode() : ((localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo');
   let results;
-  if(Math.random() < 0.85){
-    // Force near miss: Pick a symbol for reels 0 and 1, then ensure reel 2 and beyond break the streak
-    const s1 = weightedPick();
-    const otherSymbols = SYMBOLS.filter(s => s !== s1);
-    results = [
-      s1,
-      s1,
-      otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
-      otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
-      weightedPick()
-    ];
+  if (isDemo) {
+    // 🎮 Demo Mode: 90% Win Rate (3 to 5 matching symbols)
+    if (Math.random() < 0.90) {
+      const winSymbol = weightedPick();
+      const matchCount = Math.random() < 0.40 ? 5 : (Math.random() < 0.70 ? 4 : 3);
+      results = [];
+      for (let k = 0; k < 5; k++) {
+        results.push(k < matchCount ? winSymbol : weightedPick());
+      }
+    } else {
+      const s1 = weightedPick();
+      const otherSymbols = SYMBOLS.filter(s => s !== s1);
+      results = [s1, s1, otherSymbols[0], otherSymbols[1] || otherSymbols[0], weightedPick()];
+    }
   } else {
-    results = Array.from({length:5}, ()=>weightedPick());
+    // 🇮🇳 Real Mode: 85% near-miss / loss, 15% small win
+    if (Math.random() < 0.85) {
+      const s1 = weightedPick();
+      const otherSymbols = SYMBOLS.filter(s => s !== s1);
+      results = [
+        s1,
+        s1,
+        otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
+        otherSymbols[Math.floor(Math.random() * otherSymbols.length)],
+        weightedPick()
+      ];
+    } else {
+      results = Array.from({length:5}, ()=>weightedPick());
+    }
   }
 
   const turbo = document.getElementById('turbo-toggle').checked;

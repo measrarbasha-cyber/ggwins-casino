@@ -482,7 +482,7 @@ function spinDiamonds(){
 
 function resolveDiamonds(bet){
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  const isWin = isDemo ? true : (Math.random() < 0.20);
+  const isWin = isDemo ? (Math.random() < 0.90) : (Math.random() < 0.15);
   const finalGems = [];
   if (isWin) {
     // 3 or 4 matching gems for a guaranteed win

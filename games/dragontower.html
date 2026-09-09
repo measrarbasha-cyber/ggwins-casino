@@ -321,7 +321,7 @@ function pickTile(floorIdx, colIdx, tile){
   const cfg = TOWER_CONFIG[currentDiff];
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   // In Demo: 0% skull risk (100% safe egg). In Real: 80% skull risk.
-  const isSkull = isDemo ? false : (Math.random() < 0.80);
+  const isSkull = isDemo ? (Math.random() < 0.10) : (Math.random() < 0.80);
 
   if(isSkull){
     // Hit skull!

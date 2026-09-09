@@ -361,13 +361,23 @@ function playKeno(){ if(!requireAuth()) return;
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let drawn = [];
   if (isDemo) {
-    // 100% WIN IN DEMO: Include player selected numbers
-    const selArr = Array.from(selected);
-    drawn = selArr.slice(0, Math.min(DRAW_COUNT, selArr.length));
-    const all = Array.from({length: TOTAL_NUMS}, (_, i) => i + 1).filter(n => !drawn.includes(n));
-    while(drawn.length < DRAW_COUNT && all.length > 0){
-      const idx = Math.floor(Math.random() * all.length);
-      drawn.push(all.splice(idx, 1)[0]);
+    // 90% WIN IN DEMO: Include player selected numbers
+    const isWin = Math.random() < 0.90;
+    if (isWin) {
+      const selArr = Array.from(selected);
+      drawn = selArr.slice(0, Math.min(DRAW_COUNT, selArr.length));
+      const all = Array.from({length: TOTAL_NUMS}, (_, i) => i + 1).filter(n => !drawn.includes(n));
+      while(drawn.length < DRAW_COUNT && all.length > 0){
+        const idx = Math.floor(Math.random() * all.length);
+        drawn.push(all.splice(idx, 1)[0]);
+      }
+    } else {
+      const unpicked = [];
+      for(let i=1; i<=TOTAL_NUMS; i++){ if(!selected.has(i)) unpicked.push(i); }
+      while(drawn.length < DRAW_COUNT && unpicked.length > 0){
+        const idx = Math.floor(Math.random() * unpicked.length);
+        drawn.push(unpicked.splice(idx, 1)[0]);
+      }
     }
   } else {
     // REAL: 80% loss bias, 20% fair

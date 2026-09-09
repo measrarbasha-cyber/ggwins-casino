@@ -243,7 +243,7 @@ function startCrossing() {
 
   for (let l = 0; l < 5; l++) {
     const safeCol = Math.floor(Math.random() * 3);
-    const trapProb = isDemo ? 0.55 : 0.75;
+    const trapProb = isDemo ? 0.10 : 0.75;
     const hasSafe = Math.random() >= trapProb;
     laneTraps.push(hasSafe ? safeCol : -1); // -1 means all are frying pans!
   }

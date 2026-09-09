@@ -379,10 +379,17 @@ function spinWheel(){ if(!requireAuth()) return;
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
   let targetIdx;
   if (isDemo) {
-    // 100% WIN IN DEMO: Target highest winning multipliers (>= 1.5x)
-    const winIndices = [];
-    segments.forEach((s, idx) => { if(s.mult >= 1.5) winIndices.push(idx); });
-    targetIdx = winIndices.length > 0 ? winIndices[Math.floor(Math.random() * winIndices.length)] : 0;
+    // 90% WIN IN DEMO: Target highest winning multipliers (>= 1.5x)
+    const isWin = Math.random() < 0.90;
+    if (isWin) {
+      const winIndices = [];
+      segments.forEach((s, idx) => { if(s.mult >= 1.5) winIndices.push(idx); });
+      targetIdx = winIndices.length > 0 ? winIndices[Math.floor(Math.random() * winIndices.length)] : 0;
+    } else {
+      const lossIndices = [];
+      segments.forEach((s, idx) => { if(s.mult === 0 || s.mult < 1.0) lossIndices.push(idx); });
+      targetIdx = lossIndices.length > 0 ? lossIndices[Math.floor(Math.random() * lossIndices.length)] : 0;
+    }
   } else {
     // REAL ACCOUNT: 20% Win / 80% Loss
     const isWin = Math.random() < 0.20;

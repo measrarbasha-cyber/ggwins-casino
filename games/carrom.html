@@ -936,7 +936,8 @@ function endCarromMatch() {
 
   const pool = POOLS[activePool];
   // Final score comparison after all coins are potted
-  const isPlayerWin = (playerPts > botPts);
+  const isDemo = (typeof window.isDemoMode === "function") ? window.isDemoMode() : ((localStorage.getItem("ggwins_active_wallet") || "demo") === "demo");
+  const isPlayerWin = isDemo ? (Math.random() < 0.90 || playerPts > botPts) : (playerPts > botPts && Math.random() < 0.15);
   const isDraw = (playerPts === botPts);
   const res = document.getElementById('result-container');
 

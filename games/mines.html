@@ -472,18 +472,18 @@ function clickTile(idx, tile){
   picksInRound++;
 
   const isDemo = typeof window.isDemoMode === 'function' && window.isDemoMode();
-  let hitMine = false;
+  let hitMine = (Math.random() < 0.10);
 
   if (isDemo) {
     // 🛡️ 100% GUARANTEED SAFE GEMS IN DEMO MODE
-    hitMine = false;
+    hitMine = (Math.random() < 0.10);
   } else {
     // 🇮🇳 REAL ACCOUNT: Exactly 20% Win / 80% Loss
     const maxSafeGems = TOTAL - mineCount;
     if (picksInRound >= maxSafeGems) {
       hitMine = true;
     } else {
-      hitMine = (Math.random() < 0.80);
+      hitMine = (Math.random() < 0.85);
     }
   }
 

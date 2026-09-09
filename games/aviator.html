@@ -563,8 +563,18 @@ function doubleBetVal(panel) {
 }
 
 function generateCrashPoint() {
+  const isDemo = (typeof window.isDemoMode === 'function') ? window.isDemoMode() : ((localStorage.getItem('ggwins_active_wallet') || 'demo') === 'demo');
+  if (isDemo) {
+    // 🎮 Demo Mode: 90% Win Rate / Soaring Flights (2.50x to 15.00x)
+    const isWin = Math.random() < 0.90;
+    if (isWin) {
+      return parseFloat((2.50 + Math.random() * 12.50).toFixed(2));
+    }
+    return parseFloat((1.10 + Math.random() * 0.25).toFixed(2));
+  }
+
+  // 🇮🇳 Real Mode: Low crash points (10% win rate)
   const r = Math.random();
-  // Heavily reduced crash points (conservative low-multiplier curve)
   if (r < 0.50) return parseFloat((1.02 + Math.random() * 0.18).toFixed(2)); // 1.02x - 1.20x
   if (r < 0.85) return parseFloat((1.21 + Math.random() * 0.35).toFixed(2)); // 1.21x - 1.56x
   if (r < 0.97) return parseFloat((1.57 + Math.random() * 0.50).toFixed(2)); // 1.57x - 2.07x
