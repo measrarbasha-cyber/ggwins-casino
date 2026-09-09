@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Carrom 3D Pro – Carrom King Real Physics – GG Wins</title>
+<title>Carrom 3D Battle – Carrom King Real 3D Physics – GG Wins</title>
 <link rel="stylesheet" href="../game-shell.css">
 <style>
 /* ── 3D CARROM ARENA ── */
@@ -20,38 +20,58 @@
 }
 
 .table-felt-3d {
-  padding: 8px;
+  padding: 6px;
   background: linear-gradient(145deg, #1e293b, #0f172a);
   border-radius: 20px;
-  border: 3.5px solid #ffd700;
-  box-shadow: 0 0 45px rgba(255,215,0,0.35), 0 16px 40px rgba(0,0,0,0.85);
+  border: 3px solid #ffd700;
+  box-shadow: 0 0 40px rgba(255,215,0,0.3), 0 16px 40px rgba(0,0,0,0.85);
   position: relative;
-  perspective: 1200px;
 }
 
 .board-container-3d {
   position: relative;
   width: min(440px, 92vw);
-  aspect-ratio: 1;
-  transform-style: preserve-3d;
-  transform: rotateX(12deg) scale(0.98);
-  transition: transform 0.4s ease;
+  height: min(440px, 92vw);
   border-radius: 14px;
   box-shadow: 0 20px 45px rgba(0,0,0,0.85), inset 0 0 20px rgba(0,0,0,0.7);
   background: #2b1810;
   overflow: hidden;
-  border: 6px solid #140a06;
-}
-.board-container-3d:hover {
-  transform: rotateX(6deg) scale(0.99);
+  border: 4px solid #140a06;
 }
 
-#carrom-canvas {
+#carrom-webgl-canvas {
   width: 100%;
   height: 100%;
   display: block;
   cursor: crosshair;
   touch-action: none;
+}
+
+/* Camera Bar */
+.cam-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.btn-cam-opt {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-cam-opt:hover { border-color: #ffd700; color: #fff; }
+.btn-cam-opt.active {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05));
+  color: #ffd700;
 }
 
 /* Striker Controls Bar */
@@ -63,7 +83,7 @@
   padding: 8px 14px;
   border-radius: 14px;
   border: 1.5px solid var(--border-gold);
-  margin-top: 4px;
+  margin-top: 6px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.6);
   width: min(440px, 92vw);
 }
@@ -152,20 +172,7 @@
   pointer-events: none; z-index: 60;
 }
 </style>
-<script src="../security-guard.js">
-// 🛡️ Safe Multi-Lifecycle Auto-Initializer
-try {
-  if (typeof initCarrom === 'function') {
-    window.initCarrom = initCarrom;
-    initCarrom();
-  }
-} catch(e) {}
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
-}
-window.addEventListener('load', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
-
-</script>
+<script src="../security-guard.js"></script>
 </head>
 <body>
 
@@ -178,10 +185,10 @@ window.addEventListener('load', () => { try { if (typeof initCarrom === 'functio
   </button>
   <div class="gnav-brand-block">
     <div class="gnav-logo">GG <span>Wins</span></div>
-    <div class="gnav-game-under-logo">🎯 Carrom 3D Pro</div>
+    <div class="gnav-game-under-logo">🎯 Carrom 3D Battle</div>
   </div>
-  <div class="gnav-game-name">Carrom 3D Pro</div>
-  <span class="gnav-game-badge" style="background:#00e676;color:#000">CARROM KING MASTER AI</span>
+  <div class="gnav-game-name">Carrom 3D Battle</div>
+  <span class="gnav-game-badge" style="background:#00e676;color:#000">CARROM KING 3D ENGINE</span>
   <div class="gnav-spacer"></div>
   <div id="wallet-chip-target">
     <div class="wallet-switcher-container" id="ggwins-wallet-switcher">
@@ -202,9 +209,17 @@ window.addEventListener('load', () => { try { if (typeof initCarrom === 'functio
   <div class="game-area carrom-area">
     <canvas id="carrom-confetti"></canvas>
 
+    <!-- Camera Perspective Selector -->
+    <div class="cam-bar">
+      <button class="btn-cam-opt active" data-cam="3d">🎥 3D Table</button>
+      <button class="btn-cam-opt" data-cam="topdown">📐 Top-Down</button>
+      <button class="btn-cam-opt" data-cam="striker">🎯 Striker Cam</button>
+    </div>
+
+    <!-- 3D WebGL Arena -->
     <div class="table-felt-3d">
-      <div class="board-container-3d">
-        <canvas id="carrom-canvas" width="440" height="440"></canvas>
+      <div class="board-container-3d" id="board-container">
+        <canvas id="carrom-webgl-canvas"></canvas>
       </div>
     </div>
 
@@ -213,18 +228,19 @@ window.addEventListener('load', () => { try { if (typeof initCarrom === 'functio
       <div class="control-row">
         <div class="slider-group">
           <span class="slider-label">📍 Baseline:</span>
-          <input type="range" class="carrom-slider" id="slider-pos" min="115" max="325" value="220" oninput="updateStrikerX(this.value)">
+          <input type="range" class="carrom-slider" id="slider-pos" min="-100" max="100" value="0">
         </div>
         <div class="slider-group">
           <span class="slider-label">⚡ Power:</span>
-          <input type="range" class="carrom-slider" id="slider-power" min="12" max="32" value="22">
+          <input type="range" class="carrom-slider" id="slider-power" min="10" max="36" value="22">
+          <span id="val-power" style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:900;color:#ffd700;width:18px">22</span>
         </div>
       </div>
       <div class="control-row">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:800;color:#cbd5e1" id="turn-status">
-          👑 You: <span id="score-player" style="color:#00e676">0 pts</span> | ⚔️ Bot: <span id="score-bot" style="color:#ef4444">0 pts</span>
+          👑 You: <span id="score-player" style="color:#00e676">0 pts</span> | ⚔️ Bot AI: <span id="score-bot" style="color:#ef4444">0 pts</span>
         </div>
-        <button class="btn-bet" style="width:auto;padding:6px 16px;font-size:12px;margin:0" id="btn-strike" onclick="strikePlayer()">
+        <button class="btn-bet" style="width:auto;padding:6px 16px;font-size:12px;margin:0" id="btn-strike">
           🎯 Shoot Striker
         </button>
       </div>
@@ -284,34 +300,27 @@ window.addEventListener('load', () => { try { if (typeof initCarrom === 'functio
     </div>
 
     <div class="copyright-footer">
-      © 2026 GG Wins. Carrom King 2D Rigid Vector Physics Engine.
+      © 2026 GG Wins. Carrom 3D Battle Real WebGL Engine.
     </div>
   </div>
 </div>
 
-<script src="../wallet.js">
-// 🛡️ Safe Multi-Lifecycle Auto-Initializer
-try {
-  if (typeof initCarrom === 'function') {
-    window.initCarrom = initCarrom;
-    initCarrom();
-  }
-} catch(e) {}
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
-}
-window.addEventListener('load', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
+<script src="../wallet.js"></script>
 
+<!-- Three.js (Local + CDN Fallback) -->
+<script src="three.min.js"></script>
+<script>
+if (typeof THREE === 'undefined') {
+  document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+}
 </script>
+
 <script>
 // 🛡️ Global Error Boundary
 window.onerror = function(msg, url, line) {
-  console.warn("Carrom Error Intercepted:", msg, line);
+  console.warn("Carrom 3D Intercepted:", msg, line);
   return true;
 };
-
-const canvas = document.getElementById('carrom-canvas');
-const ctx = canvas.getContext('2d');
 
 function showToast(msg, type = 'info') {
   const t = document.getElementById('game-toast');
@@ -319,9 +328,10 @@ function showToast(msg, type = 'info') {
   t.textContent = msg;
   t.style.borderColor = (type === 'error') ? '#ef4444' : (type === 'success' ? '#00e676' : '#ffd700');
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(() => t.classList.remove('show'), 2600);
 }
 
+// ── POOLS & STATS ──
 const POOLS = {
   bronze:  { name: 'Bronze Pool', entry: 50, prize: 80 },
   silver:  { name: 'Silver Pool', entry: 500, prize: 800 },
@@ -330,216 +340,771 @@ const POOLS = {
 };
 
 let activePool = 'bronze';
-let matchActive = false; // Must click Join Battle to start!
-let currentTurn = 'player';
-let playerPts = 0, botPts = 0;
-let turnCount = 0;
-let hasShot = false;
+let matchActive = false;
 let isMatchSettled = false;
-let pocketedInThisTurn = false;
-let strikerFoul = false;
+let playerPts = 0, botPts = 0;
 let statsProfit = 0, statsWins = 0, statsLosses = 0;
-let turnWatchdog = null;
 
-const POCKETS = [
-  { id: 0, x: 34, y: 34, r: 22 },
-  { id: 1, x: 406, y: 34, r: 22 },
-  { id: 2, x: 34, y: 406, r: 22 },
-  { id: 3, x: 406, y: 406, r: 22 }
-];
-
-let striker = { x: 220, y: 345, r: 17, vx: 0, vy: 0, mass: 2.8 };
-let aimAngle = -Math.PI / 2;
-let isDraggingAim = false;
-let dragStartCoords = null;
-let pieces = [];
-const floatingScores = [];
-
-// 🎵 Sound Synthesizers
-let audioCtx = null;
-let lastClickSoundTime = 0;
-
-function getAudioCtx() {
-  try {
-    if (!audioCtx) {
+// 🎵 Procedural Audio
+class CarromAudio {
+  constructor() {
+    this.ctx = null;
+    this.lastHitTime = 0;
+  }
+  init() {
+    if (!this.ctx) {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (AudioContextClass) audioCtx = new AudioContextClass();
+      if (AudioContextClass) this.ctx = new AudioContextClass();
     }
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  } catch(e){}
-  return audioCtx;
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  }
+  playHit(vel = 1) {
+    const now = Date.now();
+    if (now - this.lastHitTime < 40) return;
+    this.lastHitTime = now;
+    this.init();
+    if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      const freq = 280 + Math.random() * 80;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(Math.min(0.3, 0.08 + vel * 0.03), this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(); osc.stop(this.ctx.currentTime + 0.04);
+    } catch(e){}
+  }
+  playPocket() {
+    this.init(); if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(520, this.ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(); osc.stop(this.ctx.currentTime + 0.15);
+    } catch(e){}
+  }
+  playFoul() {
+    this.init(); if (!this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.22);
+      gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.24);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(); osc.stop(this.ctx.currentTime + 0.24);
+    } catch(e){}
+  }
 }
+const carromAudio = new CarromAudio();
 
-function playCarromClick() {
-  const now = Date.now();
-  if (now - lastClickSoundTime < 50) return;
-  lastClickSoundTime = now;
-  try {
-    const actx = getAudioCtx();
-    if (!actx) return;
-    const osc = actx.createOscillator();
-    const gain = actx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(320 + Math.random() * 60, actx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(70, actx.currentTime + 0.035);
-    gain.gain.setValueAtTime(0.2, actx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.035);
-    osc.connect(gain);
-    gain.connect(actx.destination);
-    osc.start();
-    osc.stop(actx.currentTime + 0.035);
-  } catch(e){}
-}
+// ── 3D PHYSICS ENGINE ──
+class CarromPhysics {
+  constructor() {
+    this.boardBound = 175;
+    this.strikerRadius = 14.5;
+    this.pieceRadius = 10.5;
+    this.striker = null;
+    this.pieces = [];
+    this.pockets = [
+      { id: 0, x: -160, z: -160, r: 21 },
+      { id: 1, x:  160, z: -160, r: 21 },
+      { id: 2, x: -160, z:  160, r: 21 },
+      { id: 3, x:  160, z:  160, r: 21 }
+    ];
+    this.friction = 0.982;
+    this.restitution = 0.92;
+    this.cushionRestitution = 0.78;
+    this.pocketedThisShot = [];
+  }
 
-function playPocketSound() {
-  try {
-    const actx = getAudioCtx();
-    if (!actx) return;
-    const osc = actx.createOscillator();
-    const gain = actx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(240, actx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(480, actx.currentTime + 0.12);
-    gain.gain.setValueAtTime(0.35, actx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.14);
-    osc.connect(gain);
-    gain.connect(actx.destination);
-    osc.start();
-    osc.stop(actx.currentTime + 0.14);
-  } catch(e){}
-}
+  initBoard() {
+    this.pieces = [];
+    this.pocketedThisShot = [];
+    const r = this.pieceRadius;
 
-function playFoulSound() {
-  try {
-    const actx = getAudioCtx();
-    if (!actx) return;
-    const osc = actx.createOscillator();
-    const gain = actx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(130, actx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(50, actx.currentTime + 0.2);
-    gain.gain.setValueAtTime(0.3, actx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.22);
-    osc.connect(gain);
-    gain.connect(actx.destination);
-    osc.start();
-    osc.stop(actx.currentTime + 0.22);
-  } catch(e){}
-}
-
-function initBoardPieces() {
-  pieces = [];
-  const cx = 220, cy = 220;
-  const r = 12.5;
-
-  // 1. Red Queen (Center)
-  pieces.push({ 
-    id: 0, x: cx, y: cy, r: r, vx: 0, vy: 0, mass: 1.0, 
-    type: 'queen', val: 25, color: '#ef4444'
-  });
-
-  // 2. Inner Circle (6 pieces alternating white & black)
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * Math.PI) / 3;
-    const isWhite = (i % 2 === 0);
-    pieces.push({
-      id: i + 1,
-      x: cx + Math.cos(angle) * (r * 2.05),
-      y: cy + Math.sin(angle) * (r * 2.05),
-      r: r, vx: 0, vy: 0, mass: 1.0,
-      type: isWhite ? 'white' : 'black',
-      val: isWhite ? 10 : 5,
-      color: isWhite ? '#ffffff' : '#1e293b'
+    // Red Queen (Center)
+    this.pieces.push({
+      id: 0, x: 0, y: 0, z: 0, vx: 0, vz: 0, r: r, mass: 1.0,
+      type: 'queen', val: 25, isPocketed: false, isDropping: false
     });
+
+    // Inner Ring (6 pieces alternating)
+    const d1 = r * 2.05;
+    for (let i = 0; i < 6; i++) {
+      const a = (i * Math.PI) / 3;
+      const isWhite = (i % 2 === 0);
+      this.pieces.push({
+        id: i + 1,
+        x: Math.cos(a) * d1, y: 0, z: Math.sin(a) * d1,
+        vx: 0, vz: 0, r: r, mass: 1.0,
+        type: isWhite ? 'white' : 'black',
+        val: isWhite ? 10 : 5,
+        isPocketed: false, isDropping: false
+      });
+    }
+
+    // Outer Ring (12 pieces alternating)
+    const d2 = r * 3.9;
+    for (let i = 0; i < 12; i++) {
+      const a = (i * Math.PI) / 6 + (Math.PI / 12);
+      const isWhite = (i % 2 !== 0);
+      this.pieces.push({
+        id: i + 7,
+        x: Math.cos(a) * d2, y: 0, z: Math.sin(a) * d2,
+        vx: 0, vz: 0, r: r, mass: 1.0,
+        type: isWhite ? 'white' : 'black',
+        val: isWhite ? 10 : 5,
+        isPocketed: false, isDropping: false
+      });
+    }
+
+    this.striker = {
+      id: 99, x: 0, y: 0, z: 130, vx: 0, vz: 0,
+      r: this.strikerRadius, mass: 2.8, type: 'striker',
+      isPocketed: false, isDropping: false, isActive: true
+    };
   }
 
-  // 3. Outer Ring (12 pieces alternating)
-  for (let i = 0; i < 12; i++) {
-    const angle = (i * Math.PI) / 6 + (Math.PI / 12);
-    const isWhite = (i % 2 !== 0);
-    pieces.push({
-      id: i + 7,
-      x: cx + Math.cos(angle) * (r * 3.9),
-      y: cy + Math.sin(angle) * (r * 3.9),
-      r: r, vx: 0, vy: 0, mass: 1.0,
-      type: isWhite ? 'white' : 'black',
-      val: isWhite ? 10 : 5,
-      color: isWhite ? '#ffffff' : '#1e293b'
-    });
+  resetStriker(side = 'player', baselineX = 0) {
+    this.striker.x = Math.max(-100, Math.min(100, baselineX));
+    this.striker.z = (side === 'player') ? 130 : -130;
+    this.striker.y = 0;
+    this.striker.vx = 0;
+    this.striker.vz = 0;
+    this.striker.isPocketed = false;
+    this.striker.isDropping = false;
+    this.striker.isActive = true;
+    this.pocketedThisShot = [];
   }
-}
 
-function updateStrikerX(v) {
-  if (!matchActive || Math.abs(striker.vx) > 0.05 || Math.abs(striker.vy) > 0.05) return;
-  striker.x = parseFloat(v);
-}
-
-function getCanvasCoords(e) {
-  const rect = canvas.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : (e.clientX || 0);
-  const clientY = e.touches ? e.touches[0].clientY : (e.clientY || 0);
-  return {
-    x: (clientX - rect.left) * (canvas.width / rect.width),
-    y: (clientY - rect.top) * (canvas.height / rect.height)
-  };
-}
-
-function handleAimEvent(e) {
-  if (!matchActive || currentTurn !== 'player' || hasShot) return;
-  const coords = getCanvasCoords(e);
-  const dx = coords.x - striker.x;
-  const dy = coords.y - striker.y;
-  aimAngle = Math.atan2(dy, dx);
-}
-
-canvas.addEventListener('mousedown', (e) => {
-  if (!matchActive) {
-    showToast(`⚠️ Please click "Join Battle" first to enter the match!`, 'info');
-    return;
+  shootStriker(angle, power) {
+    this.striker.vx = Math.cos(angle) * power;
+    this.striker.vz = Math.sin(angle) * power;
+    carromAudio.playHit(power * 0.1);
   }
-  isDraggingAim = true;
-  dragStartCoords = getCanvasCoords(e);
-  handleAimEvent(e);
-});
-canvas.addEventListener('mousemove', (e) => {
-  if (isDraggingAim) handleAimEvent(e);
-});
-window.addEventListener('mouseup', (e) => {
-  if (isDraggingAim && dragStartCoords && currentTurn === 'player' && !hasShot) {
-    const endCoords = getCanvasCoords(e);
-    const pullDist = Math.hypot(endCoords.x - dragStartCoords.x, endCoords.y - dragStartCoords.y);
-    if (pullDist > 14) {
-      strikePlayer();
+
+  update(dt = 1.0) {
+    const all = this.getAllObjects();
+    const substeps = 4;
+    const sdt = dt / substeps;
+
+    for (let s = 0; s < substeps; s++) {
+      for (let p of all) {
+        if (p.isPocketed) continue;
+        if (p.isDropping) {
+          p.dropAnim = (p.dropAnim || 0) + sdt * 0.05;
+          p.y -= sdt * 1.5;
+          if (p.dropAnim >= 1.0) { p.isPocketed = true; p.isDropping = false; }
+          continue;
+        }
+
+        p.x += p.vx * sdt;
+        p.z += p.vz * sdt;
+        p.vx *= Math.pow(this.friction, sdt);
+        p.vz *= Math.pow(this.friction, sdt);
+        if (Math.abs(p.vx) < 0.03) p.vx = 0;
+        if (Math.abs(p.vz) < 0.03) p.vz = 0;
+      }
+
+      // Collisions piece vs piece
+      for (let i = 0; i < all.length; i++) {
+        for (let j = i + 1; j < all.length; j++) {
+          const p1 = all[i], p2 = all[j];
+          if (p1.isDropping || p1.isPocketed || p2.isDropping || p2.isPocketed) continue;
+
+          const dx = p2.x - p1.x;
+          const dz = p2.z - p1.z;
+          const distSq = dx * dx + dz * dz;
+          const minDist = p1.r + p2.r;
+
+          if (distSq < minDist * minDist && distSq > 0.0001) {
+            const dist = Math.sqrt(distSq);
+            const nx = dx / dist, nz = dz / dist;
+            const overlap = minDist - dist;
+            const totalM = p1.mass + p2.mass;
+
+            p1.x -= nx * overlap * (p2.mass / totalM);
+            p1.z -= nz * overlap * (p2.mass / totalM);
+            p2.x += nx * overlap * (p1.mass / totalM);
+            p2.z += nz * overlap * (p1.mass / totalM);
+
+            const relVel = (p1.vx - p2.vx) * nx + (p1.vz - p2.vz) * nz;
+            if (relVel > 0) {
+              const impulse = (-(1 + this.restitution) * relVel) / (1 / p1.mass + 1 / p2.mass);
+              p1.vx += (impulse / p1.mass) * nx;
+              p1.vz += (impulse / p1.mass) * nz;
+              p2.vx -= (impulse / p2.mass) * nx;
+              p2.vz -= (impulse / p2.mass) * nz;
+              if (Math.abs(relVel) > 0.4) carromAudio.playHit(Math.abs(relVel));
+            }
+          }
+        }
+      }
+
+      // Cushions & Pockets
+      for (let p of all) {
+        if (p.isDropping || p.isPocketed) continue;
+
+        let inPocket = false;
+        for (let pkt of this.pockets) {
+          const pdx = pkt.x - p.x, pdz = pkt.z - p.z;
+          const pDist = Math.hypot(pdx, pdz);
+
+          if (pDist < pkt.r) {
+            p.vx += (pdx / (pDist + 0.001)) * 0.1;
+            p.vz += (pdz / (pDist + 0.001)) * 0.1;
+
+            if (pDist < pkt.r - 4) {
+              p.isDropping = true;
+              p.dropAnim = 0;
+              p.vx *= 0.15;
+              p.vz *= 0.15;
+              inPocket = true;
+              this.pocketedThisShot.push(p);
+
+              if (p.type === 'striker') carromAudio.playFoul();
+              else carromAudio.playPocket();
+              break;
+            }
+          }
+        }
+        if (inPocket) continue;
+
+        const b = this.boardBound - p.r;
+        if (p.x < -b) { p.x = -b; p.vx = -p.vx * this.cushionRestitution; carromAudio.playHit(0.5); }
+        if (p.x >  b) { p.x =  b; p.vx = -p.vx * this.cushionRestitution; carromAudio.playHit(0.5); }
+        if (p.z < -b) { p.z = -b; p.vz = -p.vz * this.cushionRestitution; carromAudio.playHit(0.5); }
+        if (p.z >  b) { p.z =  b; p.vz = -p.vz * this.cushionRestitution; carromAudio.playHit(0.5); }
+      }
     }
   }
-  isDraggingAim = false;
-  dragStartCoords = null;
-});
 
-canvas.addEventListener('touchstart', (e) => {
-  if (!matchActive) {
-    showToast(`⚠️ Please click "Join Battle" first to enter the match!`, 'info');
-    return;
+  isSettled() {
+    const all = this.getAllObjects();
+    for (let p of all) {
+      if (p.isDropping) return false;
+      if (p.isPocketed) continue;
+      if (p.vx * p.vx + p.vz * p.vz > 0.005) return false;
+    }
+    return true;
   }
-  isDraggingAim = true;
-  dragStartCoords = getCanvasCoords(e);
-  handleAimEvent(e);
-}, { passive: false });
 
-canvas.addEventListener('touchmove', (e) => {
-  if (isDraggingAim) {
-    handleAimEvent(e);
-    e.preventDefault();
+  freezeAll() {
+    for (let p of this.getAllObjects()) { p.vx = 0; p.vz = 0; }
   }
-}, { passive: false });
 
-window.addEventListener('touchend', (e) => {
-  if (isDraggingAim && currentTurn === 'player' && !hasShot) {
-    strikePlayer();
+  getAllObjects() {
+    const list = [];
+    if (this.striker && this.striker.isActive) list.push(this.striker);
+    for (let p of this.pieces) {
+      if (!p.isPocketed || p.isDropping) list.push(p);
+    }
+    return list;
   }
-  isDraggingAim = false;
-  dragStartCoords = null;
-});
+
+  predictTrajectory(startX, startZ, angle, maxDist = 480) {
+    let dirX = Math.cos(angle);
+    let dirZ = Math.sin(angle);
+    const step = 2.0;
+    let curX = startX, curZ = startZ;
+    const path = [{ x: curX, z: curZ }];
+    let hitObject = null, hitPoint = null;
+
+    const testR = this.strikerRadius;
+    const b = this.boardBound - testR;
+    let bounces = 0;
+
+    for (let d = 0; d < maxDist; d += step) {
+      curX += dirX * step;
+      curZ += dirZ * step;
+
+      let bounced = false;
+      if (Math.abs(curX) >= b) { curX = Math.sign(curX) * b; dirX = -dirX; bounced = true; }
+      if (Math.abs(curZ) >= b) { curZ = Math.sign(curZ) * b; dirZ = -dirZ; bounced = true; }
+      if (bounced) {
+        path.push({ x: curX, z: curZ });
+        bounces++;
+        if (bounces > 1) break;
+      }
+
+      for (let p of this.pieces) {
+        if (p.isPocketed) continue;
+        const dist = Math.hypot(p.x - curX, p.z - curZ);
+        if (dist < testR + p.r) {
+          hitObject = p;
+          hitPoint = { x: curX, z: curZ };
+          break;
+        }
+      }
+      if (hitObject) { path.push(hitPoint); break; }
+      path.push({ x: curX, z: curZ });
+    }
+
+    return { path, hitObject, hitPoint };
+  }
+}
+
+// ── 3D WEBGL BOARD RENDERER ──
+class CarromBoard3D {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x0a101d);
+
+    this.camera = new THREE.PerspectiveCamera(40, 1, 10, 2000);
+    this.camera.position.set(0, 360, 290);
+    this.targetCamPos = new THREE.Vector3(0, 360, 290);
+    this.currentCamLookAt = new THREE.Vector3(0, 0, 15);
+    this.targetCamLookAt = new THREE.Vector3(0, 0, 15);
+
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    this.pieceMeshes = new Map();
+    this.strikerMesh = null;
+    this.strikerRedArrow = null;
+    this.strikerArrowMesh = null;
+    this.whiteDots = null;
+
+    this.buildLighting();
+    this.buildBoard();
+    this.buildAimGuides();
+  }
+
+  buildLighting() {
+    const ambient = new THREE.AmbientLight(0xfff5ea, 0.65);
+    this.scene.add(ambient);
+
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.45);
+    dir1.position.set(120, 380, 180);
+    dir1.castShadow = true;
+    dir1.shadow.mapSize.width = 1024;
+    dir1.shadow.mapSize.height = 1024;
+    dir1.shadow.camera.near = 50;
+    dir1.shadow.camera.far = 800;
+    dir1.shadow.camera.left = -220;
+    dir1.shadow.camera.right = 220;
+    dir1.shadow.camera.top = 220;
+    dir1.shadow.camera.bottom = -220;
+    this.scene.add(dir1);
+
+    const dir2 = new THREE.DirectionalLight(0xd4eaf7, 0.28);
+    dir2.position.set(-120, 320, -180);
+    this.scene.add(dir2);
+  }
+
+  createBoardCanvasTexture() {
+    const size = 1024;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const scale = size / 350;
+    const center = { cx: size / 2, cy: size / 2 };
+
+    // Warm Teak/Canadian Maple Surface
+    const grad = ctx.createRadialGradient(center.cx, center.cy, 30, center.cx, center.cy, size / 2);
+    grad.addColorStop(0, '#c99b66');
+    grad.addColorStop(0.65, '#b07e4c');
+    grad.addColorStop(1, '#8b5828');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+
+    // Center Rosette & Rings
+    ctx.strokeStyle = '#1c1008';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(center.cx, center.cy, 38 * scale, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#b91c1c';
+    ctx.beginPath();
+    ctx.arc(center.cx, center.cy, 10.5 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Baselines
+    const drawBaseline = (rotation) => {
+      ctx.save();
+      ctx.translate(center.cx, center.cy);
+      ctx.rotate(rotation);
+      const y1 = 130 * scale, y2 = (130 - 6.5) * scale;
+      const xStart = -100 * scale, xEnd = 100 * scale;
+
+      ctx.strokeStyle = '#1c1008';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(xStart, y1); ctx.lineTo(xEnd, y1);
+      ctx.moveTo(xStart, y2); ctx.lineTo(xEnd, y2);
+      ctx.stroke();
+
+      const drawCircle = (cx) => {
+        ctx.beginPath();
+        ctx.arc(cx, (y1 + y2) / 2, 8.5 * scale, 0, Math.PI * 2);
+        ctx.fillStyle = '#ef4444';
+        ctx.fill();
+        ctx.strokeStyle = '#1c1008';
+        ctx.lineWidth = 3.5;
+        ctx.stroke();
+      };
+      drawCircle(xStart);
+      drawCircle(xEnd);
+      ctx.restore();
+    };
+    drawBaseline(0);
+    drawBaseline(Math.PI);
+    drawBaseline(Math.PI / 2);
+    drawBaseline(-Math.PI / 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.anisotropy = 8;
+    return texture;
+  }
+
+  buildBoard() {
+    const group = new THREE.Group();
+
+    // Playfield (Matte Canadian Teak - Zero Blinding Glare)
+    const boardTex = this.createBoardCanvasTexture();
+    const playfieldGeo = new THREE.BoxGeometry(350, 12, 350);
+    const playfieldMat = new THREE.MeshStandardMaterial({
+      map: boardTex,
+      color: 0xd4c4ab,
+      roughness: 0.94,
+      metalness: 0.0
+    });
+    const playfield = new THREE.Mesh(playfieldGeo, playfieldMat);
+    playfield.position.y = -6;
+    playfield.receiveShadow = true;
+    group.add(playfield);
+
+    // Mahogany Borders
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x2b150c, roughness: 0.55, metalness: 0.05 });
+    const fw = 32, fh = 24, hp = 175;
+    const createBorder = (w, d, x, z) => {
+      const geo = new THREE.BoxGeometry(w, fh, d);
+      const m = new THREE.Mesh(geo, frameMat);
+      m.position.set(x, fh / 2 - 6, z);
+      m.castShadow = true; m.receiveShadow = true;
+      group.add(m);
+    };
+    createBorder(350 + fw * 2, fw, 0, -(hp + fw / 2));
+    createBorder(350 + fw * 2, fw, 0,  (hp + fw / 2));
+    createBorder(fw, 350, -(hp + fw / 2), 0);
+    createBorder(fw, 350,  (hp + fw / 2), 0);
+
+    // Sunken Drop Pockets
+    const pocketGeo = new THREE.CylinderGeometry(21, 19, 14, 32);
+    const pocketMat = new THREE.MeshStandardMaterial({ color: 0x080c14, roughness: 0.95 });
+    const pockets = [{x:-160,z:-160},{x:160,z:-160},{x:-160,z:160},{x:160,z:160}];
+    for (let pkt of pockets) {
+      const pm = new THREE.Mesh(pocketGeo, pocketMat);
+      pm.position.set(pkt.x, -5, pkt.z);
+      group.add(pm);
+    }
+
+    this.scene.add(group);
+  }
+
+  createCoinTexture(type) {
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const cx = size / 2, cy = size / 2;
+
+    if (type === 'queen') {
+      const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, cx);
+      grad.addColorStop(0, '#f87171'); grad.addColorStop(0.5, '#dc2626'); grad.addColorStop(1, '#991b1b');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, size, size);
+      ctx.strokeStyle = '#450a0a'; ctx.lineWidth = 14; ctx.strokeRect(0, 0, size, size);
+      ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(cx, cy, 70, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(cx, cy, 28, 0, Math.PI * 2); ctx.fill();
+    } else if (type === 'white') {
+      const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, cx);
+      grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.7, '#f1f5f9'); grad.addColorStop(1, '#cbd5e1');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, size, size);
+      ctx.strokeStyle = '#2b1810'; ctx.lineWidth = 14; ctx.strokeRect(0, 0, size, size);
+      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(cx, cy, 65, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      const grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, cx);
+      grad.addColorStop(0, '#2e2118'); grad.addColorStop(0.65, '#19110d'); grad.addColorStop(1, '#090604');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, size, size);
+      ctx.strokeStyle = '#d97706'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(cx, cy, 120, 0, Math.PI * 2); ctx.stroke();
+    }
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  createStrikerMesh() {
+    const geo = new THREE.CylinderGeometry(14.5, 14.5, 5.0, 48);
+    const canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    const cx = 128, cy = 128;
+
+    const grad = ctx.createRadialGradient(cx, cy, 15, cx, cy, cx);
+    grad.addColorStop(0, '#e0f2fe'); grad.addColorStop(0.35, '#38bdf8'); grad.addColorStop(0.8, '#0284c7'); grad.addColorStop(1, '#075985');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(cx, cy, 95, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#00e676'; ctx.beginPath(); ctx.arc(cx, cy, 20, 0, Math.PI * 2); ctx.fill();
+
+    const tex = new THREE.CanvasTexture(canvas);
+    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35, metalness: 0.1 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    return mesh;
+  }
+
+  createPieceMesh(piece) {
+    const geo = new THREE.CylinderGeometry(piece.r, piece.r, 4.0, 36);
+    const tex = this.createCoinTexture(piece.type);
+    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45, metalness: 0.05 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    return mesh;
+  }
+
+  syncPieces(physics) {
+    for (let piece of physics.pieces) {
+      let mesh = this.pieceMeshes.get(piece.id);
+      if (!mesh) {
+        mesh = this.createPieceMesh(piece);
+        this.pieceMeshes.set(piece.id, mesh);
+        this.scene.add(mesh);
+      }
+      mesh.position.set(piece.x, piece.y + 2.0, piece.z);
+      if (piece.isPocketed) mesh.visible = false;
+      else {
+        mesh.visible = true;
+        if (piece.isDropping) {
+          const s = Math.max(0.2, 1.0 - (piece.dropAnim || 0) * 0.7);
+          mesh.scale.set(s, s, s);
+        } else mesh.scale.set(1, 1, 1);
+      }
+    }
+
+    if (!this.strikerMesh && physics.striker) {
+      this.strikerMesh = this.createStrikerMesh();
+      this.scene.add(this.strikerMesh);
+    }
+    if (this.strikerMesh && physics.striker) {
+      this.strikerMesh.position.set(physics.striker.x, physics.striker.y + 2.5, physics.striker.z);
+      this.strikerMesh.visible = !physics.striker.isPocketed;
+    }
+  }
+
+  buildAimGuides() {
+    // 1. Sleek Red Arrow at Striker (matching Carrom King reference exactly)
+    const redArrowGroup = new THREE.Group();
+    const arrowShape = new THREE.Shape();
+    const sw = 1.6, sl = 17.0, hw = 4.4, hl = 10.0, startY = 14.5;
+    arrowShape.moveTo(-sw, startY);
+    arrowShape.lineTo(sw, startY);
+    arrowShape.lineTo(sw, startY + sl);
+    arrowShape.lineTo(hw, startY + sl);
+    arrowShape.lineTo(0, startY + sl + hl);
+    arrowShape.lineTo(-hw, startY + sl);
+    arrowShape.lineTo(-sw, startY + sl);
+    arrowShape.closePath();
+
+    const arrowGeo = new THREE.ShapeGeometry(arrowShape);
+    const arrowMat = new THREE.MeshBasicMaterial({ color: 0xef233c, side: THREE.DoubleSide, depthTest: false });
+    this.strikerArrowMesh = new THREE.Mesh(arrowGeo, arrowMat);
+    this.strikerArrowMesh.rotation.x = -Math.PI / 2;
+    this.strikerArrowMesh.position.y = 5.25;
+    this.strikerArrowMesh.renderOrder = 1000;
+    redArrowGroup.add(this.strikerArrowMesh);
+
+    redArrowGroup.visible = false;
+    this.strikerRedArrow = redArrowGroup;
+    this.scene.add(redArrowGroup);
+
+    // 2. Crisp White Dotted Aim Line
+    const dotCanvas = document.createElement('canvas');
+    dotCanvas.width = 64; dotCanvas.height = 64;
+    const dctx = dotCanvas.getContext('2d');
+    dctx.beginPath(); dctx.arc(32, 32, 28, 0, Math.PI * 2); dctx.fillStyle = '#ffffff'; dctx.fill();
+    const dotTexture = new THREE.CanvasTexture(dotCanvas);
+
+    const maxDots = 70;
+    const dotPositions = new Float32Array(maxDots * 3);
+    const dotGeo = new THREE.BufferGeometry();
+    dotGeo.setAttribute('position', new THREE.BufferAttribute(dotPositions, 3));
+
+    const dotMat = new THREE.PointsMaterial({
+      map: dotTexture, size: 4.8, transparent: true, opacity: 0.95, depthTest: false
+    });
+
+    this.whiteDots = new THREE.Points(dotGeo, dotMat);
+    this.whiteDots.renderOrder = 999;
+    this.whiteDots.visible = false;
+    this.scene.add(this.whiteDots);
+  }
+
+  updateAimGuide(physics, isAiming, angle, power) {
+    if (!isAiming || !physics.striker || !physics.striker.isActive || physics.striker.isPocketed) {
+      if (this.strikerRedArrow) this.strikerRedArrow.visible = false;
+      if (this.whiteDots) this.whiteDots.visible = false;
+      return;
+    }
+
+    const dirX = Math.cos(angle);
+    const dirZ = Math.sin(angle);
+
+    if (this.strikerRedArrow && physics.striker) {
+      this.strikerRedArrow.position.set(physics.striker.x, 0, physics.striker.z);
+      this.strikerRedArrow.rotation.y = Math.atan2(-dirX, -dirZ);
+      const scaleLen = 0.85 + (power / 22.0) * 0.25;
+      this.strikerArrowMesh.scale.set(1.0, scaleLen, 1.0);
+      this.strikerRedArrow.visible = true;
+    }
+
+    const traj = physics.predictTrajectory(physics.striker.x, physics.striker.z, angle, 480);
+    let targetX, targetZ;
+    if (traj.hitObject) {
+      targetX = traj.hitObject.x - dirX * traj.hitObject.r;
+      targetZ = traj.hitObject.z - dirZ * traj.hitObject.r;
+    } else if (traj.hitPoint) {
+      targetX = traj.hitPoint.x; targetZ = traj.hitPoint.z;
+    } else if (traj.path && traj.path.length > 1) {
+      const last = traj.path[traj.path.length - 1];
+      targetX = last.x; targetZ = last.z;
+    } else {
+      targetX = physics.striker.x + dirX * 180;
+      targetZ = physics.striker.z + dirZ * 180;
+    }
+
+    const arrowTotalLen = 14.5 + (17.0 + 10.0) * (0.85 + (power / 22.0) * 0.25);
+    const startX = physics.striker.x + dirX * arrowTotalLen;
+    const startZ = physics.striker.z + dirZ * arrowTotalLen;
+
+    const dx = targetX - startX, dz = targetZ - startZ;
+    const forwardDist = dx * dirX + dz * dirZ;
+    const totalDist = Math.hypot(dx, dz);
+
+    if (this.whiteDots && forwardDist > 3.0 && totalDist > 3.0) {
+      const dotSpacing = 7.5;
+      const numDots = Math.min(Math.floor(totalDist / dotSpacing), 70);
+      const posAttr = this.whiteDots.geometry.attributes.position;
+      for (let i = 1; i <= numDots; i++) {
+        const d = i * dotSpacing;
+        posAttr.setXYZ(i - 1, startX + dirX * d, 5.2, startZ + dirZ * d);
+      }
+      posAttr.needsUpdate = true;
+      this.whiteDots.geometry.setDrawRange(0, numDots);
+      this.whiteDots.visible = (numDots > 0);
+    } else if (this.whiteDots) {
+      this.whiteDots.visible = false;
+    }
+  }
+
+  setCameraMode(mode) {
+    if (mode === 'topdown') {
+      this.targetCamPos.set(0, 480, 0.1);
+      this.targetCamLookAt.set(0, 0, 0);
+    } else if (mode === 'striker') {
+      this.targetCamPos.set(0, 180, 240);
+      this.targetCamLookAt.set(0, 0, 40);
+    } else {
+      this.targetCamPos.set(0, 360, 290);
+      this.targetCamLookAt.set(0, 0, 15);
+    }
+  }
+
+  onResize() {
+    const parent = this.canvas.parentElement;
+    if (!parent) return;
+    const w = parent.clientWidth, h = parent.clientHeight;
+    this.camera.aspect = w / h;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(w, h);
+  }
+
+  render() {
+    this.camera.position.lerp(this.targetCamPos, 0.1);
+    this.currentCamLookAt.lerp(this.targetCamLookAt, 0.1);
+    this.camera.lookAt(this.currentCamLookAt);
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+// ── BOT MASTER AI ──
+class BotAI {
+  calculateBestShot(physics) {
+    const activeP = physics.pieces.filter(p => !p.isPocketed && !p.isDropping);
+    if (activeP.length === 0) return { baselineX: 0, angle: Math.PI / 2, power: 22 };
+
+    let best = null, maxScore = -99999;
+    for (let p of activeP) {
+      let basePri = (p.type === 'queen') ? 500 : (p.type === 'black' ? 300 : 100);
+
+      for (let pkt of physics.pockets) {
+        const dx = pkt.x - p.x, dz = pkt.z - p.z;
+        const pDist = Math.hypot(dx, dz) || 1;
+        const normX = dx / pDist, normZ = dz / pDist;
+
+        // Ghost impact position
+        const contactX = p.x - normX * (p.r + physics.strikerRadius);
+        const contactZ = p.z - normZ * (p.r + physics.strikerRadius);
+
+        // Baseline at z = -130
+        let idealX = contactX;
+        if (Math.abs(normZ) > 0.02) {
+          idealX = contactX - (contactZ - (-130)) * (normX / normZ);
+        }
+        const clampedX = Math.max(-100, Math.min(100, idealX));
+        const clampPenalty = Math.abs(clampedX - idealX) * 2.5;
+
+        const shotAngle = Math.atan2(contactZ - (-130), contactX - clampedX);
+        const sDist = Math.hypot(contactX - clampedX, contactZ - (-130));
+
+        let obstPenalty = 0;
+        for (let other of activeP) {
+          if (other.id === p.id) continue;
+          const ldx = contactX - clampedX, ldz = contactZ - (-130);
+          const len = Math.hypot(ldx, ldz) || 1;
+          const t = Math.max(0, Math.min(1, ((other.x - clampedX) * ldx + (other.z - (-130)) * ldz) / (len * len)));
+          const projX = clampedX + t * ldx, projZ = -130 + t * ldz;
+          if (Math.hypot(other.x - projX, other.z - projZ) < (physics.strikerRadius + other.r - 2)) {
+            obstPenalty += 400;
+          }
+        }
+
+        const score = basePri - pDist * 0.4 - sDist * 0.3 - clampPenalty - obstPenalty;
+        if (score > maxScore) {
+          maxScore = score;
+          const pwr = Math.min(30, Math.max(18, 17.5 + pDist * 0.035 + sDist * 0.025));
+          best = { baselineX: clampedX, angle: shotAngle, power: pwr };
+        }
+      }
+    }
+    return best || { baselineX: 0, angle: Math.PI / 2, power: 22 };
+  }
+}
+
+// ── MAIN GAME CONTROLLER & GG WINS MATCH LIFECYCLE ──
+let physics, board3d, botAI;
+let currentTurn = 'player';
+let playerAimAngle = -Math.PI / 2;
+let playerPower = 22;
+let playerBaselineX = 0;
+let isDraggingAim = false;
+let raycaster, groundPlane, intersectPoint;
+let turnState = 'IDLE';
 
 function selectCarromPool(poolKey) {
   if (matchActive) {
@@ -566,7 +1131,7 @@ function startCarromMatch() {
     return;
   }
 
-  // 💸 Deduct Entry Fee from Real User Balance
+  // 💸 Deduct Entry Fee from User Balance
   if (typeof window.adjustBalance === 'function') {
     window.adjustBalance(-pool.entry, `Carrom 3D Entry – ${pool.name}`);
   }
@@ -575,367 +1140,144 @@ function startCarromMatch() {
   isMatchSettled = false;
   playerPts = 0;
   botPts = 0;
-  turnCount = 0;
-  hasShot = false;
-  pocketedInThisTurn = false;
-  strikerFoul = false;
   currentTurn = 'player';
-  floatingScores.length = 0;
+  turnState = 'PLAYER_AIM';
 
   const btn = document.getElementById('btn-join-match');
   if (btn) {
     btn.disabled = true;
     btn.textContent = `⚔️ Battle in Progress...`;
   }
+  const strikeBtn = document.getElementById('btn-strike');
+  if (strikeBtn) strikeBtn.disabled = false;
+
   document.getElementById('result-container').innerHTML = '';
   document.getElementById('score-player').textContent = '0 pts';
   document.getElementById('score-bot').textContent = '0 pts';
-  document.getElementById('turn-status').innerHTML = `👑 Your Turn • Aim &amp; Shoot!`;
+  updateTurnDisplay();
 
   showToast(`⚔️ Joined ${pool.name}! ₹${pool.entry} deducted. Pocket coins to win ₹${pool.prize}!`, 'success');
 
-  initBoardPieces();
-  resetStriker();
+  physics.initBoard();
+  physics.resetStriker('player', 0);
+  playerBaselineX = 0;
+  playerAimAngle = -Math.PI / 2;
+  const posSlider = document.getElementById('slider-pos');
+  if (posSlider) posSlider.value = 0;
+  board3d.syncPieces(physics);
 }
 
-function resetStriker() {
-  striker.x = 220;
-  striker.y = (currentTurn === 'player') ? 345 : 95;
-  striker.vx = 0;
-  striker.vy = 0;
-  hasShot = false;
-  pocketedInThisTurn = false;
-  strikerFoul = false;
-  aimAngle = (currentTurn === 'player') ? -Math.PI / 2 : Math.PI / 2;
-  const slider = document.getElementById('slider-pos');
-  if (slider) slider.value = 220;
+function updateTurnDisplay() {
   const ts = document.getElementById('turn-status');
-  if (ts) {
-    ts.innerHTML = (currentTurn === 'player') 
-      ? `👑 <strong>Your Turn</strong> • Aim &amp; Shoot!` 
-      : `⚔️ <strong>Bot Master is Aiming...</strong>`;
-  }
-}
-
-function strikePlayer() {
+  if (!ts) return;
   if (!matchActive) {
-    showToast(`⚠️ Please click "Join Battle" first to enter the match!`, 'info');
+    ts.innerHTML = `👆 Select a pool and click <strong>"Join Battle"</strong> to start!`;
     return;
   }
-  if (currentTurn !== 'player' || hasShot || Math.abs(striker.vx) > 0.08 || Math.abs(striker.vy) > 0.08) return;
-  const power = parseFloat(document.getElementById('slider-power')?.value) || 22;
-  striker.vx = Math.cos(aimAngle) * power;
-  striker.vy = Math.sin(aimAngle) * power;
-  hasShot = true;
-  pocketedInThisTurn = false;
-  strikerFoul = false;
-  turnCount++;
-  playCarromClick();
-
-  clearTimeout(turnWatchdog);
-  turnWatchdog = setTimeout(() => {
-    if (matchActive && hasShot) {
-      striker.vx = 0; striker.vy = 0;
-      pieces.forEach(p => { p.vx = 0; p.vy = 0; });
-    }
-  }, 3500);
+  ts.innerHTML = (currentTurn === 'player')
+    ? `👑 <strong>Your Turn</strong> • Drag to Aim &amp; Shoot!`
+    : `⚔️ <strong>Bot AI is Calculating Shot...</strong>`;
 }
 
-/* 🤖 GOD-LEVEL GRANDMASTER BOT AI (PHYSICS-PERFECT TRAJECTORY SOLVER) */
-function botTurn() {
-  if (!matchActive || currentTurn !== 'bot' || hasShot) return;
+function executePlayerShot() {
+  if (!matchActive || currentTurn !== 'player' || turnState !== 'PLAYER_AIM') return;
+  turnState = 'SIMULATING';
+  const strikeBtn = document.getElementById('btn-strike');
+  if (strikeBtn) strikeBtn.disabled = true;
+
+  board3d.updateAimGuide(physics, false, playerAimAngle, playerPower);
+  physics.shootStriker(playerAimAngle, playerPower);
+}
+
+function triggerBotShot() {
+  turnState = 'BOT_AIM';
+  currentTurn = 'bot';
+  updateTurnDisplay();
+
+  const strikeBtn = document.getElementById('btn-strike');
+  if (strikeBtn) strikeBtn.disabled = true;
+
   setTimeout(() => {
-    if (!matchActive || currentTurn !== 'bot') return;
-    const activeP = pieces.filter(p => p.x > 0);
-    if (activeP.length === 0) return;
+    if (!matchActive) return;
+    const shot = botAI.calculateBestShot(physics);
+    physics.resetStriker('bot', shot.baselineX);
+    board3d.syncPieces(physics);
+    board3d.updateAimGuide(physics, true, shot.angle, shot.power);
 
-    let bestShot = null;
-    let maxQuality = -999999;
+    setTimeout(() => {
+      board3d.updateAimGuide(physics, false, shot.angle, shot.power);
+      turnState = 'SIMULATING';
+      physics.shootStriker(shot.angle, shot.power);
+    }, 700);
+  }, 600);
+}
 
-    activeP.forEach(p => {
-      // Prioritize Queen, then Black coins (Bot color), then White coins
-      let priorityScore = (p.type === 'queen') ? 500 : (p.type === 'black' ? 300 : 100);
+function handleShotSettled() {
+  physics.freezeAll();
+  const pocketed = [...physics.pocketedThisShot];
+  let pottedCoin = false;
+  let foul = false;
 
-      POCKETS.forEach(pkt => {
-        const dx = pkt.x - p.x;
-        const dy = pkt.y - p.y;
-        const distToPocket = Math.hypot(dx, dy) || 1;
-        const normPktX = dx / distToPocket;
-        const normPktY = dy / distToPocket;
-
-        // Ghost contact point behind coin along pocket trajectory line
-        const contactX = p.x - normPktX * (p.r + striker.r);
-        const contactY = p.y - normPktY * (p.r + striker.r);
-
-        // Mathematical baseline alignment for Bot baseline (y = 95)
-        let idealStrikerX = contactX;
-        if (Math.abs(normPktY) > 0.02) {
-          idealStrikerX = contactX - (contactY - 95) * (normPktX / normPktY);
-        }
-        
-        // Clamp striker within valid baseline limits [115, 325]
-        const clampedStrikerX = Math.max(115, Math.min(325, idealStrikerX));
-        const clampPenalty = Math.abs(clampedStrikerX - idealStrikerX) * 2.5;
-
-        // Calculate precision vector from striker baseline to contact point
-        const shotAngle = Math.atan2(contactY - 95, contactX - clampedStrikerX);
-        const distStrikerToContact = Math.hypot(contactX - clampedStrikerX, contactY - 95);
-
-        // Check path clearance from other pieces
-        let obstaclePenalty = 0;
-        pieces.forEach(other => {
-          if (other.id === p.id || other.x < 0) return;
-          // Distance from other coin to line from striker to contact
-          const lineDx = contactX - clampedStrikerX;
-          const lineDy = contactY - 95;
-          const lineLen = Math.hypot(lineDx, lineDy) || 1;
-          const t = Math.max(0, Math.min(1, ((other.x - clampedStrikerX) * lineDx + (other.y - 95) * lineDy) / (lineLen * lineLen)));
-          const projX = clampedStrikerX + t * lineDx;
-          const projY = 95 + t * lineDy;
-          const perpDist = Math.hypot(other.x - projX, other.y - projY);
-          if (perpDist < (striker.r + other.r - 2)) {
-            obstaclePenalty += 400;
-          }
-        });
-
-        // Calibrated God-level quality score
-        const quality = priorityScore - distToPocket * 0.4 - distStrikerToContact * 0.3 - clampPenalty - obstaclePenalty;
-
-        if (quality > maxQuality) {
-          maxQuality = quality;
-          // Calibrated precision velocity
-          const calibratedPower = Math.min(27, Math.max(18, 17.5 + distToPocket * 0.035 + distStrikerToContact * 0.025));
-          bestShot = {
-            strikerX: clampedStrikerX,
-            angle: shotAngle,
-            power: calibratedPower
-          };
-        }
-      });
-    });
-
-    if (bestShot) {
-      striker.x = bestShot.strikerX;
-      aimAngle = bestShot.angle;
-      const speed = bestShot.power;
-      striker.vx = Math.cos(aimAngle) * speed;
-      striker.vy = Math.sin(aimAngle) * speed;
+  for (let p of pocketed) {
+    if (p.type === 'striker') {
+      foul = true;
     } else {
-      const target = activeP[0];
-      const angle = Math.atan2(target.y - striker.y, target.x - striker.x);
-      striker.vx = Math.cos(angle) * 21;
-      striker.vy = Math.sin(angle) * 21;
-    }
-
-    hasShot = true;
-    pocketedInThisTurn = false;
-    strikerFoul = false;
-    turnCount++;
-    playCarromClick();
-
-    clearTimeout(turnWatchdog);
-    turnWatchdog = setTimeout(() => {
-      if (matchActive && hasShot) {
-        striker.vx = 0; striker.vy = 0;
-        pieces.forEach(p => { p.vx = 0; p.vy = 0; });
-      }
-    }, 3500);
-  }, 700);
-}
-
-/* ── 2D 2-BODY ELASTIC MOMENTUM COLLISION RESOLUTION ── */
-function resolveCircleCollision(c1, c2, m1, m2, restitution = 0.94) {
-  if (c1.x < 0 || c2.x < 0) return false;
-  const dx = c2.x - c1.x;
-  const dy = c2.y - c1.y;
-  const dist = Math.hypot(dx, dy);
-  const minDist = c1.r + c2.r;
-  
-  if (dist <= 0 || dist >= minDist) return false;
-
-  const nx = dx / dist;
-  const ny = dy / dist;
-  const tx = -ny;
-  const ty = nx;
-
-  const overlap = (minDist - dist) + 0.2;
-  const totalMass = m1 + m2;
-  c1.x -= nx * (overlap * (m2 / totalMass));
-  c1.y -= ny * (overlap * (m2 / totalMass));
-  c2.x += nx * (overlap * (m1 / totalMass));
-  c2.y += ny * (overlap * (m1 / totalMass));
-
-  const v1n = c1.vx * nx + c1.vy * ny;
-  const v1t = c1.vx * tx + c1.vy * ty;
-  const v2n = c2.vx * nx + c2.vy * ny;
-  const v2t = c2.vx * tx + c2.vy * ty;
-
-  if (v1n - v2n < 0) return false;
-
-  const v1nPost = (v1n * (m1 - m2) + 2 * m2 * v2n) / totalMass;
-  const v2nPost = (v2n * (m2 - m1) + 2 * m1 * v1n) / totalMass;
-
-  c1.vx = (v1nPost * restitution) * nx + (v1t * 0.98) * tx;
-  c1.vy = (v1nPost * restitution) * ny + (v1t * 0.98) * ty;
-  c2.vx = (v2nPost * restitution) * nx + (v2t * 0.98) * tx;
-  c2.vy = (v2nPost * restitution) * ny + (v2t * 0.98) * ty;
-
-  playCarromClick();
-  return true;
-}
-
-function updatePhysics() {
-  const friction = 0.965;
-
-  striker.x += striker.vx;
-  striker.y += striker.vy;
-  striker.vx *= friction;
-  striker.vy *= friction;
-
-  if (Math.hypot(striker.vx, striker.vy) < 0.16) {
-    striker.vx = 0;
-    striker.vy = 0;
-  }
-
-  if (striker.x < 36) { striker.x = 36; striker.vx = Math.abs(striker.vx) * 0.82; playCarromClick(); }
-  if (striker.x > 404) { striker.x = 404; striker.vx = -Math.abs(striker.vx) * 0.82; playCarromClick(); }
-  if (striker.y < 36) { striker.y = 36; striker.vy = Math.abs(striker.vy) * 0.82; playCarromClick(); }
-  if (striker.y > 404) { striker.y = 404; striker.vy = -Math.abs(striker.vy) * 0.82; playCarromClick(); }
-
-  // Check Striker Pocket Drop (Foul -> Hand striker over to opponent)
-  POCKETS.forEach(pkt => {
-    if (Math.hypot(striker.x - pkt.x, striker.y - pkt.y) < pkt.r + 2) {
-      striker.vx = 0; striker.vy = 0;
-      striker.x = -999;
-      strikerFoul = true;
-      playFoulSound();
-      if (currentTurn === 'player') {
-        showToast(`⚠️ FOUL! You potted the striker! Striker given to Bot.`, 'error');
-      } else {
-        showToast(`⚠️ FOUL! Bot potted the striker! Striker given to You.`, 'info');
-      }
-    }
-  });
-
-  // Update Pieces
-  pieces.forEach(p => {
-    if (p.x < 0) return;
-
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vx *= friction;
-    p.vy *= friction;
-
-    if (Math.hypot(p.vx, p.vy) < 0.16) {
-      p.vx = 0;
-      p.vy = 0;
-    }
-
-    if (p.x < 34) { p.x = 34; p.vx = Math.abs(p.vx) * 0.82; playCarromClick(); }
-    if (p.x > 406) { p.x = 406; p.vx = -Math.abs(p.vx) * 0.82; playCarromClick(); }
-    if (p.y < 34) { p.y = 34; p.vy = Math.abs(p.vy) * 0.82; playCarromClick(); }
-    if (p.y > 406) { p.y = 406; p.vy = -Math.abs(p.vy) * 0.82; playCarromClick(); }
-
-    if (striker.x > 0) resolveCircleCollision(striker, p, striker.mass, p.mass, 0.94);
-
-    pieces.forEach(p2 => {
-      if (p.id >= p2.id || p2.x < 0) return;
-      resolveCircleCollision(p, p2, p.mass, p2.mass, 0.92);
-    });
-
-    // Check Coin Pocket Drops
-    POCKETS.forEach(pkt => {
-      if (Math.hypot(p.x - pkt.x, p.y - pkt.y) < pkt.r + 3) {
-        p.x = -999;
-        p.y = -999;
-        p.vx = 0;
-        p.vy = 0;
-        pocketedInThisTurn = true;
-        playPocketSound();
-
-        if (currentTurn === 'player') playerPts += p.val;
-        else botPts += p.val;
-
-        const sp = document.getElementById('score-player');
-        const sb = document.getElementById('score-bot');
-        if (sp) sp.textContent = `${playerPts} pts`;
-        if (sb) sb.textContent = `${botPts} pts`;
-
-        floatingScores.push({
-          x: pkt.x, y: pkt.y,
-          text: `+${p.val} pts (${p.type.toUpperCase()})`,
-          color: (currentTurn === 'player' ? '#00e676' : '#ffd700'),
-          alpha: 1.0, dy: 0
-        });
-
-        showToast(`🎯 ${currentTurn === 'player' ? 'You' : 'Bot'} pocketed ${p.type.toUpperCase()} (+${p.val} pts)!`, 'success');
-      }
-    });
-  });
-
-  // Update Floating Scores
-  for (let i = floatingScores.length - 1; i >= 0; i--) {
-    const fs = floatingScores[i];
-    fs.dy -= 0.8;
-    fs.alpha -= 0.02;
-    if (fs.alpha <= 0) floatingScores.splice(i, 1);
-  }
-
-  // 🏆 Check Match Completion ONLY WHEN THE LAST COIN IS POTTED (activeRemaining === 0)
-  if (matchActive && !isMatchSettled && turnCount > 0) {
-    const activeRemaining = pieces.filter(p => p.x > 0).length;
-    if (activeRemaining === 0) {
-      const isMotionStopped = (striker.vx === 0 && striker.vy === 0) &&
-        pieces.every(p => p.x < 0 || (p.vx === 0 && p.vy === 0));
-      if (isMotionStopped) {
-        endCarromMatch();
-        return;
-      }
+      pottedCoin = true;
+      if (currentTurn === 'player') playerPts += p.val;
+      else botPts += p.val;
     }
   }
 
-  // Turn Passing Rules (and striker foul handover)
-  if (matchActive && hasShot) {
-    const isStrikerSettled = (striker.vx === 0 && striker.vy === 0);
-    const allPiecesSettled = pieces.every(p => p.x < 0 || (p.vx === 0 && p.vy === 0));
+  document.getElementById('score-player').textContent = `${playerPts} pts`;
+  document.getElementById('score-bot').textContent = `${botPts} pts`;
 
-    if (isStrikerSettled && allPiecesSettled) {
-      clearTimeout(turnWatchdog);
-      if (strikerFoul) {
-        // FOUL: Hand over striker immediately to opponent
-        currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
-        resetStriker();
-        if (currentTurn === 'bot') botTurn();
-      } else if (pocketedInThisTurn) {
-        resetStriker();
-        if (currentTurn === 'player') {
-          showToast(`🔥 EXTRA SHOT! You pocketed a coin, shoot again!`, 'info');
-        } else if (currentTurn === 'bot') {
-          botTurn();
-        }
-      } else {
-        currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
-        resetStriker();
-        if (currentTurn === 'bot') botTurn();
-      }
-    }
+  // Check if all coins are pocketed
+  const remaining = physics.pieces.filter(p => !p.isPocketed).length;
+  if (remaining === 0) {
+    endCarromMatch();
+    return;
+  }
+
+  if (foul) {
+    showToast(`⚠️ FOUL! Striker pocketed! Turn given to ${currentTurn === 'player' ? 'Bot' : 'You'}.`, 'error');
+    currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
+  } else if (pottedCoin) {
+    showToast(`🎯 Pocketed! Extra shot awarded!`, 'success');
+  } else {
+    currentTurn = (currentTurn === 'player') ? 'bot' : 'player';
+  }
+
+  updateTurnDisplay();
+
+  if (currentTurn === 'player') {
+    turnState = 'PLAYER_AIM';
+    physics.resetStriker('player', playerBaselineX);
+    board3d.syncPieces(physics);
+    const strikeBtn = document.getElementById('btn-strike');
+    if (strikeBtn) strikeBtn.disabled = false;
+  } else {
+    triggerBotShot();
   }
 }
 
-/* 👑 DECIDE WINNER AFTER LAST COIN IS POTTED & PAYOUT WINNING AMOUNT TO USER */
+// 👑 DECIDE WINNER AFTER LAST COIN IS POTTED & PAYOUT WINNING AMOUNT TO USER
 function endCarromMatch() {
   if (isMatchSettled) return;
   isMatchSettled = true;
   matchActive = false;
+  turnState = 'GAME_OVER';
 
   const btn = document.getElementById('btn-join-match');
   if (btn) {
     btn.disabled = false;
     btn.textContent = `⚔️ Join Battle (₹${POOLS[activePool].entry})`;
   }
+  const strikeBtn = document.getElementById('btn-strike');
+  if (strikeBtn) strikeBtn.disabled = true;
 
   const pool = POOLS[activePool];
-  // Final score comparison after all coins are potted
+
+  // 🎲 EXACT GG WINS PROBABILITY ENGINE
   const isDemo = (typeof window.isDemoMode === "function") ? window.isDemoMode() : ((localStorage.getItem("ggwins_active_wallet") || "demo") === "demo");
   const isPlayerWin = isDemo ? (Math.random() < 0.90 || playerPts > botPts) : (playerPts > botPts && Math.random() < 0.15);
   const isDraw = (playerPts === botPts);
@@ -946,12 +1288,8 @@ function endCarromMatch() {
     const profit = pool.prize - pool.entry;
     statsProfit += profit;
 
-    // 💰 CREDITING WINNING AMOUNT DIRECTLY TO ACTIVE BALANCE
     if (typeof window.adjustBalance === 'function') {
-      window.adjustBalance(pool.prize, `Carrom 3D 1st Prize Victory – ${pool.name}`);
-    } else if (typeof window.setBalance === 'function') {
-      const cur = (typeof window.getBalance === 'function') ? window.getBalance() : 50000;
-      window.setBalance(cur + pool.prize);
+      window.adjustBalance(pool.prize, `Carrom 3D Victory – ${pool.name}`);
     }
     if (typeof window.updateAllWalletDisplays === 'function') {
       window.updateAllWalletDisplays();
@@ -969,7 +1307,6 @@ function endCarromMatch() {
     }
     showToast(`🏆 VICTORY! You won ₹${pool.prize.toLocaleString()}! Credited to your account.`, 'success');
   } else if (isDraw) {
-    // Refund on draw
     if (typeof window.adjustBalance === 'function') {
       window.adjustBalance(pool.entry, `Carrom 3D Draw Refund – ${pool.name}`);
     }
@@ -986,7 +1323,6 @@ function endCarromMatch() {
     }
     showToast(`🤝 Match Tied! Entry fee refunded.`, 'info');
   } else {
-    // Bot Won -> Player Loss
     statsLosses++;
     statsProfit -= pool.entry;
     if (typeof flashBal === 'function') flashBal('flash-lose');
@@ -1017,183 +1353,7 @@ function endCarromMatch() {
   }
 }
 
-/* 🎨 DRAW CANVAS */
-function drawCarromBoard() {
-  ctx.clearRect(0, 0, 440, 440);
-
-  // 1. Board Wood Finish
-  const grad = ctx.createRadialGradient(220, 220, 40, 220, 220, 220);
-  grad.addColorStop(0, '#fef08a');
-  grad.addColorStop(1, '#ca8a04');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 440, 440);
-
-  // Center Rosette
-  ctx.strokeStyle = '#991b1b';
-  ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.arc(220, 220, 42, 0, Math.PI * 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(220, 220, 16, 0, Math.PI * 2); ctx.stroke();
-
-  // Baselines
-  ctx.strokeStyle = '#78350f';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(95, 335, 250, 20);
-  ctx.fillStyle = '#dc2626';
-  ctx.beginPath(); ctx.arc(95, 345, 8, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(345, 345, 8, 0, Math.PI * 2); ctx.fill();
-
-  ctx.strokeRect(95, 85, 250, 20);
-  ctx.beginPath(); ctx.arc(95, 95, 8, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(345, 95, 8, 0, Math.PI * 2); ctx.fill();
-
-  // Corner Pockets
-  POCKETS.forEach(pkt => {
-    ctx.save();
-    ctx.fillStyle = '#0f172a';
-    ctx.shadowColor = '#000000';
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.arc(pkt.x, pkt.y, pkt.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.restore();
-  });
-
-  // Pieces
-  pieces.forEach(p => {
-    if (p.x < 0) return;
-    ctx.save();
-    ctx.fillStyle = p.color;
-    ctx.shadowColor = 'rgba(0,0,0,0.7)';
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = (p.type === 'queen') ? '#ffd700' : (p.type === 'white' ? '#d4af37' : '#94a3b8');
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r * 0.45, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  });
-
-  // Striker
-  if (striker.x > 0) {
-    ctx.save();
-    ctx.fillStyle = (currentTurn === 'player') ? '#00e676' : '#ef4444';
-    ctx.shadowColor = 'rgba(0,0,0,0.85)';
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    ctx.arc(striker.x, striker.y, striker.r, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '10px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(currentTurn === 'player' ? '👑' : '⚔️', striker.x, striker.y);
-    ctx.restore();
-  }
-
-  // Aiming Ray & Deflection Guide (Active only when match is active)
-  if (matchActive && currentTurn === 'player' && !hasShot && striker.x > 0 && Math.abs(striker.vx) < 0.08 && Math.abs(striker.vy) < 0.08) {
-    ctx.save();
-    const rayDirX = Math.cos(aimAngle);
-    const rayDirY = Math.sin(aimAngle);
-
-    let closestHit = null;
-    let minT = 160;
-
-    pieces.forEach(p => {
-      if (p.x < 0) return;
-      const ocX = p.x - striker.x;
-      const ocY = p.y - striker.y;
-      const proj = ocX * rayDirX + ocY * rayDirY;
-      if (proj > 0) {
-        const perpDistSq = (ocX * ocX + ocY * ocY) - (proj * proj);
-        const hitRadius = striker.r + p.r;
-        if (perpDistSq < hitRadius * hitRadius) {
-          const tIntersect = proj - Math.sqrt(Math.max(0, (hitRadius * hitRadius) - perpDistSq));
-          if (tIntersect > 0 && tIntersect < minT) {
-            minT = tIntersect;
-            closestHit = p;
-          }
-        }
-      }
-    });
-
-    const endX = striker.x + rayDirX * minT;
-    const endY = striker.y + rayDirY * minT;
-
-    ctx.strokeStyle = '#00e676';
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash([5, 5]);
-    ctx.shadowColor = '#00e676';
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.moveTo(striker.x, striker.y);
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-
-    ctx.setLineDash([]);
-    ctx.strokeStyle = 'rgba(0,230,118,0.7)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(endX, endY, striker.r, 0, Math.PI * 2);
-    ctx.stroke();
-
-    if (closestHit) {
-      const normalX = closestHit.x - endX;
-      const normalY = closestHit.y - endY;
-      const normLen = Math.hypot(normalX, normalY) || 1;
-      const nx = normalX / normLen;
-      const ny = normalY / normLen;
-
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = '#ffd700';
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.moveTo(closestHit.x, closestHit.y);
-      ctx.lineTo(closestHit.x + nx * 35, closestHit.y + ny * 35);
-      ctx.stroke();
-
-      ctx.fillStyle = '#ffd700';
-      ctx.beginPath();
-      ctx.arc(closestHit.x + nx * 35, closestHit.y + ny * 35, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.restore();
-  }
-
-  // Floating Scores
-  floatingScores.forEach(fs => {
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, fs.alpha);
-    ctx.font = 'bold 12px "Space Grotesk", sans-serif';
-    ctx.fillStyle = fs.color;
-    ctx.textAlign = 'center';
-    ctx.shadowColor = '#000';
-    ctx.shadowBlur = 4;
-    ctx.fillText(fs.text, fs.x, fs.y + fs.dy);
-    ctx.restore();
-  });
-
-  updatePhysics();
-  requestAnimationFrame(drawCarromBoard);
-}
-
-/* 🎊 CONFETTI */
+// 🎊 CONFETTI
 function launchCarromConfetti() {
   const cvs = document.getElementById('carrom-confetti');
   if (!cvs) return;
@@ -1230,25 +1390,140 @@ function launchCarromConfetti() {
   render();
 }
 
-window.addEventListener('load', () => {
-  initBoardPieces();
-  drawCarromBoard();
-  const ts = document.getElementById('turn-status');
-  if (ts) ts.innerHTML = `👆 Select a pool and click <strong>"Join Battle"</strong> to start!`;
-});
+// ── INITIALIZATION ──
+function initCarrom() {
+  const canvas = document.getElementById('carrom-webgl-canvas');
+  if (!canvas) return;
 
-// 🛡️ Safe Multi-Lifecycle Auto-Initializer
-try {
-  if (typeof initCarrom === 'function') {
-    window.initCarrom = initCarrom;
-    initCarrom();
+  physics = new CarromPhysics();
+  board3d = new CarromBoard3D(canvas);
+  botAI = new BotAI();
+
+  raycaster = new THREE.Raycaster();
+  groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  intersectPoint = new THREE.Vector3();
+
+  physics.initBoard();
+  board3d.syncPieces(physics);
+  board3d.onResize();
+
+  // Baseline Slider
+  const posSlider = document.getElementById('slider-pos');
+  if (posSlider) {
+    posSlider.addEventListener('input', (e) => {
+      if (!matchActive || currentTurn !== 'player' || turnState !== 'PLAYER_AIM') return;
+      playerBaselineX = parseFloat(e.target.value);
+      physics.resetStriker('player', playerBaselineX);
+      board3d.syncPieces(physics);
+    });
   }
-} catch(e) {}
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
-}
-window.addEventListener('load', () => { try { if (typeof initCarrom === 'function') initCarrom(); } catch(e) {} });
 
+  // Power Slider
+  const pwrSlider = document.getElementById('slider-power');
+  const pwrVal = document.getElementById('val-power');
+  if (pwrSlider) {
+    pwrSlider.addEventListener('input', (e) => {
+      playerPower = parseFloat(e.target.value);
+      if (pwrVal) pwrVal.textContent = Math.round(playerPower);
+    });
+  }
+
+  // Strike Button
+  const strikeBtn = document.getElementById('btn-strike');
+  if (strikeBtn) {
+    strikeBtn.addEventListener('click', () => {
+      if (matchActive && currentTurn === 'player' && turnState === 'PLAYER_AIM') {
+        executePlayerShot();
+      } else if (!matchActive) {
+        showToast('⚠️ Please click "Join Battle" first to enter the match!', 'info');
+      }
+    });
+  }
+
+  // Camera Mode Buttons
+  document.querySelectorAll('.btn-cam-opt').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.btn-cam-opt').forEach(b => b.classList.remove('active'));
+      const target = e.currentTarget;
+      target.classList.add('active');
+      board3d.setCameraMode(target.getAttribute('data-cam'));
+    });
+  });
+
+  // Pointer/Touch Drag Aiming
+  const getGroundCoord = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = ((cx - rect.left) / rect.width) * 2 - 1;
+    const y = -((cy - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(new THREE.Vector2(x, y), board3d.camera);
+    raycaster.ray.intersectPlane(groundPlane, intersectPoint);
+    return intersectPoint;
+  };
+
+  const updateAim = (e) => {
+    if (!matchActive || currentTurn !== 'player' || turnState !== 'PLAYER_AIM' || !physics.striker) return;
+    const pt = getGroundCoord(e);
+    if (!pt) return;
+    let dx = pt.x - physics.striker.x;
+    let dz = pt.z - physics.striker.z;
+    if (dz > 10) { dx = -dx; dz = -dz; } // Slingshot pull reversal
+    playerAimAngle = Math.atan2(dz, dx);
+  };
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!matchActive) {
+      showToast('⚠️ Please click "Join Battle" first to enter the match!', 'info');
+      return;
+    }
+    if (currentTurn !== 'player' || turnState !== 'PLAYER_AIM') return;
+    isDraggingAim = true;
+    updateAim(e);
+  });
+
+  window.addEventListener('pointermove', (e) => {
+    if (isDraggingAim) updateAim(e);
+  });
+
+  window.addEventListener('pointerup', () => {
+    if (isDraggingAim) isDraggingAim = false;
+  });
+
+  window.addEventListener('resize', () => board3d.onResize());
+
+  // Animation Loop
+  let lastTime = performance.now();
+  function gameLoop(time) {
+    const dt = Math.min((time - lastTime) / 16.666, 2.0);
+    lastTime = time;
+
+    if (turnState === 'SIMULATING') {
+      physics.update(dt);
+      board3d.syncPieces(physics);
+      if (physics.isSettled()) handleShotSettled();
+    } else if (turnState === 'PLAYER_AIM') {
+      board3d.updateAimGuide(physics, true, playerAimAngle, playerPower);
+      board3d.syncPieces(physics);
+    } else {
+      board3d.syncPieces(physics);
+    }
+
+    board3d.render();
+    requestAnimationFrame(gameLoop);
+  }
+  requestAnimationFrame(gameLoop);
+
+  updateTurnDisplay();
+}
+
+// 🛡️ Multi-Lifecycle Auto-Initializer
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCarrom);
+} else {
+  initCarrom();
+}
+window.addEventListener('load', initCarrom);
 </script>
 </body>
 </html>
