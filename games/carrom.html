@@ -561,15 +561,15 @@ class CarromPhysics {
           const pdx = pkt.x - p.x, pdz = pkt.z - p.z;
           const pDist = Math.hypot(pdx, pdz);
 
-          if (pDist < pkt.r) {
-            p.vx += (pdx / (pDist + 0.001)) * 0.1;
-            p.vz += (pdz / (pDist + 0.001)) * 0.1;
+          if (pDist < pkt.r + 2) {
+            p.vx += (pdx / (pDist + 0.001)) * 0.2;
+            p.vz += (pdz / (pDist + 0.001)) * 0.2;
 
-            if (pDist < pkt.r - 4) {
+            if (pDist < pkt.r - 1 || Math.hypot(p.vx, p.vz) < 0.4) {
               p.isDropping = true;
               p.dropAnim = 0;
-              p.vx *= 0.15;
-              p.vz *= 0.15;
+              p.vx = 0;
+              p.vz = 0;
               inPocket = true;
               this.pocketedThisShot.push(p);
 
@@ -595,7 +595,7 @@ class CarromPhysics {
     for (let p of all) {
       if (p.isDropping) return false;
       if (p.isPocketed) continue;
-      if (p.vx * p.vx + p.vz * p.vz > 0.005) return false;
+      if (p.vx * p.vx + p.vz * p.vz > 0.03) return false;
     }
     return true;
   }
@@ -1179,8 +1179,11 @@ function updateTurnDisplay() {
     : `⚔️ <strong>Bot AI is Calculating Shot...</strong>`;
 }
 
+let simulationStartTime = 0;
+
 function executePlayerShot() {
   if (!matchActive || currentTurn !== 'player' || turnState !== 'PLAYER_AIM') return;
+  simulationStartTime = performance.now();
   turnState = 'SIMULATING';
   const strikeBtn = document.getElementById('btn-strike');
   if (strikeBtn) strikeBtn.disabled = true;
@@ -1206,6 +1209,7 @@ function triggerBotShot() {
 
     setTimeout(() => {
       board3d.updateAimGuide(physics, false, shot.angle, shot.power);
+      simulationStartTime = performance.now();
       turnState = 'SIMULATING';
       physics.shootStriker(shot.angle, shot.power);
     }, 700);
@@ -1215,6 +1219,7 @@ function triggerBotShot() {
 function handleShotSettled() {
   physics.freezeAll();
   const pocketed = [...physics.pocketedThisShot];
+  physics.pocketedThisShot = [];
   let pottedCoin = false;
   let foul = false;
 
@@ -1501,7 +1506,11 @@ function initCarrom() {
     if (turnState === 'SIMULATING') {
       physics.update(dt);
       board3d.syncPieces(physics);
-      if (physics.isSettled()) handleShotSettled();
+      const simElapsed = performance.now() - simulationStartTime;
+      if (physics.isSettled() || simElapsed > 3200) {
+        physics.freezeAll();
+        handleShotSettled();
+      }
     } else if (turnState === 'PLAYER_AIM') {
       board3d.updateAimGuide(physics, true, playerAimAngle, playerPower);
       board3d.syncPieces(physics);
