@@ -173,29 +173,34 @@
     setElText('stat-vip-revenue', `₹${totalVipRev.toLocaleString('en-IN', {minimumFractionDigits: 2})}`);
 
     // Real-Time Notification Triggers on New Incoming Requests
-    if (!isFirstLoad) {
-      if (pendingVips.length > lastPendingVipCount) {
-        const latestVip = pendingVips[0] || {};
-        const u = latestVip.username || 'Player';
-        const tier = latestVip.tier || 'VIP';
+    if (isFirstLoad) {
+      isFirstLoad = false;
+      if (pendingDeps.length > 0) {
+        const latestDep = pendingDeps[0] || {};
+        const amt = latestDep.amount ? `₹${parseFloat(latestDep.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}` : '';
+        const u = latestDep.username || 'Player';
         showWhatsAppNotification({
-          type: 'vip',
-          title: `👑 New VIP Request: ${tier}`,
-          subtitle: `@${u} requested upgrade • Tap to review`,
-          targetTab: 'vip'
+          type: 'deposit',
+          title: `💰 ${pendingDeps.length} Pending Deposit${pendingDeps.length > 1 ? 's' : ''} Awaiting Approval!`,
+          subtitle: `Latest: ${amt} from @${u} • Tap to review`,
+          targetTab: 'deposits'
         });
-      } else if (pendingDeps.length > lastPendingDepCount) {
+      }
+    } else {
+      // Independent checks: Deposits ALWAYS notify with highest priority
+      if (pendingDeps.length > lastPendingDepCount) {
         const latestDep = pendingDeps[0] || {};
         const amt = latestDep.amount ? `₹${parseFloat(latestDep.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}` : 'New Amount';
         const u = latestDep.username || 'Player';
         const utr = latestDep.utr || 'Proof Attached';
         showWhatsAppNotification({
           type: 'deposit',
-          title: `💰 New Deposit: ${amt}`,
+          title: `💰 New Deposit Alert: ${amt}`,
           subtitle: `From @${u} • UTR: ${utr} • Tap to approve`,
           targetTab: 'deposits'
         });
-      } else if (pendingWths.length > lastPendingWthCount) {
+      }
+      if (pendingWths.length > lastPendingWthCount) {
         const latestWth = pendingWths[0] || {};
         const amt = latestWth.amount ? `₹${parseFloat(latestWth.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}` : 'New Amount';
         const u = latestWth.username || 'Player';
@@ -207,9 +212,26 @@
           targetTab: 'withdrawals'
         });
       }
+      if (pendingVips.length > lastPendingVipCount) {
+        const latestVip = pendingVips[0] || {};
+        const u = latestVip.username || 'Player';
+        const tier = latestVip.tier || 'VIP';
+        showWhatsAppNotification({
+          type: 'vip',
+          title: `👑 New VIP Request: ${tier}`,
+          subtitle: `@${u} requested upgrade • Tap to review`,
+          targetTab: 'vip'
+        });
+      }
     }
 
-    isFirstLoad = false;
+    // Flashing Browser Title & Tab Bar Attention Indicator
+    if (pendingDeps.length > 0) {
+      flashDocumentTitle(`💰 (${pendingDeps.length}) NEW DEPOSIT! • GG Wins`);
+    } else {
+      stopFlashingDocumentTitle();
+    }
+
     lastPendingDepCount = pendingDeps.length;
     lastPendingWthCount = pendingWths.length;
     lastPendingVipCount = pendingVips.length;
@@ -676,33 +698,103 @@
     setTimeout(() => alertDiv.remove(), 4500);
   }
 
+  let sharedAudioCtx = null;
+  function getAudioContext() {
+    try {
+      if (!sharedAudioCtx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioClass) sharedAudioCtx = new AudioClass();
+      }
+      if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume().catch(() => {});
+      }
+    } catch(e) {}
+    return sharedAudioCtx;
+  }
+
+  // Pre-unlock audio on user gesture
+  ['click', 'touchstart', 'keydown'].forEach(evt => {
+    window.addEventListener(evt, () => getAudioContext(), { passive: true });
+  });
+
+  let titleInterval = null;
+  const originalDocTitle = "Admin Terminal - GG Wins";
+  function flashDocumentTitle(txt) {
+    if (titleInterval) return;
+    let flip = false;
+    titleInterval = setInterval(() => {
+      document.title = flip ? txt : originalDocTitle;
+      flip = !flip;
+    }, 1000);
+  }
+  function stopFlashingDocumentTitle() {
+    if (titleInterval) {
+      clearInterval(titleInterval);
+      titleInterval = null;
+      document.title = originalDocTitle;
+    }
+  }
+  window.addEventListener('focus', () => {
+    stopFlashingDocumentTitle();
+  });
+
   function playAlertTone() {
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      // WhatsApp signature chime (800Hz followed by 1050Hz)
-      const osc1 = audioCtx.createOscillator();
-      const gain1 = audioCtx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(800, audioCtx.currentTime);
-      gain1.gain.setValueAtTime(0.35, audioCtx.currentTime);
-      gain1.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.10);
-      osc1.connect(gain1);
-      gain1.connect(audioCtx.destination);
-      osc1.start();
-      osc1.stop(audioCtx.currentTime + 0.10);
+      const audioCtx = getAudioContext();
+      if (audioCtx) {
+        const now = audioCtx.currentTime;
+        // High-fidelity WhatsApp double-chime (880Hz -> 1174Hz High D6)
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, now);
+        gain1.gain.setValueAtTime(0.55, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.12);
 
-      const osc2 = audioCtx.createOscillator();
-      const gain2 = audioCtx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(1050, audioCtx.currentTime + 0.12);
-      gain2.gain.setValueAtTime(0.40, audioCtx.currentTime + 0.12);
-      gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.38);
-      osc2.connect(gain2);
-      gain2.connect(audioCtx.destination);
-      osc2.start(audioCtx.currentTime + 0.12);
-      osc2.stop(audioCtx.currentTime + 0.38);
-    } catch (e) {}
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1174.66, now + 0.14);
+        gain2.gain.setValueAtTime(0.65, now + 0.14);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.14);
+        osc2.stop(now + 0.45);
+      }
+    } catch(e) {}
+
+    // Vibrate device (WhatsApp double vibration pattern)
+    try {
+      if ('vibrate' in navigator) {
+        navigator.vibrate([250, 100, 250]);
+      }
+    } catch(e) {}
   }
+
+  window.testAlertNotification = function() {
+    getAudioContext();
+    playAlertTone();
+    showWhatsAppNotification({
+      type: 'deposit',
+      title: '💰 Test Deposit Alert: ₹1,500.00',
+      subtitle: 'From @TestPlayer • UTR: UPI987654321012 • Chime & notifications operational!',
+      targetTab: 'deposits'
+    });
+
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission().then(perm => {
+        const btn = document.getElementById('btn-toggle-sound');
+        if (btn) btn.innerHTML = `<span>🔔</span> <span>Alerts: ${perm === 'granted' ? 'Active' : 'Muted'} (Test)</span>`;
+      });
+    } else {
+      showNotification('🔔 Alerts Active! You will be notified instantly when a deposit is sent.', '#00e676');
+    }
+  };
 
   function showWhatsAppNotification(data) {
     const { type, title, subtitle, targetTab } = data;
@@ -1558,6 +1650,8 @@
     const tbody = document.getElementById('email-logs-tbody');
     const receiverInput = document.getElementById('email-receiver-input');
     const senderInput = document.getElementById('email-sender-input');
+    const tgTokenInput = document.getElementById('tg-token-input');
+    const tgChatInput = document.getElementById('tg-chatid-input');
 
     try {
       const res = await fetch('/api/admin/get-email-config');
@@ -1565,6 +1659,8 @@
       if (data.success && data.config) {
         if (receiverInput && data.config.receiver) receiverInput.value = data.config.receiver;
         if (senderInput && data.config.sender) senderInput.value = data.config.sender;
+        if (tgTokenInput && data.config.telegram_bot_token) tgTokenInput.value = data.config.telegram_bot_token;
+        if (tgChatInput && data.config.telegram_chat_id) tgChatInput.value = data.config.telegram_chat_id;
       }
 
       const logs = data.logs || [];
@@ -1651,6 +1747,67 @@
     }
   };
 
+    window.saveTelegramConfig = async function() {
+    const token = (document.getElementById('tg-token-input')?.value || '').trim();
+    const chatid = (document.getElementById('tg-chatid-input')?.value || '').trim();
+    const statusEl = document.getElementById('tg-action-status');
+
+    if (statusEl) statusEl.textContent = '⏳ Saving Telegram settings...';
+
+    try {
+      const res = await fetch('/api/admin/set-email-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegram_bot_token: token, telegram_chat_id: chatid })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (statusEl) {
+          statusEl.textContent = '✅ Telegram settings saved! Deposit alerts will be forwarded to your phone.';
+          statusEl.style.color = '#25D366';
+        }
+        showNotification('✅ Telegram settings saved!', '#25D366');
+      } else {
+        if (statusEl) { statusEl.textContent = '❌ ' + data.message; statusEl.style.color = '#ef4444'; }
+      }
+    } catch(e) {
+      if (statusEl) { statusEl.textContent = '❌ Error: ' + e.message; statusEl.style.color = '#ef4444'; }
+    }
+  };
+
+  window.sendTestTelegramAlert = async function() {
+    const token = (document.getElementById('tg-token-input')?.value || '').trim();
+    const chatid = (document.getElementById('tg-chatid-input')?.value || '').trim();
+    const statusEl = document.getElementById('tg-action-status');
+
+    if (!token || !chatid) {
+      alert('Please enter both your Telegram Bot Token and Chat ID first.');
+      return;
+    }
+
+    if (statusEl) statusEl.textContent = '📨 Sending test alert to Telegram...';
+
+    try {
+      const res = await fetch('/api/admin/send-test-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegram_bot_token: token, telegram_chat_id: chatid })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (statusEl) {
+          statusEl.textContent = '🎉 Test push notification delivered to your Telegram app!';
+          statusEl.style.color = '#25D366';
+        }
+        showNotification('🎉 Telegram alert delivered to your phone!', '#25D366');
+      } else {
+        if (statusEl) { statusEl.textContent = '❌ ' + data.message; statusEl.style.color = '#ef4444'; }
+      }
+    } catch(e) {
+      if (statusEl) { statusEl.textContent = '❌ Network error: ' + e.message; statusEl.style.color = '#ef4444'; }
+    }
+  };
+
   window.sendTestNotificationEmail = async function() {
     const receiver = (document.getElementById('email-receiver-input')?.value || '').trim();
     const statusEl = document.getElementById('email-action-status');
@@ -1693,20 +1850,68 @@
     }
   };
 
+  // ── BACKGROUND LOCK-SCREEN MONITOR FOR DEPOSIT ALERTS ───────────────────────────
+  async function checkPendingAlertsOnly() {
+    try {
+      const res = await fetch('/api/all-deposits');
+      if (res.ok) {
+        const json = await res.json();
+        const deps = json.deposits || [];
+        const pending = deps.filter(d => d.status === 'Pending');
+
+        // Update Lock Screen Alert Banner
+        const lockBanner = document.getElementById('lock-pending-alert-banner');
+        if (lockBanner) {
+          if (pending.length > 0) {
+            lockBanner.style.display = 'block';
+            lockBanner.innerHTML = `💰 <strong>${pending.length} DEPOSIT${pending.length > 1 ? 'S' : ''} AWAITING APPROVAL!</strong><br><span style="font-size:11.5px;color:#cbd5e1">Latest: ₹${parseFloat(pending[0].amount||0).toLocaleString('en-IN')} from @${pending[0].username || 'Player'}</span>`;
+          } else {
+            lockBanner.style.display = 'none';
+          }
+        }
+
+        if (pending.length > 0) {
+          flashDocumentTitle(`💰 (${pending.length}) PENDING DEPOSIT! • GG Wins`);
+        } else {
+          stopFlashingDocumentTitle();
+        }
+
+        // If new deposit arrived while locked
+        if (lastPendingDepCount !== -1 && pending.length > lastPendingDepCount) {
+          const newest = pending[0] || {};
+          const amt = newest.amount ? `₹${parseFloat(newest.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}` : 'New Amount';
+          const u = newest.username || 'Player';
+          const utr = newest.utr || 'Proof Attached';
+          showWhatsAppNotification({
+            type: 'deposit',
+            title: `💰 New Deposit Alert: ${amt}`,
+            subtitle: `From @${u} • UTR: ${utr} • Tap to approve`,
+            targetTab: 'deposits'
+          });
+        }
+        lastPendingDepCount = pending.length;
+      }
+    } catch(e) {}
+  }
+
   // ── 9. BOOTSTRAP (REAL-TIME AUTO-SYNC & NOTIFICATION ENGINE) ─────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
     const isUnlocked = checkAdminSession();
     if (isUnlocked) {
       fetchAllData();
+    } else {
+      checkPendingAlertsOnly();
     }
 
-    // Real-Time Background Auto-Sync Engine (polls every 3.5 seconds)
+    // Real-Time Background Auto-Sync Engine (polls every 3 seconds whether unlocked or locked!)
     setInterval(async () => {
       const unlocked = checkAdminSession();
       if (unlocked) {
         await fetchAllData();
+      } else {
+        await checkPendingAlertsOnly();
       }
-    }, 3500);
+    }, 3000);
 
     // Request browser notification permission for background alerts
     if ('Notification' in window && Notification.permission === 'default') {

@@ -81,6 +81,7 @@ def dispatch_admin_email_alert(subject, plain_text, html, receiver_override=None
                     err_msg += f"Webhook Error: {e_wb}; "
 
             # ── 3. TELEGRAM BOT INSTANT PUSH NOTIFICATION (PORT 443) ───────
+            tg_sent = False
             if tg_token and tg_chat_id:
                 try:
                     clean_tg_text = f"🚨 *{subject}*\n\n{plain_text}"
@@ -93,6 +94,7 @@ def dispatch_admin_email_alert(subject, plain_text, html, receiver_override=None
                     tg_req = urllib.request.Request(tg_url, data=tg_payload, headers={"Content-Type": "application/json"})
                     with urllib.request.urlopen(tg_req, timeout=8) as r:
                         if r.status == 200:
+                            tg_sent = True
                             sent = True
                             delivery_channel = "Telegram Bot Alert"
                             print(f"[Telegram Alert] Sent to Chat {tg_chat_id}")
@@ -100,7 +102,6 @@ def dispatch_admin_email_alert(subject, plain_text, html, receiver_override=None
                     err_msg += f"Telegram Error: {e_tg}; "
 
             # ── 4. DIRECT SMTP SSL-465 / STARTTLS-587 ─────────────────────
-            if not sent:
                 msg = MIMEMultipart("alternative")
                 msg["Subject"] = subject
                 msg["From"] = f"GG WINS Admin Alerts <{sender}>"
@@ -606,12 +607,16 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
                 email_cfg = db.get("email_config", {})
                 sender = (os.environ.get("ADMIN_EMAIL") or email_cfg.get("sender") or "ggwinssupport@gmail.com").strip()
                 receiver = (os.environ.get("ADMIN_NOTIFY_RECEIVER") or email_cfg.get("receiver") or "ggwinssupport@gmail.com").strip()
+                tg_token = (os.environ.get("TELEGRAM_BOT_TOKEN") or email_cfg.get("telegram_bot_token") or "").strip()
+                tg_chat_id = (os.environ.get("TELEGRAM_CHAT_ID") or email_cfg.get("telegram_chat_id") or "").strip()
                 logs = db.get("email_logs", [])
                 self.send_json({
                     "success": True,
                     "config": {
                         "sender": sender,
                         "receiver": receiver,
+                        "telegram_bot_token": tg_token,
+                        "telegram_chat_id": tg_chat_id,
                         "updatedAt": email_cfg.get("updatedAt", 0)
                     },
                     "logs": logs[:40]
@@ -971,15 +976,44 @@ class GGWinsHandler(http.server.SimpleHTTPRequestHandler):
             sender = (req_data.get("sender") or "ggwinssupport@gmail.com").strip()
             password = req_data.get("password", "").strip()
             receiver = (req_data.get("receiver") or sender).strip()
+            tg_token = (req_data.get("telegram_bot_token") or "").strip()
+            tg_chat_id = (req_data.get("telegram_chat_id") or "").strip()
 
             db.setdefault("email_config", {})
             db["email_config"]["sender"] = sender
             db["email_config"]["receiver"] = receiver
             if password:
                 db["email_config"]["password"] = password.replace(" ", "")
+            if "telegram_bot_token" in req_data:
+                db["email_config"]["telegram_bot_token"] = tg_token
+            if "telegram_chat_id" in req_data:
+                db["email_config"]["telegram_chat_id"] = tg_chat_id
             db["email_config"]["updatedAt"] = int(time.time() * 1000)
             save_db(db)
-            self.send_json({"success": True, "message": f"Email alert target saved: {receiver}", "config": db["email_config"]})
+            self.send_json({"success": True, "message": f"Alert targets saved: {receiver}", "config": db["email_config"]})
+            return
+
+        # ── SEND TEST TELEGRAM ALERT ──────────────────────────────
+        elif url_path == "/api/admin/send-test-telegram":
+            token = (req_data.get("telegram_bot_token") or os.environ.get("TELEGRAM_BOT_TOKEN") or db.get("email_config", {}).get("telegram_bot_token") or "").strip()
+            chat_id = (req_data.get("telegram_chat_id") or os.environ.get("TELEGRAM_CHAT_ID") or db.get("email_config", {}).get("telegram_chat_id") or "").strip()
+
+            if not token or not chat_id:
+                self.send_json({"success": False, "message": "Please enter both Telegram Bot Token and Chat ID."}, status=HTTPStatus.BAD_REQUEST)
+                return
+
+            try:
+                tg_msg = f"🧪 *[GG WINS] Telegram Alert Test*\n\n✅ Instant notification system is active! Whenever a player submits a deposit request, you will receive an alert right here on Telegram."
+                tg_url = f"https://api.telegram.org/bot{token}/sendMessage"
+                tg_payload = json.dumps({"chat_id": chat_id, "text": tg_msg, "parse_mode": "Markdown"}).encode("utf-8")
+                tg_req = urllib.request.Request(tg_url, data=tg_payload, headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(tg_req, timeout=10) as r:
+                    if r.status == 200:
+                        self.send_json({"success": True, "message": f"Test message delivered to Telegram chat {chat_id}!"})
+                    else:
+                        self.send_json({"success": False, "message": f"Telegram API responded with HTTP {r.status}"}, status=HTTPStatus.BAD_REQUEST)
+            except Exception as e:
+                self.send_json({"success": False, "message": f"Telegram error: {str(e)}"}, status=HTTPStatus.BAD_REQUEST)
             return
 
         # ── SEND TEST NOTIFICATION EMAIL ──────────────────────────

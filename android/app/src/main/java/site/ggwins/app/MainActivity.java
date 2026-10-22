@@ -5,9 +5,11 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -35,6 +37,17 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String DEFAULT_URL = BuildConfig.START_URL;
@@ -50,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout adminDock;
     private ValueCallback<Uri[]> filePathCallback;
     private long lastBackgroundTime = 0;
+    private ScheduledExecutorService backgroundPoller;
+    private int lastKnownPendingDeposits = -1;
 
     public class AndroidNotificationBridge {
         @JavascriptInterface
@@ -100,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
         if (BuildConfig.IS_ADMIN_APP) {
             adminDock.setVisibility(View.VISIBLE);
             setupAdminDock();
+            startAdminDepositNotificationPoller();
         } else {
             adminDock.setVisibility(View.GONE);
         }
@@ -123,7 +139,14 @@ public class MainActivity extends AppCompatActivity {
             channel.enableLights(true);
             channel.setLightColor(0xFF00E676);
             channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{0, 200, 100, 200}); // WhatsApp double-vibe
+            channel.setVibrationPattern(new long[]{0, 250, 100, 250}); // WhatsApp double-vibe
+            channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT)
+                    .build();
+            channel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttributes);
 
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             if (notificationManager != null) {
@@ -135,15 +158,26 @@ public class MainActivity extends AppCompatActivity {
     private void showWhatsAppSystemNotification(String title, String message, String type) {
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("OPEN_TARGET", HOST_URL);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, flags);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
                 .setContentText(message)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setSound(defaultSoundUri)
-                .setVibrate(new long[]{0, 200, 100, 200})
+                .setVibrate(new long[]{0, 250, 100, 250})
                 .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
@@ -151,6 +185,73 @@ public class MainActivity extends AppCompatActivity {
             try {
                 notificationManager.notify((int) System.currentTimeMillis(), builder.build());
             } catch (Exception ignored) {}
+        }
+    }
+
+    private void startAdminDepositNotificationPoller() {
+        if (!BuildConfig.IS_ADMIN_APP) return;
+        if (backgroundPoller != null && !backgroundPoller.isShutdown()) return;
+
+        backgroundPoller = Executors.newSingleThreadScheduledExecutor();
+        backgroundPoller.scheduleWithFixedDelay(() -> {
+            try {
+                URL url = new URL("https://ggwins.site/api/all-deposits");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setConnectTimeout(5000);
+                conn.setReadTimeout(5000);
+                conn.setRequestProperty("User-Agent", "GGWinsAdminApp/1.1 (BackgroundPoller)");
+
+                if (conn.getResponseCode() == 200) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                    reader.close();
+
+                    JSONObject json = new JSONObject(sb.toString());
+                    JSONArray deposits = json.optJSONArray("deposits");
+                    if (deposits != null) {
+                        int pendingCount = 0;
+                        JSONObject newestDeposit = null;
+                        for (int i = 0; i < deposits.length(); i++) {
+                            JSONObject d = deposits.getJSONObject(i);
+                            if ("Pending".equalsIgnoreCase(d.optString("status"))) {
+                                pendingCount++;
+                                if (newestDeposit == null) {
+                                    newestDeposit = d;
+                                }
+                            }
+                        }
+
+                        // If new deposit arrived or first run with pending deposits
+                        if (lastKnownPendingDeposits != -1 && pendingCount > lastKnownPendingDeposits && newestDeposit != null) {
+                            double amount = newestDeposit.optDouble("amount", 0.0);
+                            String user = newestDeposit.optString("username", "Player");
+                            String utr = newestDeposit.optString("utr", "N/A");
+                            String title = String.format("💰 New Deposit: ₹%,.2f", amount);
+                            String subtitle = String.format("From @%s • UTR: %s • Tap to approve", user, utr);
+
+                            runOnUiThread(() -> showWhatsAppSystemNotification(title, subtitle, "deposit"));
+                        }
+                        lastKnownPendingDeposits = pendingCount;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }, 2, 4, TimeUnit.SECONDS);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (intent != null && intent.hasExtra("OPEN_TARGET")) {
+            String target = intent.getStringExtra("OPEN_TARGET");
+            if (webView != null && target != null) {
+                webView.loadUrl(target);
+            }
         }
     }
 
@@ -207,6 +308,14 @@ public class MainActivity extends AppCompatActivity {
             if (elapsed > 45000) {
                 lockTerminal();
             }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (backgroundPoller != null && !backgroundPoller.isShutdown()) {
+            backgroundPoller.shutdownNow();
         }
     }
 

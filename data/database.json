@@ -9,7 +9,17 @@
   "withdrawals": [],
   "vip_requests": [],
   "transactions": [],
-  "email_logs": [],
+  "email_logs": [
+    {
+      "id": "EML-255B8A01",
+      "to": "ggwinssupport@gmail.com",
+      "subject": "Test Subject",
+      "channel": "SMTP SSL-465",
+      "status": "Delivered",
+      "error": null,
+      "timestamp": 1792658962465
+    }
+  ],
   "email_config": {
     "sender": "ggwinssupport@gmail.com",
     "receiver": "ggwinssupport@gmail.com",
