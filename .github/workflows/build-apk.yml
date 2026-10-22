@@ -30,6 +30,7 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        continue-on-error: true
 
       - name: Accept Android SDK Licenses
         run: yes | sdkmanager --licenses || true
